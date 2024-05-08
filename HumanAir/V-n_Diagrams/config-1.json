@@ -1,0 +1,6 @@
+{
+    "name": "Config 1",
+    "MTOW_lbs": 10000,
+    "CLmax": 2.0,
+    "W/S": 800
+}

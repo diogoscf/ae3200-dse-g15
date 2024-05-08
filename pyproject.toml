@@ -1,0 +1,31 @@
+[project]
+name = "HumanAir"
+authors = [
+    {name = "Diogo Fernandes", email = "contact@diogoscf.eu"},
+]
+description = "DSE HumanAir Programming"
+requires-python = ">=3.12"
+readme = "README.md"
+license = {file = "LICENSE"}
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "pandas",
+    "openpyxl",
+    "xlwings",
+]
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["HumanAir"]
+
+[tool.setuptools.dynamic]
+version = {attr = "HumanAir.__version__"}
+
+[tool.black]
+line-length = 120
