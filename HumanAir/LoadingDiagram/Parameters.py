@@ -9,6 +9,7 @@ Clmax_TO=1.6
 Clmax_Land=1.9
 
 Cdo=0.028
+# Cdo = 0.0055*3  # Flying wing
 
 """========== Mission Parameters =========="""
 h_TO=1000
