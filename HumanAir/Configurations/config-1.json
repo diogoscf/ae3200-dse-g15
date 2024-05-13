@@ -1,0 +1,22 @@
+{
+    "name": "Config 1",
+    "MTOW_N": 14871,
+    "OEW_N": 8673,
+    "MFW_N": 1500,
+    "Wpl_des_kg": 540,
+    "CLmax_clean": 1.6,
+    "CLmax_land": 2.1,
+    "W/S_N/m2": 1032,
+    "W/P_N/W": 0.102,
+    "Vc_m/s": 60,
+    "MGC_m": 2,
+    "CLalpha": 4,
+    "E_bat_Wh": 50000,
+    "E_fuel_Wh/kg": 12000,
+    "η_bat": 0.85,
+    "η_generator": 0.45,
+    "CD0": 0.024,
+    "AR": 9.38,
+    "e": 0.82,
+    "range_nm": 600
+}

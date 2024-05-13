@@ -27,11 +27,17 @@ m_to_FL = 1/(0.3048*100.0)
 lbs_to_kg = 0.45359237
 kg_to_lbs = 1/0.45359237
 
+G = 9.80665 # [m/s^2]
+
 
 if __name__ == "__main__":
-    aircraft_data = json.load(open(os.path.join(os.path.dirname(__file__), FILE), "r"))
-    MTOW_lbs = aircraft_data["MTOW_lbs"]
-    MTOW_kg = MTOW_lbs * lbs_to_kg
+    aircraft_data = json.load(open(os.path.join(os.path.dirname(__file__), "..", "Configurations", FILE), "r"))
+    # MTOW_lbs = aircraft_data["MTOW_lbs"]
+    # MTOW_kg = MTOW_lbs * lbs_to_kg
+    MTOW_N = aircraft_data["MTOW_N"]
+    MTOW_kg = MTOW_N / G
+    MTOW_lbs = MTOW_kg * kg_to_lbs
+    print(MTOW_lbs)
 
     if MTOW_kg > 8618:
         raise ValueError(
@@ -66,6 +72,9 @@ if __name__ == "__main__":
     V_A = np.sqrt(2*nmax*WS_kgm2/(rho*CLmax_clean))
     V_S1 = np.sqrt(2*WS_kgm2/(rho*CLmax_clean))
     V_H = np.sqrt(2*(-nmin)*WS_kgm2/(rho*CLmax_clean))
+
+    if V_A > Vc_ms:
+        raise ValueError("V_A > V_C")
 
     V_S0 = np.sqrt(2*WS_kgm2/(rho*CLmax_land))
 

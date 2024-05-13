@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_ConvWithCanard as p
+import Parameters.Parameters_ConvNoCanard as p
 import Equations as eq
 import Plotting as plot
 
