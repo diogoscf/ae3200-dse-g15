@@ -10,16 +10,16 @@ Clmax_TO=1.9
 Clmax_Land=2.5
 
 
-Cdo=0.024*1.15 #Cessna :0.028 B2: 0.0065, 0.0165
+Cdo=0.024 #Cessna :0.028 B2: 0.0065, 0.0165 chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://www.icas.org/ICAS_ARCHIVE/ICAS1982/ICAS-82-1.2.2.pdf
 
 """========== Mission Parameters =========="""
-h_TO=1600
-h_Cruise=2000
-h_Land=1600
+h_TO=1800
+h_Cruise=3000
+h_Land=1800
 
 V_stall=31.38 #Cessna 206
 V_climb=35
-V_cruise=70 #Cessna 206
+V_cruise=60 #Cessna 206
 
 s_land=500
 f= 0.997#W_to/W_land

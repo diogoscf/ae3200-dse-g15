@@ -27,7 +27,7 @@ Climbgradient_y=eq.Climbgradient(p.eta_p, WS, p.climbrate, p.V_climb, p.A, p.e, 
 
 print("W/S = ", Landing_x)
 index=np.where(np.abs(WS-Landing_x)<1)[0][0]
-print("W/P = ", Cruise_y[index])
+print("W/P = ", Climbgradient_y[index])
 
 
 """========== 2: Plot Lines =========="""

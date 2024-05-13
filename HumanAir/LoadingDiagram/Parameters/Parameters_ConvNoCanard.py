@@ -13,13 +13,13 @@ Clmax_Land=2.5
 Cdo=0.024 #Cessna :0.028 B2: 0.0065, 0.0165
 
 """========== Mission Parameters =========="""
-h_TO=1600
-h_Cruise=2000
-h_Land=1600
+h_TO=1800
+h_Cruise=3000
+h_Land=1800
 
 V_stall=31.38 #Cessna 206
 V_climb=35
-V_cruise=70 #Cessna 206
+V_cruise=60 #Cessna 206
 
 s_land=500
 f= 0.997#W_to/W_land
