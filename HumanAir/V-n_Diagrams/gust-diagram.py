@@ -19,9 +19,11 @@ G = 9.80665 # [m/s^2]
 
 
 if __name__ == "__main__":
-    aircraft_data = json.load(open(os.path.join(os.path.dirname(__file__), FILE), "r"))
-    MTOW_lbs = aircraft_data["MTOW_lbs"]
-    MTOW_kg = MTOW_lbs * lbs_to_kg
+    aircraft_data = json.load(open(os.path.join(os.path.dirname(__file__), "..", "Configurations", FILE), "r"))
+    # MTOW_lbs = aircraft_data["MTOW_lbs"]
+    # MTOW_kg = MTOW_lbs * lbs_to_kg
+    MTOW_N = aircraft_data["MTOW_N"]
+    MTOW_kg = MTOW_N / G
 
     if MTOW_kg > 8618:
         raise ValueError(
