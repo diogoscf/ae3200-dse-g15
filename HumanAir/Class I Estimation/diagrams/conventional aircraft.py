@@ -278,11 +278,13 @@ def plot_MTOW_vs_WW(combined = True, show = None, save = None, ax = None):
                     elif step == 4 and not combined:
                         plt.savefig("Double_MTOW_vs_WW.svg")
 
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+if __name__ == "__main__":
+    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
 
-plot_MTOW_vs_Payload(show = False, combined = True, ax = axes[0])
-plot_MTOW_vs_OEW(show = False, combined = True, ax = axes[1])
-plot_MTOW_vs_WW(show = False, combined = True, ax = axes[2])
-
-plt.tight_layout()
-plt.show()
+    plot_MTOW_vs_Payload(show = False, combined = True, ax = axes[0])
+    plot_MTOW_vs_OEW(show = False, combined = True, ax = axes[1])
+    plot_MTOW_vs_WW(show = False, combined = True, ax = axes[2])
+    
+    plt.tight_layout()
+    plt.savefig("Combined_MTOW_vs_Payload_OEW_WW.png")
+    plt.show()
