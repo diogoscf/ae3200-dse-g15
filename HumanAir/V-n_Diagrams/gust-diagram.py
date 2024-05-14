@@ -3,7 +3,10 @@ import json
 import os
 import matplotlib.pyplot as plt
 
-from HumanAir.isa import isa
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from isa import isa
 
 FILE = "config-1.json"
 COMMUTER = True

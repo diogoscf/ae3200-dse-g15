@@ -128,11 +128,15 @@ def plot_MTOW_vs_OEW(combined = True, show = None, save = None, ax = None):
     if save:
         plt.savefig("MTOW_vs_OEW_FlyingWing.svg")
 
-fig, axes = plt.subplots(1, 2, figsize=(15, 5))
-
-plot_MTOW_vs_Payload(show = False, combined = True, ax = axes[0])
-plot_MTOW_vs_OEW(show = False, combined = True, ax = axes[1])
 
 
-plt.tight_layout()
-plt.show()
+if __name__ == "__main__":
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+
+    plot_MTOW_vs_Payload(show = False, combined = True, ax = axes[0])
+    plot_MTOW_vs_OEW(show = False, combined = True, ax = axes[1])
+
+
+    plt.tight_layout()
+    plt.savefig("FlyingWing.png")
+    plt.show()
