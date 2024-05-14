@@ -6,9 +6,9 @@ e=0.82
 TOP=165
 eta_p=0.85
 
-Clmax_clean=1.6
-Clmax_TO=1.6
-Clmax_Land=2.0
+Clmax_clean=1.2
+Clmax_TO=1.2
+Clmax_Land=1.6
 
 
 Cdo=0.015 #Cessna :0.028 B2: 0.0065, 0.0165
