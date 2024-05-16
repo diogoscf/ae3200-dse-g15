@@ -1,3 +1,5 @@
+import numpy as np
+
 """========== Aircraft Design Parameters =========="""
 name="Conventional Aircraft, No Canard"
 A=9.38 #Cessna 206: 9.38, B2: 5.75
@@ -23,7 +25,8 @@ V_cruise=60 #Cessna 206
 
 s_land=500
 f= 0.997#W_to/W_land
-climbrate=2.8
+climbrate=5
+print(climbrate)
 Cl_SafetyFactor=1.2
 nmax=4.5
 

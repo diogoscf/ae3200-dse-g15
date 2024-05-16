@@ -1,3 +1,4 @@
+import numpy as np
 """========== Aircraft Design Parameters =========="""
 name="Flying Wing"
 A=7.5 #Cessna 206: 9.38, B2: 5.75
@@ -5,9 +6,9 @@ e=0.82
 TOP=66.91
 eta_p=0.85
 
-Clmax_clean=1.6
-Clmax_TO=1.6
-Clmax_Land=2.0
+Clmax_clean=1.2
+Clmax_TO=1.2
+Clmax_Land=1.6
 
 
 Cdo=0.015 #Cessna :0.028 B2: 0.0065, 0.0165
@@ -23,7 +24,7 @@ V_cruise=60 #Cessna 206
 
 s_land=500
 f= 0.997#W_to/W_land
-climbrate=2.8
+climbrate=5
 Cl_SafetyFactor=1.2
 nmax=4.5
 
