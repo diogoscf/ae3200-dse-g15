@@ -3,7 +3,7 @@ import numpy as np
 name="Conventional Aircraft, With Canard"
 A=12 #Cessna 206: 9.38, B2: 5.75
 e=0.82
-TOP=165
+TOP=66.91
 eta_p=0.85
 
 Clmax_clean=1.9
@@ -18,7 +18,7 @@ h_TO=1800
 h_Cruise=3000
 h_Land=1800
 
-V_stall=31.38 #Cessna 206
+V_stall=31.38 #CS23 - at take off weight
 V_climb=35
 V_cruise=60 #Cessna 206
 
