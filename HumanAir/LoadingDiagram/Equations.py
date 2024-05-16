@@ -15,22 +15,22 @@ def Cd(cdo, A, e, Cl):
 
 
 """========== Flight Operations =========="""
-def Stallspeedx(h, Vs, Clmax, T0=288.15, constlambda=-0.0065):
-    Temp = (T0 + constlambda * h)
-    Correction = Temp / (Temp + 15)
-    return 0.5*Correction*Density(h)*Vs**2*Clmax
+def Stallspeedx(h, Vs, Clmax): #T0=288.15, constlambda=-0.0065):
+    #Temp = (T0 + constlambda * h)
+    #Correction = Temp / (Temp + 15)
+    return 0.5*Density(h)*Vs**2*Clmax
 
 def Takeoff(TOP, WS, h, ClmaxTO, rho0=1.225, T0=288.15, constlambda=-0.0065):
-    Temp = (T0 + constlambda * h)
-    Correction = Temp / (Temp + 15)
+    #Temp = (T0 + constlambda * h)
+    #Correction = Temp / (Temp + 15)
     constsigma=Density(h)/rho0
-    Clto=ClmaxTO/1.21
+    Clto=ClmaxTO/1.21 # roskam pt1 p95
     return TOP*Clto*constsigma/WS
 
-def Landingx(Clmax_land, h, sland, f, T0=288.15, constlambda=-0.0065):
-    Temp = (T0 + constlambda * h)
-    Correction = Temp / (Temp + 15)
-    return (Clmax_land*Correction*Density(h)*sland/0.5915)/(2*f)
+def Landingx(Clmax_land, h, sland, f): #T0=288.15, constlambda=-0.0065):
+    #Temp = (T0 + constlambda * h)
+    #Correction = Temp / (Temp + 15)
+    return (Clmax_land*Density(h)*sland/0.305199384478051392)/(2*f) # was 0.5915 changed to 0.305199384478051392
 
 def Cruise(etap, h, Cd0, Vcruise, WS, A, e, cruisepowersetting, cruiseweightwrtMTOW, rho0=1.225):
     a=(cruisepowersetting/cruiseweightwrtMTOW)*etap*(Density(h)/rho0)**0.75
