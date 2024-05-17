@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_FlyingWing as p
+import Parameters.Parameters_ConvNoCanard as p
 import Equations as eq
 import Plotting as plot
 
@@ -25,9 +25,10 @@ Climbrate_y=eq.Climbrate(p.eta_p, p.A, p.e, p.h_TO, p.Cdo, p.climbrate, WS)
 Climbgradient_y=eq.Climbgradient(p.eta_p, WS, p.climbrate, p.V_climb, p.A, p.e, p.Clmax_clean, p.Cl_SafetyFactor, p.Cdo, p.h_TO)
 #Manouvering_y=eq.Manouvering(p.Cdo, p.h_Cruise, p.V_cruise, WS, p.nmax, p.A, p.e, p.eta_p)
 
-print("W/S = ", Landing_x)
-index=np.where(np.abs(WS-Landing_x)<1)[0][0]
-print("W/P = ", Climbgradient_y[index])
+
+index=np.where(np.abs(Climbrate_y-Takeoff_y)<0.0005)[0][0]
+print("W/S = ", WS[index])
+print("W/P = ", Climbrate_y[index])
 
 
 """========== 2: Plot Lines =========="""
@@ -45,11 +46,13 @@ plt.fill_between(WS, Climbgradient_y, 1, color='red', alpha=.1)
 plt.fill_betweenx(ylst, Stallspeed_x, 2000, color='red', alpha=.1)
 plt.fill_betweenx(ylst, Landing_x, 2000, color='red', alpha=.1)
 plt.scatter(ReferenceWS, ReferenceWP, color='orange', alpha=0.5, label="Reference Aircraft")
-plt.xlabel("W/S (N/m^2)")
+plt.scatter(WS[index],Climbrate_y[index], label="Chosen Design Point", s=100, color='red')
+plt.xlabel(r"W/S (N/$m^2$)")
 plt.ylabel("W/P (N/W)")
 plt.ylim(0,0.4)
 plt.xlim(0,1500)
 plt.subplots_adjust(right=0.75)
 plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
 plt.title(p.name)
+plt.savefig("test.svg")
 plt.show()

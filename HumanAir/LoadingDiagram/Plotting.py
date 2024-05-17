@@ -1,9 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-def Plotx(xvalue, ylst, name: str):
+def Plotx(xvalue, ylst, name: str, colour=None, linestyle=None):
     xlst=np.ones(len(ylst))*xvalue
-    plt.plot(xlst, ylst, label=name)
+    if colour and linestyle:
+        plt.plot(xlst, ylst, label=name, color=colour, linestyle=linestyle)
+    else:
+        plt.plot(xlst, ylst, label=name)
 
-def Ploty(xlst, ylst, name: str):
-    plt.plot(xlst, ylst, label=name)
+def Ploty(xlst, ylst, name: str, colour=None, linestyle=None):
+    if colour and linestyle:
+        plt.plot(xlst, ylst, label=name, color=colour, linestyle=linestyle)
+    else:
+        plt.plot(xlst, ylst, label=name)
