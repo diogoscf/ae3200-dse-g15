@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from isa import isa
 
-FILE = "config-1.json"
+FILE = "flying wing.json"
 COMMUTER = True
 
 ft_to_m = 0.3048
@@ -151,5 +151,8 @@ if __name__ == "__main__":
     ax.set_ylabel("Load Factor [-]")
 
     ax.grid()
+
+    fig.set_size_inches(16, 9)
+    fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"vn-gust-{aircraft_data['name']}.pdf"), bbox_inches="tight", dpi=200)
     plt.show()
 
