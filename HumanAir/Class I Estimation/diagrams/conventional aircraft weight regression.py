@@ -286,5 +286,5 @@ if __name__ == "__main__":
     plot_MTOW_vs_WW(show = False, combined = True, ax = axes[2])
     
     plt.tight_layout()
-    plt.savefig("Combined_MTOW_vs_Payload_OEW_WW.png")
+    plt.savefig("Combined_MTOW_vs_Payload_OEW_WW.pdf")
     plt.show()
