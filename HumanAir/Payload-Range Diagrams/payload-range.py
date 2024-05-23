@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from isa import isa
 
-FILE = "config-1.json"
+FILE = "conventional.json"
 COMMUTER = True
 
 ft_to_m = 0.3048
@@ -28,9 +28,8 @@ G = 9.80665 # [m/s^2]
 #     return P_zerolift + P_induced
 
 
-
-if __name__ == "__main__":
-    with open(os.path.join(os.path.dirname(__file__), "..", "Configurations", FILE), "r", encoding="utf-8") as f:
+def payload_range_points(filename):
+    with open(os.path.join(os.path.dirname(__file__), "..", "Configurations", filename), "r", encoding="utf-8") as f:
         aircraft_data = json.load(f)
     MTOW_N = aircraft_data["MTOW_N"]
     OEW_N = aircraft_data["OEW_N"]
@@ -77,25 +76,53 @@ if __name__ == "__main__":
     # print(f"Calculated  p_req: {p_req_calc}")
     # print(f"Adjusted    p_req: {p_req_calc*((isa(1800)[2]/isa(0)[2])**(3/4))}")
 
-    plt.rcParams.update({'font.size': 15})
+    return zero_fuel_range_km, design_range_km, max_fuel_range_km, ferry_range_km, Wpl_des_N, Wpl_maxfuel_N, aircraft_data["pretty_name"]
+
+
+if __name__ == "__main__":
+
+    plt.rcParams.update({'font.size': 30})
     fig, ax = plt.subplots()
     fig.tight_layout()
     ax.axhline(linewidth=2, color="k")
     ax.axvline(linewidth=2, color="k")
     style = "b-"
 
-    ax.plot([0, zero_fuel_range_km], [Wpl_des_N, Wpl_des_N], "b--")
-    ax.plot([zero_fuel_range_km, design_range_km], [Wpl_des_N, Wpl_des_N], style)
-    ax.plot([design_range_km, max_fuel_range_km], [Wpl_des_N, Wpl_maxfuel_N], style)
-    ax.plot([max_fuel_range_km, ferry_range_km], [Wpl_maxfuel_N, 0], style)
+    for i, filename in enumerate(["conventional.json", "canard.json", "flying wing.json"]):
+        color = "brg"[i]
+        style = color + "-"
+        zero_fuel_range_km, design_range_km, max_fuel_range_km, ferry_range_km, Wpl_des_N, Wpl_maxfuel_N, pretty_name = payload_range_points(filename)
 
-    ax.plot(zero_fuel_range_km, Wpl_des_N, "bo", ms=10)
-    ax.plot(design_range_km, Wpl_des_N, "bo", ms=10)
-    ax.plot(max_fuel_range_km, Wpl_maxfuel_N, "bo", ms=10)
-    ax.plot(ferry_range_km, 0, "bo", ms=10)
+        ax.plot([0, zero_fuel_range_km], [Wpl_des_N, Wpl_des_N], f"{color}--")
+        ax.plot([zero_fuel_range_km, design_range_km], [Wpl_des_N, Wpl_des_N], style)
+        ax.plot([design_range_km, max_fuel_range_km], [Wpl_des_N, Wpl_maxfuel_N], style)
+        ax.plot([max_fuel_range_km, ferry_range_km], [Wpl_maxfuel_N, 0], style)
+
+        ax.plot(zero_fuel_range_km, Wpl_des_N, f"{color}o", ms=20)
+        ax.plot(design_range_km, Wpl_des_N, f"{color}o", ms=20)
+        ax.plot(max_fuel_range_km, Wpl_maxfuel_N, f"{color}o", ms=20)
+        ax.plot(ferry_range_km, 0, f"{color}o", ms=20, label=pretty_name)
+
+    # ax.plot([0, zero_fuel_range_km], [Wpl_des_N, Wpl_des_N], "b--")
+    # ax.plot([zero_fuel_range_km, design_range_km], [Wpl_des_N, Wpl_des_N], style)
+    # ax.plot([design_range_km, max_fuel_range_km], [Wpl_des_N, Wpl_maxfuel_N], style)
+    # ax.plot([max_fuel_range_km, ferry_range_km], [Wpl_maxfuel_N, 0], style)
+
+    # ax.plot(zero_fuel_range_km, Wpl_des_N, "bo", ms=10)
+    # ax.plot(design_range_km, Wpl_des_N, "bo", ms=10)
+    # ax.plot(max_fuel_range_km, Wpl_maxfuel_N, "bo", ms=10)
+    # ax.plot(ferry_range_km, 0, "bo", ms=10)
 
     ax.set_xlabel("Range [km]")
     ax.set_ylabel("Payload [N]")
 
+    ax.legend()
+
     ax.grid()
+
+    ax.set_xlim(-20, 2200)
+
+    fig.set_size_inches(20, 7)
+    # fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range-{aircraft_data['name']}.pdf"), bbox_inches="tight", dpi=200)
+    fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range.pdf"), bbox_inches="tight", dpi=200)
     plt.show()
