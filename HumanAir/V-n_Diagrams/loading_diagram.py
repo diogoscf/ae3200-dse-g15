@@ -8,8 +8,10 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from isa import isa
 
-FILE = "config-1.json"
+FILE = "flying wing.json"
 PLOT_FLAPPED = False
+
+FONT_SIZE = 30
 
 
 def nmax_f(MTOW_lbs):
@@ -117,7 +119,7 @@ if __name__ == "__main__":
     print("nmax:", nmax)
     print("nmin:", nmin)
 
-    plt.rcParams.update({'font.size': 15})
+    plt.rcParams.update({'font.size': FONT_SIZE})
     fig, ax = plt.subplots()
     fig.tight_layout()
     ax.axhline(linewidth=2, color="k")
@@ -136,19 +138,19 @@ if __name__ == "__main__":
         ax.plot(V_IJ, n_IJ, style)
 
     ax.plot(V_A, nmax, "ro")
-    ax.annotate("A", (V_A, nmax), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate("A", (V_A, nmax), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
 
     ax.plot(Vd_ms, nmax, "ro")
-    ax.annotate("D", (Vd_ms, nmax), textcoords="offset points", xytext=(2, 8), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate("D", (Vd_ms, nmax), textcoords="offset points", xytext=(2, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
 
     ax.plot(Vd_ms, 0, "ro")
-    ax.annotate("E", (Vd_ms, 0), textcoords="offset points", xytext=(8, 8), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate("E", (Vd_ms, 0), textcoords="offset points", xytext=(8, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
 
     ax.plot(Vc_ms, nmin, "ro")
-    ax.annotate("F", (Vc_ms, nmin), textcoords="offset points", xytext=(2, -20), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate("F", (Vc_ms, nmin), textcoords="offset points", xytext=(2, -20), ha="center", fontweight="bold", fontsize=FONT_SIZE)
 
     ax.plot(V_H, nmin, "ro")
-    ax.annotate("H", (V_H, nmin), textcoords="offset points", xytext=(-2, -20), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate("H", (V_H, nmin), textcoords="offset points", xytext=(-2, -20), ha="center", fontweight="bold", fontsize=FONT_SIZE)
 
     ax.plot(0, 0, "ro")
 
@@ -161,20 +163,20 @@ if __name__ == "__main__":
     
     ax.plot([Vc_ms, Vc_ms], [nmin, 0], linestyle="--", color="grey", zorder=-1)
     # ax.plot(Vc_ms, 0, marker="o", color="grey")
-    ax.annotate("$V_C$", (Vc_ms, 0), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=15, color="grey")
+    ax.annotate("$V_C$", (Vc_ms, 0), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=FONT_SIZE, color="grey")
 
-    ax.annotate("$V_D$", (Vd_ms, 0), textcoords="offset points", xytext=(-16, 8), ha="center", fontsize=15, color="grey")
+    ax.annotate("$V_D$", (Vd_ms, 0), textcoords="offset points", xytext=(-16, 8), ha="center", fontsize=FONT_SIZE, color="grey")
 
     ax.plot([V_A, V_A], [0, nmax], linestyle="--", color="grey", zorder=-1)
     # ax.plot(Vc_ms, 0, marker="o", color="grey")
-    ax.annotate("$V_A$", (V_A, 0), textcoords="offset points", xytext=(0, -20), ha="center", fontsize=15, color="grey")
+    ax.annotate("$V_A$", (V_A, 0), textcoords="offset points", xytext=(0, -20), ha="center", fontsize=FONT_SIZE, color="grey")
 
     ax.plot([V_S1, V_S1], [-1, 1], linestyle="--", color="grey", zorder=-1)
     # ax.plot(V_S1, 0, marker="o", color="grey")
-    ax.annotate("$V_{S1}$", (V_S1, 0), textcoords="offset points", xytext=(16, 8), ha="center", fontsize=15, color="grey")     
+    ax.annotate("$V_{S1}$", (V_S1, 0), textcoords="offset points", xytext=(16, 8), ha="center", fontsize=FONT_SIZE, color="grey")     
 
-    ax.annotate(f"$n_{{max}} = {nmax:.2f}$", (V_A + (Vd_ms-V_A)/2, nmax), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=15)
-    ax.annotate(f"$n_{{min}} = {nmin:.2f}$", (V_H + (Vc_ms-V_H)/2, nmin), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=15)
+    ax.annotate(f"$n_{{max}} = {nmax:.2f}$", (V_A + (Vd_ms-V_A)/2, nmax), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=FONT_SIZE)
+    ax.annotate(f"$n_{{min}} = {nmin:.2f}$", (V_H + (Vc_ms-V_H)/2, nmin), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=FONT_SIZE)
 
     ax.plot([0, Vd_ms], [1, 1], linestyle="--", color="grey", zorder=-2)
 
@@ -182,8 +184,13 @@ if __name__ == "__main__":
     ax.set_xlabel("Velocity (EAS) [m/s]")
     ax.set_ylabel("Load Factor [-]")
 
+    ax.set_ylim(-2.0, 4.2)
+
     
 
     ax.grid()
+
+    fig.set_size_inches(16, 9)
+    fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"vn-loading-{aircraft_data['name']}.pdf"), bbox_inches="tight", dpi=200)
     plt.show()
 

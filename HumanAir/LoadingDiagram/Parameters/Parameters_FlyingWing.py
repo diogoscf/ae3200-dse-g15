@@ -18,8 +18,8 @@ h_TO=1800
 h_Cruise=3000
 h_Land=1800
 
-V_stall=31.38 #CS23 - at take off weight
-V_climb=35
+V_stall=31.38 #Cessna 206
+V_climb=1.2*V_stall
 V_cruise=60 #Cessna 206
 
 s_land=500
