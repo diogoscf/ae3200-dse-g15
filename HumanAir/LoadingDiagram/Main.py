@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_ConvNoCanard as p
+import Parameters.Parameters_FlyingWing as p
 import Equations as eq
 import Plotting as plot
 
@@ -47,6 +47,7 @@ plt.fill_betweenx(ylst, Stallspeed_x, 2000, color='red', alpha=.1)
 plt.fill_betweenx(ylst, Landing_x, 2000, color='red', alpha=.1)
 plt.scatter(ReferenceWS, ReferenceWP, color='orange', alpha=0.5, label="Reference Aircraft")
 plt.scatter(WS[index],Climbrate_y[index], label="Chosen Design Point", s=100, color='red')
+plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color='blue')
 plt.xlabel(r"W/S (N/$m^2$)")
 plt.ylabel("W/P (N/W)")
 plt.ylim(0,0.4)
@@ -54,5 +55,5 @@ plt.xlim(0,1500)
 plt.subplots_adjust(right=0.75)
 plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
 plt.title(p.name)
-plt.savefig("test.svg")
+plt.savefig("Performance_FlyingWing.svg")
 plt.show()
