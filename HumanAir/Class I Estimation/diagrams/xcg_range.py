@@ -5,16 +5,16 @@ cases = ['OEW', 'OEW + PL', 'OEW + PL + FL', 'OEW + FL']
 case_numbers = [1, 2, 3, 4]
 
 # conventional aircraft
-xcg_conv = np.array([2.1, 2.81, 2.78, 2.13]) # m from nose
-mass_conv = np.array([0, 675, 831.6, 156.6]) # kg
+xcg_conv = np.array([3.06, 4.18, 4.13, 3.10]) # m from nose
+mass_conv = np.array([0, 675, 822.6, 147.6]) # kg
 
 # canard
-xcg_canard = np.array([3.54, 3.49, 3.53, 3.61])
-mass_canard = np.array([0, 675, 820.3, 145.3]) # kg
+xcg_canard = np.array([6.15, 5.82, 5.95, 6.32])
+mass_canard = np.array([0, 675, 800.9, 128.9]) # kg
 
 # flying wing
-xcg_fwing = np.array([1.39, 1.29, 1.3, 1.38])
-mass_fwing = np.array([0, 675, 911.7, 236.7]) # kg
+xcg_fwing = np.array([1.92, 1.75, 1.74, 1.9])
+mass_fwing = np.array([0, 675, 888.3, 213.3]) # kg
 
 # Append the first points to the end to close the loop
 xcg_conv_closed = np.append(xcg_conv, xcg_conv[0])
@@ -91,5 +91,5 @@ handles = [plt.Line2D([0], [0], marker='', color='w', label=f'{num}: {case}', ma
 fig.legend(handles=handles, loc='upper center', ncol=4, bbox_to_anchor=(0.5, 1))
 
 plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
+plt.savefig('xcg_range.png')
 plt.show()

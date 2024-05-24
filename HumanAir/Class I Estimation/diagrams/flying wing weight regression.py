@@ -138,5 +138,5 @@ if __name__ == "__main__":
 
 
     plt.tight_layout()
-    plt.savefig("FlyingWing.png")
+    plt.savefig("FlyingWing.pdf")
     plt.show()
