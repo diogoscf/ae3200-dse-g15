@@ -16,7 +16,7 @@ def Cd(cdo, A, e, Cl):
 
 """========== Flight Operations =========="""
 def Stallspeedx(h, Vs, Clmax, T0=288.15, constlambda=-0.0065):
-    Temp = (T0 + constlambda * h)
+    Temp = (T0 + constlambda * h) # temperature correction is for temperature offset
     Correction = Temp / (Temp + 21)
     return 0.5*Correction*Density(h)*Vs**2*Clmax
 
