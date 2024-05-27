@@ -4,6 +4,7 @@ import os
 import matplotlib.pyplot as plt
 
 import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from isa import isa
@@ -12,15 +13,15 @@ FILE = "conventional.json"
 COMMUTER = True
 
 ft_to_m = 0.3048
-FL_to_m = 0.3048*100.0
-m_to_ft = 1/0.3048
-m_to_FL = 1/(0.3048*100.0)
+FL_to_m = 0.3048 * 100.0
+m_to_ft = 1 / 0.3048
+m_to_FL = 1 / (0.3048 * 100.0)
 lbs_to_kg = 0.45359237
-kg_to_lbs = 1/0.45359237
+kg_to_lbs = 1 / 0.45359237
 nm_to_km = 1.852
-km_to_nm = 1/1.852
+km_to_nm = 1 / 1.852
 
-G = 9.80665 # [m/s^2]
+G = 9.80665  # [m/s^2]
 
 # def power_required_W(W_N, MTOW_N, Vc_ms, WS_Nm2, CD0, AR, e, h = 0):
 #     P_zerolift = 0.5 * isa(h)[2] * CD0 * MTOW_N * (Vc_ms**3) / WS_Nm2
@@ -35,6 +36,8 @@ def payload_range_points(filename):
     OEW_N = aircraft_data["OEW_N"]
     Wpl_des_kg = aircraft_data["Wpl_des_kg"]
     Wpl_des_N = Wpl_des_kg * G
+    Wpl_max_kg = aircraft_data["Wpl_max_kg"]
+    Wpl_max_N = Wpl_max_kg * G
     MFW_N = aircraft_data["MFW_N"]
 
     design_range_nm = aircraft_data["range_nm"]
@@ -47,8 +50,10 @@ def payload_range_points(filename):
         raise ValueError("OEW+Wpl exceeds MTOW.")
     if Wf_des_N > MFW_N:
         raise ValueError("Fuel weight for max payload exceeds MFW.")
-    
-    E_bat_available_Wh = aircraft_data["E_bat_Wh"] * aircraft_data["η_bat"]
+
+    E_bat_available_Wh = (
+        aircraft_data["E_bat_Wh"] * aircraft_data["η_bat"]
+    )  # * aircraft_data["DoD_bat"] * aircraft_data["η_electricmotor"] # uncommment for new version
     WP_NW = aircraft_data["W/P_N/W"]
     P_req_W = MTOW_N / WP_NW
 
@@ -58,8 +63,20 @@ def payload_range_points(filename):
     zero_fuel_endurance_h = E_bat_available_Wh / P_req_W
     zero_fuel_range_km = zero_fuel_endurance_h * Vc_kmh
 
+    fuel_weight_maxpayload_N = MTOW_N - Wpl_max_N - OEW_N
+    print(fuel_weight_maxpayload_N)
+    E_fuel_maxpayload_Wh = (
+        aircraft_data["E_fuel_Wh/kg"] * (fuel_weight_maxpayload_N / G) * aircraft_data["η_generator"]
+    )  # * aircraft_data["η_powertrain"] # uncommment for new version
+    maxpayload_endurance_h = (E_bat_available_Wh + E_fuel_maxpayload_Wh) / P_req_W
+    print(maxpayload_endurance_h)
+    maxpayload_maxrange_km = maxpayload_endurance_h * Vc_kmh
+    # print(fuel_weight_maxpayload_N/G, MTOW_N/G, Wpl_max_N/G, OEW_N/G)
+
     Wpl_maxfuel_N = MTOW_N - OEW_N - MFW_N
-    E_fuel_available_Wh = aircraft_data["E_fuel_Wh/kg"] * (MFW_N / G) * aircraft_data["η_generator"]
+    E_fuel_available_Wh = (
+        aircraft_data["E_fuel_Wh/kg"] * (MFW_N / G) * aircraft_data["η_generator"]
+    )  # * aircraft_data["η_powertrain"] # uncommment for new version
     max_fuel_endurance_h = (E_bat_available_Wh + E_fuel_available_Wh) / P_req_W
     max_fuel_range_km = max_fuel_endurance_h * Vc_kmh
 
@@ -76,12 +93,22 @@ def payload_range_points(filename):
     # print(f"Calculated  p_req: {p_req_calc}")
     # print(f"Adjusted    p_req: {p_req_calc*((isa(1800)[2]/isa(0)[2])**(3/4))}")
 
-    return zero_fuel_range_km, design_range_km, max_fuel_range_km, ferry_range_km, Wpl_des_N, Wpl_maxfuel_N, aircraft_data["pretty_name"]
+    return (
+        zero_fuel_range_km,
+        maxpayload_maxrange_km,
+        design_range_km,
+        max_fuel_range_km,
+        ferry_range_km,
+        Wpl_max_N,
+        Wpl_des_N,
+        Wpl_maxfuel_N,
+        aircraft_data["pretty_name"],
+    )
 
 
 if __name__ == "__main__":
 
-    plt.rcParams.update({'font.size': 30})
+    plt.rcParams.update({"font.size": 30})
     fig, ax = plt.subplots()
     fig.tight_layout()
     ax.axhline(linewidth=2, color="k")
@@ -89,19 +116,38 @@ if __name__ == "__main__":
     style = "b-"
 
     for i, filename in enumerate(["conventional.json", "canard.json", "flying wing.json"]):
+        # for i, filename in enumerate(["conventional.json"]):
         color = "brg"[i]
         style = color + "-"
-        zero_fuel_range_km, design_range_km, max_fuel_range_km, ferry_range_km, Wpl_des_N, Wpl_maxfuel_N, pretty_name = payload_range_points(filename)
+        (
+            zero_fuel_range_km,
+            maxpayload_maxrange_km,
+            design_range_km,
+            max_fuel_range_km,
+            ferry_range_km,
+            Wpl_max_N,
+            Wpl_des_N,
+            Wpl_maxfuel_N,
+            pretty_name,
+        ) = payload_range_points(filename)
 
-        ax.plot([0, zero_fuel_range_km], [Wpl_des_N, Wpl_des_N], f"{color}--")
-        ax.plot([zero_fuel_range_km, design_range_km], [Wpl_des_N, Wpl_des_N], style)
-        ax.plot([design_range_km, max_fuel_range_km], [Wpl_des_N, Wpl_maxfuel_N], style)
+        ax.plot([0, zero_fuel_range_km], [Wpl_max_N, Wpl_max_N], f"{color}--")
+        ax.plot([zero_fuel_range_km, maxpayload_maxrange_km], [Wpl_max_N, Wpl_max_N], style)
+        ax.plot([maxpayload_maxrange_km, max_fuel_range_km], [Wpl_max_N, Wpl_maxfuel_N], style)
         ax.plot([max_fuel_range_km, ferry_range_km], [Wpl_maxfuel_N, 0], style)
 
-        ax.plot(zero_fuel_range_km, Wpl_des_N, f"{color}o", ms=20)
-        ax.plot(design_range_km, Wpl_des_N, f"{color}o", ms=20)
+        ax.plot(zero_fuel_range_km, Wpl_max_N, f"{color}o", ms=20)
+        ax.plot(maxpayload_maxrange_km, Wpl_max_N, f"{color}o", ms=20)
+        print(maxpayload_maxrange_km * km_to_nm, Wpl_max_N / G)
+        # ax.plot(design_range_km, Wpl_des_N, f"{color}o", ms=20)
+        print(design_range_km * km_to_nm, Wpl_des_N / G)
         ax.plot(max_fuel_range_km, Wpl_maxfuel_N, f"{color}o", ms=20)
+        print(max_fuel_range_km * km_to_nm, Wpl_maxfuel_N / G)
         ax.plot(ferry_range_km, 0, f"{color}o", ms=20, label=pretty_name)
+
+    ax.plot(design_range_km, Wpl_des_N, "X", mfc="purple", mec="purple", ms=20, label="Design Point")
+    ax.plot([0, design_range_km], [Wpl_des_N, Wpl_des_N], "--", color="purple")
+    ax.plot([design_range_km, design_range_km], [0, Wpl_des_N], "--", color="purple")
 
     # ax.plot([0, zero_fuel_range_km], [Wpl_des_N, Wpl_des_N], "b--")
     # ax.plot([zero_fuel_range_km, design_range_km], [Wpl_des_N, Wpl_des_N], style)
@@ -124,5 +170,9 @@ if __name__ == "__main__":
 
     fig.set_size_inches(20, 7)
     # fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range-{aircraft_data['name']}.pdf"), bbox_inches="tight", dpi=200)
-    fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range.pdf"), bbox_inches="tight", dpi=200)
+    fig.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range.pdf"),
+        bbox_inches="tight",
+        dpi=200,
+    )
     plt.show()
