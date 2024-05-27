@@ -106,3 +106,9 @@ class WP_WS:
             plt.savefig("Performance_FlyingWing.svg")
 
         plt.show()
+        
+        
+if __name__ == "__main__":
+    wp = WP_WS()
+    wp.plot()
+    print(wp.calculate_optimal_point())

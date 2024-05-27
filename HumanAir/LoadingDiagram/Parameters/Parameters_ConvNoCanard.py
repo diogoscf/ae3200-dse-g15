@@ -23,8 +23,8 @@ V_stall=31.38 #Cessna 206
 V_climb=1.2*V_stall
 V_cruise=60 #Cessna 206
 
-s_land=500
-f= 1 # changed to 1 since if aircraft flies on batteries W_to = W_land - used to be 0.95 #W_to/W_land
+s_land=500/1.18 # /1.18 for grass strip
+f= 1 # W_to/W_land - changed to 1 since if aircraft flies on batteries W_to = W_land - used to be 0.95 
 climbrate=5
 Cl_SafetyFactor=1.2
 nmax=4.5
