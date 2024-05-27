@@ -2,7 +2,7 @@
 import math
 
 G_0 = 9.80665   # gravitational acceleration at sea-level
-R_air = 287.0   # specific gas constant for air
+R_air = 287.05  # specific gas constant for air
 T_sea = 288.15  # ISA temperature at sea level (15 Celsius)
 p_sea = 101325  # ISA pressure at sea level (1 atm)
 rho_sea = p_sea/(R_air*T_sea)
@@ -46,13 +46,13 @@ def results(t, p, rho):
     print(f"Density: {rho} kg/m^3 ({rho_perc}% SL)\n")
 
 # Main ISA logic
-def isa(h):
+def isa(h, delta_T=0):
     t, p, h0 = T_sea, p_sea, 0
     for (h_max, a) in ISA:
         h1 = min(h_max, h)
         t, p, h0 = t1(t, a, h0, h1), p1(p, t, a, h0, h1), h1
         if h <= h_max:
-            return t, p, rho1(p, t)
+            return t+delta_T, p, rho1(p, t+delta_T)
     print("ERROR: Height too large - The ISA only goes to a height of 86 km (282152 ft or FL 2821)")
     exit(0)
 
