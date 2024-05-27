@@ -5,7 +5,7 @@ import Equations as eq
 import Plotting as plot
 
 """========== 0: Initialise WS =========="""
-WS=np.arange(0,2500,2)
+WS=np.arange(0,1500,2)
 ylst=np.linspace(0,1,500)
 
 ReferenceWS=[449.0307667, 602.1288757, 643.1831172, 725.2916003, 725.2916003, 578.0625962,
@@ -25,9 +25,10 @@ Climbrate_y=eq.Climbrate(p.eta_p, p.A, p.e, p.h_TO, p.Cdo, p.climbrate, WS)
 Climbgradient_y=eq.Climbgradient(p.eta_p, WS, p.climbrate, p.V_climb, p.A, p.e, p.Clmax_clean, p.Cl_SafetyFactor, p.Cdo, p.h_TO)
 #Manouvering_y=eq.Manouvering(p.Cdo, p.h_Cruise, p.V_cruise, WS, p.nmax, p.A, p.e, p.eta_p)
 
-#print("W/S = ", Landing_x)
-#index=np.where(np.abs(WS-Landing_x)<1)[0][0]
-#print("W/P = ", Climbgradient_y[index])
+
+index=np.where(np.abs(Cruise_y-Takeoff_y)<0.0005)[0][0]
+print("W/S = ", WS[index])
+print("W/P = ", Cruise_y[index])
 
 
 """========== 2: Plot Lines =========="""
@@ -42,14 +43,17 @@ plt.fill_between(WS, Takeoff_y, 1, color='red', alpha=.1)
 plt.fill_between(WS, Cruise_y, 1, color='red', alpha=.1)
 plt.fill_between(WS, Climbrate_y, 1, color='red', alpha=.1)
 plt.fill_between(WS, Climbgradient_y, 1, color='red', alpha=.1)
-plt.fill_betweenx(ylst, Stallspeed_x, 2500, color='red', alpha=.1)
-plt.fill_betweenx(ylst, Landing_x, 2500, color='red', alpha=.1)
+plt.fill_betweenx(ylst, Stallspeed_x, 2000, color='red', alpha=.1)
+plt.fill_betweenx(ylst, Landing_x, 2000, color='red', alpha=.1)
 plt.scatter(ReferenceWS, ReferenceWP, color='orange', alpha=0.5, label="Reference Aircraft")
-plt.xlabel("W/S (N/m^2)")
+plt.scatter(WS[index],Cruise_y[index], label="Chosen Design Point", s=100, color='red')
+plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color='blue')
+plt.xlabel(r"W/S (N/$m^2$)")
 plt.ylabel("W/P (N/W)")
 plt.ylim(0,0.4)
-plt.xlim(0,2500)
+plt.xlim(0,1500)
 plt.subplots_adjust(right=0.75)
 plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
 plt.title(p.name)
+plt.savefig("Performance_FlyingWing.svg")
 plt.show()
