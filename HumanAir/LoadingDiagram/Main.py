@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_FlyingWing as p
+import Parameters.Parameters_ConvNoCanard as p
 import Equations as eq
 import Plotting as plot
 
@@ -26,9 +26,9 @@ Climbgradient_y=eq.Climbgradient(p.eta_p, WS, p.climbrate, p.V_climb, p.A, p.e, 
 #Manouvering_y=eq.Manouvering(p.Cdo, p.h_Cruise, p.V_cruise, WS, p.nmax, p.A, p.e, p.eta_p)
 
 
-index=np.where(np.abs(Climbrate_y-Takeoff_y)<0.0005)[0][0]
+index=np.where(np.abs(Cruise_y-Takeoff_y)<0.0005)[0][0]
 print("W/S = ", WS[index])
-print("W/P = ", Climbrate_y[index])
+print("W/P = ", Cruise_y[index])
 
 
 """========== 2: Plot Lines =========="""
@@ -46,7 +46,7 @@ plt.fill_between(WS, Climbgradient_y, 1, color='red', alpha=.1)
 plt.fill_betweenx(ylst, Stallspeed_x, 2000, color='red', alpha=.1)
 plt.fill_betweenx(ylst, Landing_x, 2000, color='red', alpha=.1)
 plt.scatter(ReferenceWS, ReferenceWP, color='orange', alpha=0.5, label="Reference Aircraft")
-plt.scatter(WS[index],Climbrate_y[index], label="Chosen Design Point", s=100, color='red')
+plt.scatter(WS[index],Cruise_y[index], label="Chosen Design Point", s=100, color='red')
 plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color='blue')
 plt.xlabel(r"W/S (N/$m^2$)")
 plt.ylabel("W/P (N/W)")
