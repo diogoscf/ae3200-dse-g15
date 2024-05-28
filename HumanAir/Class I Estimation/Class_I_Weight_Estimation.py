@@ -41,24 +41,34 @@ class WeightEstm:
 
             MTOW_new=OEW_prime+PowertrainWeight+BatteryWeight+FuelWeight+WingWeight+self.dict["Payload"]
 
+            if MTOW_new>8000:
+                break
+
             ok=True
         
-        self.dict["MTOW"]=MTOW_old
-        return(MTOW_new,self.dict["cont"]*MTOW_new,self.dict["cont"]*OEW_prime,self.dict["cont"]*PowertrainWeight,self.dict["cont"]*BatteryWeight,self.dict["cont"]*FuelWeight,self.dict["cont"]*WingWeight,self.dict["cont"]*self.dict["Payload"])
+        if MTOW_new<8000:
+            self.dict["MTOW"]=MTOW_old
+            return(MTOW_new,self.dict["cont"]*MTOW_new,self.dict["cont"]*OEW_prime,self.dict["cont"]*PowertrainWeight,self.dict["cont"]*BatteryWeight,self.dict["cont"]*FuelWeight,self.dict["cont"]*WingWeight,self.dict["cont"]*self.dict["Payload"])
+        else:
+            self.dict["MTOW"]=MTOW_old
+            return(676767676767,self.dict["cont"]*MTOW_new,self.dict["cont"]*OEW_prime,self.dict["cont"]*PowertrainWeight,self.dict["cont"]*BatteryWeight,self.dict["cont"]*FuelWeight,self.dict["cont"]*WingWeight,self.dict["cont"]*self.dict["Payload"])
 
     def PolynomialRegression(self,bat):
 
         lst_P=[]
+        lst_bat=[]
 
         for pbat in bat:
             row=self.Iterations(pbat)
-            lst_P.append(9.81*row[1]/self.dict["W/P"])
+            if row[0]!=676767676767:
+                lst_P.append(9.81*row[1]/self.dict["W/P"])
+                lst_bat.append(pbat)
     
-
-        coeff_exp=np.polyfit(bat,np.log(lst_P),1)
-        coeff_pol=np.polyfit(bat,lst_P,2)
-        y_pol=coeff_pol[0]*bat**2+coeff_pol[1]*bat+coeff_pol[2]
-        y_exp=np.exp(coeff_exp[1])*np.exp(coeff_exp[0]*bat)
+        lst_bat=np.array(lst_bat)
+        coeff_exp=np.polyfit(lst_bat,np.log(lst_P),1)
+        coeff_pol=np.polyfit(lst_bat,lst_P,2)
+        y_pol=coeff_pol[0]*lst_bat**2+coeff_pol[1]*lst_bat+coeff_pol[2]
+        y_exp=np.exp(coeff_exp[1])*np.exp(coeff_exp[0]*lst_bat)
 
         return coeff_exp,coeff_pol
 
