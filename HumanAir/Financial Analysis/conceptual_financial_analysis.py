@@ -33,14 +33,14 @@ def hourly_operating_cost(mission_file, standard_aircraft_data = c206_data, airc
     total_hourly_cost : float
         The total new aircraft operating cost per hour of flight in (US$)
     """
-    overhaul_cost = standard_aircraft_data["overhaul_per_hour"] * standard_aircraft_data["Vc_m/s"] / aircraft_data["Vc_m/s"]
+    overhaul_cost = standard_aircraft_data["overhaul_per_hour"] * standard_aircraft_data["Vc_m/s"] / aircraft_data["Performance"]["Vc_m/s"]
 
     mission_freqs = calculate_mission_freqs(mission_file)
     _, maintenance_cost = calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standard_co2 = None, V_standard_kts = None, standard_ac_data = standard_aircraft_data)
 
-    endurance = nm_to_m(aircraft_data["range_nm"])/aircraft_data["Vc_m/s"]/3600
+    endurance = nm_to_m(aircraft_data["Performance"]["range_nm"])/aircraft_data["Performance"]["Vc_m/s"]/3600
 
-    fuel_burn = aircraft_data["MFW_N"]/9.80665/endurance
+    fuel_burn = aircraft_data["Weights"]["MFW_N"]/9.80665/endurance
     fuel_cost = fuel_burn*vol_jet_a1_price/jet_a1_dens
 
     return overhaul_cost + maintenance_cost + fuel_cost
