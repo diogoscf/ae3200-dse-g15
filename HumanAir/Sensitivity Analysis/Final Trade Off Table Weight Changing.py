@@ -1,6 +1,16 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.rcParams["axes.labelsize"] = 24
+plt.rcParams["axes.titlesize"] = 24
+plt.rcParams["xtick.labelsize"] = 18
+plt.rcParams["ytick.labelsize"] = 18
+plt.rcParams["legend.fontsize"] = 24
+# plt.rcParams["svg.fonttype"] = "none"
+# plt.rcParams["figure.labelsize"] = 16
+# plt.rcParams["font.family"] = "serif"
+# plt.rcParams["font.serif"] = "CMU Serif"
+
 # Define the trade off table
 criteria = ["Ground Clearance", "Emission reduction", "Development Risk", "Cost", "Operability"]
 initial_weights = np.array([0.1, 0.3, 0.2, 0.3, 0.1])
@@ -33,20 +43,38 @@ for i in range(len(initial_weights)):
 
 # Plot the sensitivity results
 fig, axes = plt.subplots(len(initial_weights), 1, figsize=(10, 15))
-
+last = len(criteria) - 1
 for i, criterion in enumerate(criteria):
     ax = axes[i]
-    for concept in concepts:
-        ax.plot(weight_ranges, sensitivity_results[concept][criterion], label=concept)
-    ax.set_xlabel('Weight Value')
+    colours = "brg"
+    for j, concept in enumerate(concepts):
+        label = concept if i == last else None
+        ax.plot(weight_ranges, sensitivity_results[concept][criterion], label=label, color=colours[j])
+    if i == last:
+        ax.set_xlabel('Weight Value')
+        # ax.legend(loc = 'lower right', bbox_to_anchor=(1.0, 0.05))
     ax.set_ylabel('Final Score')
     ax.set_title(f'{criterion}')
-    ax.legend(loc = 'lower right')
     ax.grid()
 
+    ax.set_yticks(np.arange(0, 10, 1))
+    ax.set_yticks(np.arange(0, 10, 0.5), minor=True)
+    ax.set_ylim(1.0, 5.0)
+
+    ax.set_xticks(np.arange(0, 1.01, 0.1))
+    ax.set_xticks(np.arange(-0.05, 1.06, 0.05), minor=True)
+    # ax.set_xlim(1.0, 5.0)
+
+    # ax.tick_params("both", length=10, width=1, which="major")
+    # ax.tick_params("both", length=5, width=1, which="minor")
+
+
+handles, labels = axes[-1].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", ncol=len(criteria), frameon=False)
 plt.tight_layout()
-plt.savefig("Sensitivity Analysis of Weight.pdf")
-plt.show()
+plt.subplots_adjust(bottom=0.05, top=0.93, wspace=0, hspace=0.38)
+plt.savefig("Figures/Sensitivity Analysis of Weight.pdf")
+# plt.show()
 
 
 
@@ -64,17 +92,35 @@ for i in range(initial_importance.shape[1]):
 
 # Plot the sensitivity results for importance
 fig, axes = plt.subplots(len(criteria), 1, figsize=(10, 15))
-
+last = len(criteria) - 1
 for i, criterion in enumerate(criteria):
     ax = axes[i]
-    for concept in concepts:
-        ax.plot(importance_ranges, sensitivity_results_importance[concept][criterion], label=concept)
+    colours = "brg"
+    for j, concept in enumerate(concepts):
+        label = concept if i == last else None
+        ax.plot(importance_ranges, sensitivity_results_importance[concept][criterion], label=label, color=colours[j])
     ax.set_ylabel('Final Score')
-    ax.set_xlabel('Importance Value')
-    ax.set_title(f'{criterion}')
-    ax.legend(loc = 'lower right')
-    ax.grid(True)
+    if i == last:
+        ax.set_xlabel('Criterion Score')
 
+    ax.set_title(f'{criterion}')
+    # ax.legend(loc = 'lower right')
+    ax.grid()
+
+    ax.set_yticks(np.arange(0, 10, 1))
+    ax.set_yticks(np.arange(0, 10, 0.5), minor=True)
+    ax.set_ylim(1.0, 5.0)
+
+    ax.set_xticks(np.arange(1, 5.01, 1))
+    ax.set_xticks(np.arange(1, 5.01, 0.5), minor=True)
+    # ax.set_xlim(1.0, 5.0)
+
+    # ax.tick_params("both", length=10, width=1, which="major")
+    # ax.tick_params("both", length=5, width=1, which="minor")
+
+handles, labels = axes[-1].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", ncol=len(criteria), frameon=False)
 plt.tight_layout()
-plt.savefig("Sensitivity Analysis of Importance.pdf")
-plt.show()
+plt.subplots_adjust(bottom=0.05, top=0.93, wspace=0, hspace=0.38)
+plt.savefig("Figures/Sensitivity Analysis of Importance.pdf")
+# plt.show()
