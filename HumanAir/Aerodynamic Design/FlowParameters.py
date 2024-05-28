@@ -1,5 +1,17 @@
-def Mach(V, a):
-    return V/a
+import numpy as np
+class Flow:
+    def __init__(self, V, ISA, Wing):
+        self.V = V
+        self.a = ISA.SpeedOfSound()
+        self.Mu = ISA.DynamicViscosity()
+        self.MAC = Wing.MAC()
+        self.Rho = ISA.Density()
 
-def Reynolds(V, Mu, MAC, Rho):
-    return V*MAC*Rho/Mu
+    def Mach(self):
+        return self.V/self.a
+
+    def Reynolds(self):
+        return self.V*self.MAC*self.Rho/self.Mu
+
+    def Beta(self):
+        return np.sqrt(1-self.Mach()**2)

@@ -1,13 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 class LongitudinalStability:
-    def __init__(self, CLh, CLah, XcgW, Xcgh, VhV, MAC, CMac, Xac, SM, Clalphah, Clalphaah, deda, FuselageLength, CgAft, CgFwd):
+    def __init__(self, CLh, CLah, Xcgh, XLEMAC, VhV, Wing, CMac, Xac, SM, deda, FuselageLength, CgAft, CgFwd, airfoil, Clalphah = 5.93792624, Clalphaah = 6.237426906):
         self.CLh = CLh
         self.CLah = CLah
         self.FuselageLength = FuselageLength
-        self.lh=(Xcgh-XcgW)*self.FuselageLength
+        self.lh=Xcgh*FuselageLength-(XLEMAC+0.4*Wing.MAC())
         self.VhV=VhV
-        self.c=MAC
+        self.c=Wing.MAC()
         self.CMac=CMac
         self.Xac=Xac
         self.dxcg=0.01
@@ -18,7 +18,11 @@ class LongitudinalStability:
         self.deda=deda
         self.CgFwd=CgFwd
         self.CgAft=CgAft
+        self.Airfoil=airfoil
+        print("Longitudinal Stability Initialized")
 
+    def CMac_Wing(self):
+        return self.Airfoil['Cm_0']*()
 
     def Stability(self):
         return (self.Xcg-self.Xac+self.SM)/(self.Clalphah/self.Clalphaah*(1-self.deda)*self.lh/self.c*self.VhV**2)

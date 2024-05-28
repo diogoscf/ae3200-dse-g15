@@ -2,16 +2,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Planform:
-    def __init__(self, MTOW, WS, AR, Taper, QuarterChordSweep):
+    def __init__(self, AR, Taper, QuarterChordSweep,MTOW=None, WS=None, S=None):
         self.MTOW = MTOW
         self.WS = WS
         self.AR = AR
         self.Taper = Taper
         self.QuarterChordSweep = QuarterChordSweep
         self.g = 9.81
+        self.S=S
+        if MTOW == None and WS == None and S == None:
+            raise ValueError("Please provide a value for either MTOW and WS or S!")
+
 
     def WingSurfaceArea(self):
-        return self.MTOW*self.g/self.WS
+        if self.S!=None:
+            return self.S
+        else:
+            return self.MTOW * self.g / self.WS
 
     def WingSpan(self):
         return np.sqrt(self.WingSurfaceArea()*self.AR)
@@ -41,5 +48,7 @@ class Planform:
         plt.show()
 
 if __name__ == "__main__":
-    WingConventional=Planform(1946.34, 618, 9.35, 0.4, 15)
+    WingConventional=Planform(1946.34, 618, 9.35, 0.4, 5)
+    print(WingConventional.AC_LE())
+    WingConventional.PlotWingPlanform()
 
