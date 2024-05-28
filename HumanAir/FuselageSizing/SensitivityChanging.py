@@ -2,15 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Define the trade off table
-criteria = ["Ground Clearance", "Emission reduction", "Development Risk", "Cost", "Operability"]
-initial_weights = np.array([0.1, 0.3, 0.2, 0.3, 0.1])
-concepts = ['Flying Wing', 'Canard', 'Conventional']
+criteria = ["Structure Weight", "Subsystem Integration", "Ease of Manufacturing", "Manufacturing Cost", "Aerodynamics"]
+initial_weights = np.array([0.25, 0.1, 0.25, 0.25, 0.15])
+concepts = ['Monocoque', 'Semi-monocoque', 'Truss', 'Geodesic']
 
 # Define importance
 initial_importance = np.array([
-    [3, 1, 1, 2, 1],
-    [3, 4, 4, 4, 3],
-    [4, 3, 5, 5, 5]
+    [5, 3, 2, 3, 5],
+    [3, 5, 3, 3, 5],
+    [4, 1, 5, 5, 3],
+    [3, 3, 1, 1, 4]
 ])
 
 
