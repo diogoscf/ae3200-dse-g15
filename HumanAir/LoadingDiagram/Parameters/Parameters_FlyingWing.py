@@ -1,6 +1,7 @@
 import numpy as np
 """========== Aircraft Design Parameters =========="""
 name="Flying Wing"
+shortname="flyingwing"
 A=7.5 #Cessna 206: 9.38, B2: 5.75
 e=0.82
 TOP=66.91

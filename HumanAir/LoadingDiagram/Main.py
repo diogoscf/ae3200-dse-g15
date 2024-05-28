@@ -1,8 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_FlyingWing as p
+import Parameters.Parameters_ConvWithCanard as p
 import Equations as eq
 import Plotting as plot
+
+plt.rcParams["axes.labelsize"] = 24
+plt.rcParams["axes.titlesize"] = 24
+plt.rcParams["xtick.labelsize"] = 18
+plt.rcParams["ytick.labelsize"] = 18
+plt.rcParams["legend.fontsize"] = 24
+# plt.rcParams["svg.fonttype"] = "none"
+# plt.rcParams["figure.labelsize"] = 16
+# plt.rcParams["font.family"] = "serif"
+# plt.rcParams["font.serif"] = "CMU Serif"
 
 """========== 0: Initialise WS =========="""
 WS=np.arange(0,1500,2)
@@ -35,10 +45,10 @@ print("W/P = ", Climbrate_y[index])
 plt.figure(figsize=(10,7))
 plot.Plotx(Stallspeed_x, ylst, "Stall Speed Requirement")
 plot.Plotx(Landing_x, ylst, "Landing Requirement")
-plot.Ploty(WS, Takeoff_y, "Take-off requirement")
+plot.Ploty(WS, Takeoff_y, "Take-off Requirement")
 plot.Ploty(WS, Cruise_y, "Cruise Requirement")
-plot.Ploty(WS, Climbrate_y, "Climbrate Requirement")
-plot.Ploty(WS, Climbgradient_y, "Climbgradient Requirement")
+plot.Ploty(WS, Climbrate_y, "Climb Rate Requirement")
+plot.Ploty(WS, Climbgradient_y, "Climb Gradient Requirement")
 plt.fill_between(WS, Takeoff_y, 1, color='red', alpha=.1)
 plt.fill_between(WS, Cruise_y, 1, color='red', alpha=.1)
 plt.fill_between(WS, Climbrate_y, 1, color='red', alpha=.1)
@@ -48,12 +58,15 @@ plt.fill_betweenx(ylst, Landing_x, 2000, color='red', alpha=.1)
 plt.scatter(ReferenceWS, ReferenceWP, color='orange', alpha=0.5, label="Reference Aircraft")
 plt.scatter(WS[index],Climbrate_y[index], label="Chosen Design Point", s=100, color='red')
 plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color='blue')
-plt.xlabel(r"W/S (N/$m^2$)")
-plt.ylabel("W/P (N/W)")
+plt.xlabel("W/S [N/m$^2$]")
+plt.ylabel("W/P [N/W]")
 plt.ylim(0,0.4)
 plt.xlim(0,1500)
-plt.subplots_adjust(right=0.75)
-plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
-plt.title(p.name)
-plt.savefig("Performance_FlyingWing.svg")
+plt.subplots_adjust(left=-1,right=0.05)
+legend = plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+plt.tight_layout()
+extent = legend.get_frame().get_bbox()#get_tightbbox().transformed(plt.gcf().dpi_scale_trans.inverted())
+# plt.title(p.name)
+plt.savefig(f"Figures/Performance_legend.pdf", bbox_inches="tight", dpi=200)
+# plt.savefig(f"Figures/Performance_{p.shortname}.pdf")#, bbox_inches=extent.expanded(1.01,1.05), dpi=200)
 plt.show()

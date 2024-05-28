@@ -2,6 +2,7 @@ import numpy as np
 
 """========== Aircraft Design Parameters =========="""
 name="Conventional Aircraft, No Canard"
+shortname="conventional"
 A=9.38 #Cessna 206: 9.38, B2: 5.75
 e=0.82
 TOP=66.91
