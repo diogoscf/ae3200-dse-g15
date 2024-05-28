@@ -13,7 +13,7 @@
     "Vc_m/s": 60,
     "MGC_m": 1.93,
     "CLalpha": 6.24,
-    "E_bat_Wh": 56349,
+    "E_bat_Wh": 186451,
     "E_fuel_Wh/kg": 11972,
     "η_bat": 0.85,
     "η_generator": 0.45,
@@ -23,5 +23,7 @@
     "CD0": 0.02,
     "AR": 9.38,
     "e": 0.82,
-    "range_nm": 600
+    "range_nm": 600,
+    "P_req_cruise_W": 217309,
+    "CO2_emissions_kg/kg": 3.16
 }
