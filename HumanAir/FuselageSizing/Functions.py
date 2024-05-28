@@ -4,6 +4,8 @@ import pandas as pd
 # Define the path to the text file
 # file_path = 'data.txt'
 
+''' DATA_EXAMPLE'''
+
 def import_data(file_path):    
     # Initialise lists
     column_names = []
@@ -29,5 +31,28 @@ def import_data(file_path):
     return df
 
 
-        
-    
+'''WING_SPAN'''
+
+def import_data2(file_path):
+    data = {}
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+        angle_file = lines[0]
+        angles = re.findall(r'VLM1 -\s*-?\d+\.?\d*', angle_file)
+        angles = [float(re.search(r'VLM1 -\s*(-?\d+\.?\d*)', angle).group(1)) for angle in angles]
+
+
+        for line in lines[1:]:
+            values = line.split()  # Split the line into values
+            for i in range(0, len(values), 2):  # Iterate over values in steps of 2
+                angle_index = i // 2  # Calculate the corresponding angle index
+                angle = angles[angle_index]
+                y_positions = float(values[i])  # Convert y_positions to float
+                lift_distribution = float(values[i + 1])  # Convert lift_distribution to float
+                
+                if angle not in data:
+                    data[angle] = {"y_positions": [], "lift_distribution": []}
+
+                data[angle]["y_positions"].append(y_positions)
+                data[angle]["lift_distribution"].append(lift_distribution)
+    return data
