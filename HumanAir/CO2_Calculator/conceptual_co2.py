@@ -137,7 +137,7 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     weighted_fuel_co2 = np.sum(fuel_emissions_return[relevant_idx] * mission_freqs[relevant_idx, 2])/np.sum(mission_freqs[relevant_idx, 2])
 
     co2 = weighted_fuel_co2 + overhaul_co2 + maintenance_co2
-    return co2
+    return co2, maintenance_cost_return_new_avg
 
 def calculate_co2_reduction(mission_file = "maf_mission_graph.csv", ac_data = aircraft_data, standard_ac_data = c206_data):
     """Calculate the CO2 reduction of the aircraft based on the mission profile.
@@ -169,10 +169,10 @@ def calculate_co2_reduction(mission_file = "maf_mission_graph.csv", ac_data = ai
     else:
         c206_co2, c206_maintenance_co2 = relevant_c206_data
     
-    new_co2 = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
+    new_co2,_ = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
     co2_ratio = 1 - (new_co2 / c206_co2)
 
-    return co2_ratio
+    return co2_ratio, _
 
 
 if __name__ == "__main__":

@@ -5,5 +5,8 @@
     "fuel_burn_L/h": 62.50,
     "fuel_density_kg/L": 0.717,
     "CO2_emissions_kg/kg": 3.05,
-    "co2_fuel_%": 89
+    "co2_fuel_%": 89,
+    "fuel_per_hour": 144,
+    "maintenace_per_hour": 129,
+    "overhaul_per_hour": 55
 }
