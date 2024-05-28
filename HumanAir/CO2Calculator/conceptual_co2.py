@@ -110,8 +110,12 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     vc_kts = m_s_to_kt(ac_data["Vc_m/s"])
     flight_time_h = mission_freqs[:,0] * 2 / vc_kts
     battery_usage_ratio = ac_data["E_bat_Wh"]/(flight_time_h * ac_data["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
+
+    # print(flight_time_h)
+    # print(battery_usage_ratio)
+    # print(" ")
     battery_usage_ratio[battery_usage_ratio > 1] = 1
-    fuel_required_return_kg = flight_time_h * ac_data["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["E_fuel_Wh/kg"] * ac_data["η_generator"]) # TODO: Check if power train efficiency matters
+    fuel_required_return_kg = flight_time_h * ac_data["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["E_fuel_Wh/kg"] * ac_data["n_generator"]) # TODO: Check if power train efficiency matters
     fuel_emissions_return = fuel_required_return_kg * ac_data["CO2_emissions_kg/kg"]
 
     if maintenance_standard_co2 is None:
@@ -130,12 +134,10 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     # In any case, the influence on the results is minimal
     maintenance_cost_return_standard_avg = np.sum(maintenance_cost_return_standard[:] * mission_freqs[:, 2])/np.sum(mission_freqs[:, 2])
     maintenance_cost_return_new_avg = np.sum(maintenance_cost_return_new[:] * mission_freqs[:, 2])/np.sum(mission_freqs[:, 2])
-
     cost_ratio = maintenance_cost_return_new_avg / maintenance_cost_return_standard_avg 
     maintenance_co2 = (1 - MAINTENANCE_CO2_OVERHAUL) * maintenance_standard_co2 * cost_ratio * FT_ratio
 
     weighted_fuel_co2 = np.sum(fuel_emissions_return[relevant_idx] * mission_freqs[relevant_idx, 2])/np.sum(mission_freqs[relevant_idx, 2])
-
     co2 = weighted_fuel_co2 + overhaul_co2 + maintenance_co2
     return co2
 
@@ -168,10 +170,9 @@ def calculate_co2_reduction(mission_file = "maf_mission_graph.csv", ac_data = ai
         relevant_c206_data = (c206_co2, c206_maintenance_co2)
     else:
         c206_co2, c206_maintenance_co2 = relevant_c206_data
-    
+
     new_co2 = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
     co2_ratio = 1 - (new_co2 / c206_co2)
-
     return co2_ratio
 
 

@@ -2,17 +2,17 @@ import numpy as np
 
 """========== Aircraft Design Parameters =========="""
 name="Conventional Aircraft, No Canard"
-A=9.38 #Cessna 206: 9.38, B2: 5.75
+A=7.44 #Cessna 206: 9.38, B2: 5.75
 e=0.82
 TOP=60
 eta_p=0.85
 
-Clmax_clean=1.6
-Clmax_TO=1.6
-Clmax_Land=2.5
+Clmax_clean=2.1
+Clmax_TO=2.4
+Clmax_Land=2.4
 
 
-Cdo=0.03 #Cessna :0.028 B2: 0.0065, 0.0165
+Cdo=0.028 #Cessna :0.028 B2: 0.0065, 0.0165
 
 """========== Mission Parameters =========="""
 h_TO=1800

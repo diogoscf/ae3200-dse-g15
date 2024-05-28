@@ -46,9 +46,8 @@ class WeightEstm:
         self.dict["MTOW"]=MTOW_old
         return(MTOW_new,self.dict["cont"]*MTOW_new,self.dict["cont"]*OEW_prime,self.dict["cont"]*PowertrainWeight,self.dict["cont"]*BatteryWeight,self.dict["cont"]*FuelWeight,self.dict["cont"]*WingWeight,self.dict["cont"]*self.dict["Payload"])
 
-    def PolynomialRegression(self):
+    def PolynomialRegression(self,bat):
 
-        bat=np.arange(0,0.18,0.001)
         lst_P=[]
 
         for pbat in bat:
@@ -60,10 +59,8 @@ class WeightEstm:
         coeff_pol=np.polyfit(bat,lst_P,2)
         y_pol=coeff_pol[0]*bat**2+coeff_pol[1]*bat+coeff_pol[2]
         y_exp=np.exp(coeff_exp[1])*np.exp(coeff_exp[0]*bat)
-        #plt.scatter(bat,lst_P)
-        #plt.plot(bat,y_exp)
-        #plt.plot(bat,y_pol)
-        #plt.show()
+
+        return coeff_exp,coeff_pol
 
 
 if __name__ == "__main__":
