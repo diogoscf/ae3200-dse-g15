@@ -8,7 +8,7 @@ concepts = ['Monocoque', 'Semi-monocoque', 'Truss', 'Geodesic']
 
 # Define importance
 initial_importance = np.array([
-    [55, 3, 2, 3, 5],
+    [5, 3, 2, 3, 5],
     [4, 5, 3, 3, 5],
     [3, 1, 5, 5, 3],
     [3, 3, 1, 1, 4]
