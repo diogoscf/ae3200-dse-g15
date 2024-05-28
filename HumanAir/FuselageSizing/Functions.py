@@ -43,12 +43,12 @@ def import_data2(file_path):
 
 
         for line in lines[1:]:
-            values = line.split()  # Split the line into values
-            for i in range(0, len(values), 2):  # Iterate over values in steps of 2
-                angle_index = i // 2  # Calculate the corresponding angle index
+            values = line.split()  
+            for i in range(0, len(values), 2):  
+                angle_index = i // 2 
                 angle = angles[angle_index]
-                y_positions = float(values[i])  # Convert y_positions to float
-                lift_distribution = float(values[i + 1])  # Convert lift_distribution to float
+                y_positions = float(values[i]) 
+                lift_distribution = float(values[i + 1]) 
                 
                 if angle not in data:
                     data[angle] = {"y_positions": [], "lift_distribution": []}
