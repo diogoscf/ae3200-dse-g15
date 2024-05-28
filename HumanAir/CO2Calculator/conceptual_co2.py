@@ -110,7 +110,6 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     vc_kts = m_s_to_kt(ac_data["Vc_m/s"])
     flight_time_h = mission_freqs[:,0] * 2 / vc_kts
     battery_usage_ratio = ac_data["E_bat_Wh"]/(flight_time_h * ac_data["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
-
     # print(flight_time_h)
     # print(battery_usage_ratio)
     # print(" ")

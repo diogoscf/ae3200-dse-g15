@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import numpy as np
+from tqdm import tqdm
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -16,33 +17,96 @@ from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2Calculator.conceptual_co2 import calculate_co2_reduction as co2
 
 
+A_lst = np.arange(6.5,10,0.1)
+eta_p_lst = np.arange(0.8,0.9,0.05)
+Clmax_clean_lst = np.arange(1.6,2.1,0.1)
+Clmax_TO_lst = np.arange(2,2.8,0.1)
+Clmax_Land_lst = np.arange(2,2.8,0.1)
+Cd0_lst = np.arange(0.024,0.034,0.002)
+V_cruise_lst = np.arange(50,73,1)
+climbrate_lst = np.arange(3.5,6,0.5)
+
 
 # loading the json file
 with open('../Configurations/design.json', 'r') as f:
     dict = json.load(f)
 
-# initialise the loading diagram to get W/P and W/S
-dict['W/P'], dict['W/S'] = WP_WS().calculate_optimal_point()
-print(dict['W/P'], dict['W/S'])
+CO2 = 0
+dict_iterations= {}
+ok = 0
+for A in tqdm(A_lst, desc="A loop"):
+    for eta_p in eta_p_lst:
+        for Clmax_clean in Clmax_clean_lst:
+            for Clmax_TO in Clmax_TO_lst:
+                for Clmax_Land in Clmax_Land_lst:
+                    for Cd0 in Cd0_lst:
+                        for V_cruise in V_cruise_lst:
+                            for climbrate in climbrate_lst:
+                                p.A = A
+                                p.eta_p = eta_p
+                                p.Clmax_clean = Clmax_clean
+                                p.Clmax_TO = Clmax_TO
+                                p.Clmax_Land = Clmax_Land
+                                p.Cdo = Cd0
+                                p.V_cruise = V_cruise
+                                p.climbrate = climbrate
 
-# initialise the class I weight estimation
-WeightEstm = WeightEstimation(dict)
+                                # initialise the loading diagram to get W/P and W/S
+                                dict['W/P'], dict['W/S'] = WP_WS().calculate_optimal_point()
 
-# initialise the bat percentage
-bat = np.arange(0, 0.18, 0.001)
-coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
+                                # initialise the class I weight estimation
+                                WeightEstm = WeightEstimation(dict)
 
-# run the regression to find power required cruise
-for step in range(len(bat)):
+                                # initialise the bat percentage
+                                bat = np.arange(0, 0.18, 0.001)
+                                coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
 
-    # calculate the power required cruise
-    dict['P_req_cruise_W'] = dict['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
+                                # run the regression to find power required cruise
+                                for step in range(len(bat)):
 
-    dict['E_bat_Wh'] = dict['P_req_cruise_W'] * dict['endurance'] / dict['P_cruise/P_TO'] * bat[step]
-    print("STEP:", step)
-    print("Battery Percentage:", bat[step]*100)
-    print("Energy:",dict["E_bat_Wh"])
-    print("Power required cruise",dict['P_req_cruise_W'])
-    # print(bat[step]*100)
-    co2_ratio = co2(ac_data=dict)
-    #print(np.round(co2_ratio*100,2))
+                                    # calculate the power required cruise
+                                    dict['P_req_cruise_W'] = dict['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
+
+                                    dict['E_bat_Wh'] = dict['P_req_cruise_W'] * dict['endurance'] / dict['P_cruise/P_TO'] * bat[step]
+                                    # print("STEP:", step)
+                                    # print("Battery Percentage:", bat[step]*100)
+                                    # print("Energy:",dict["E_bat_Wh"])
+                                    # print("Power required cruise",dict['P_req_cruise_W'])
+                                    # print(bat[step]*100)
+
+                                    co2_ratio = co2(ac_data=dict)
+
+                                    if co2_ratio * 100 > 50 and dict['E_bat_Wh']<250000:
+                                        CO2 = co2_ratio
+
+                                        dict_iterations[step] = {}
+                                        dict_iterations[step]['A'] = A
+                                        dict_iterations[step]['eta_p'] = eta_p
+                                        dict_iterations[step]['Clmax_clean'] = Clmax_clean
+                                        dict_iterations[step]['Clmax_TO'] = Clmax_TO
+                                        dict_iterations[step]['Clmax_Land'] = Clmax_Land
+                                        dict_iterations[step]['Cd0'] = Cd0
+                                        dict_iterations[step]['V_cruise'] = V_cruise
+                                        dict_iterations[step]['climbrate'] = climbrate
+                                        dict_iterations[step]['CO2'] = np.round(CO2*100, 2)
+                                        dict_iterations[step]['W/P'] = dict['W/P']
+                                        dict_iterations[step]['W/S'] = dict['W/S']
+                                        dict_iterations[step]['bat'] = bat[step]
+
+                                    else:
+                                        break
+
+
+
+
+
+
+
+
+
+# Specify the file name
+file_name = 'data_iterations.json'
+
+# Open the file in write mode and use json.dump to write the dictionary
+with open(file_name, 'w') as file:
+    json.dump(dict_iterations, file, indent=4)

@@ -70,7 +70,7 @@ class WP_WS:
                 optimal_WP = min_envelope[y]
                 optimal_WS = self.WS[y]
 
-        # print(np.max(min_envelope))
+        #print(np.max(min_envelope))
         # print(f"Optimal W/S = {optimal_WS}, Optimal W/P = {optimal_WP}")
         return optimal_WP, optimal_WS
 
