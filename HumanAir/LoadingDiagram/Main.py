@@ -33,8 +33,8 @@ class WP_WS:
         #Manouvering_y=eq.Manouvering(p.Cdo, p.h_Cruise, p.V_cruise, WS, p.nmax, p.A, p.e, p.eta_p)
 
         # Convert the x-values to y-values
-        Landing_y = self.Landing_x * self.ylst
-        Stallspeed_y = self.Stallspeed_x * self.ylst
+        self.Landing_y = self.Landing_x * self.ylst
+        self.Stallspeed_y = self.Stallspeed_x * self.ylst
 
     def calculate_optimal_point(self):
         # Create a matrix where each column is one of the y-values
