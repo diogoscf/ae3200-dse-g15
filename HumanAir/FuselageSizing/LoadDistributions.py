@@ -44,7 +44,7 @@ def forces(Excel_cruise, Excel_TO, y_points,n):
     Cl = Excel_cruise['Cl']
     Cdi = Excel_cruise['ICd'] #see if this is the case
     c = Excel_cruise['Chord']
-    V = 0 #m/s cruise speed 
+    V = 60 #m/s cruise speed 
     rho = 0 #kg/m^3 density at altitude of cruise 
     dy = (Excel_cruise['y-span'][-1]-Excel_cruise['y-span'][0])/n
     Lcruise = Cl*0.5*rho*V**2*c #N/m
@@ -54,7 +54,7 @@ def forces(Excel_cruise, Excel_TO, y_points,n):
     Cl = Excel_TO['Cl']
     Cdi = Excel_TO['ICd']
     c = Excel_TO['Chord']
-    V = 0 #m/s lift off speed 
+    V = 38 #m/s take off speed 
     rho = 1.225 #kg/m^3 density at sea level
     dy = (Excel_TO['y-span'][-1]-Excel_TO['y-span'][0])/n
     Ltakeoff = Cl*0.5*rho*V**2*c #N/m
@@ -86,25 +86,53 @@ def TestForces(Lcruise, Ltakeoff, Tcruise, W, Excel_TO):
 sweep = 0 #add sweep angle 
 def InternalLoads(L,T,W,D,M,n,y_points,data,sweep):
     b = data['y-span'][-1]*2
-    Dtot = D- T # drag and thrust act on the x axis
+    Dtot = T-D # drag and thrust act on the x axis
     Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)))[::-1]
-    Vy = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)))[::-1]
+    Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)))[::-1]
     Vx = np.append(Vx,[0])
-    Vy = np.append(Vy,[0])
+    Vz = np.append(Vz,[0])
 
-    My = integrate.cumtrapz(np.flip(Vx * b / (2 * n)))[::-1]
-    Mx = integrate.cumtrapz(np.flip(Vy * b / (2 * n)))[::-1]
-    My = np.append(My,[0])
+    #add the moment about x 
+    Mx = integrate.cumtrapz(np.flip(Vz * b / (2 * n)))[::-1]
     Mx = np.append(Mx,[0])
 
     #add the torque function
-    #Mz = integrate.cumtrapz(np.flip(Vy*np.tan(sweep)*SJHDFGJSDFG))[::-1]
+    Mz = integrate.cumtrapz(np.flip(Vz*np.tan(sweep)*b/(2*n)))[::-1]
+    #dy = (Excel_TO['y-span'][-1]- Excel_TO['y-span'][0]) / n
+    #Mz = integrate.cumtrapz(Vz*np.tan(sweep)*(y_points[1:]-y_points[:-1]),dx=dy)
     Mz = np.append(Mz,[0])
 
-    return Vx, Vy, Mx, My
+    return Vx, Vz, Mx, Mz
 
 Excel_cruise, Excel_TO, y_points = import_data(n)
 Lcruise, Ltakeoff, W, M_cruise, M_TO, Dcruise, Dtakeoff = forces(Excel_cruise, Excel_TO, y_points, n)
-Vx, Vy, Mx, My = InternalLoads(Lcruise, T, W, Dcruise, M_cruise, n, y_points, Excel_cruise) #for the cruise
+Vx, Vz, Mx, Mz = InternalLoads(Lcruise, T, W, Dcruise, M_cruise, n, y_points, Excel_cruise) #for the cruise
 
-print(3+3)
+plt.figure(figsize=(12, 8))
+
+plt.subplot(2, 2, 1)
+plt.plot(y_points, Vx)
+plt.title('Shear Force Vx along span')
+plt.xlabel('Spanwise Position (m)')
+plt.ylabel('Vx (N)')
+
+plt.subplot(2, 2, 2)
+plt.plot(y_points, Vz)
+plt.title('Shear Force Vz along span')
+plt.xlabel('Spanwise Position (m)')
+plt.ylabel('Vz (N)')
+
+plt.subplot(2, 2, 3)
+plt.plot(y_points, Mx)
+plt.title('Bending Moment Mx along span')
+plt.xlabel('Spanwise Position (m)')
+plt.ylabel('Mx (Nm)')
+
+plt.subplot(2, 2, 4)
+plt.plot(y_points, Mz)
+plt.title('Torque Mz along span')
+plt.xlabel('Spanwise Position (m)')
+plt.ylabel('Mz (Nm)')
+
+plt.tight_layout()
+plt.show()
