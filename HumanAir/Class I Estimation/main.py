@@ -4,6 +4,7 @@ import json
 import numpy as np
 from tqdm import tqdm
 
+# Integration in progress
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -95,8 +96,6 @@ for A in tqdm(A_lst, desc="A loop"):
 
                                     else:
                                         break
-
-
 
 
 
