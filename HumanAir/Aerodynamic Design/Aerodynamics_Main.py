@@ -6,7 +6,6 @@ from LongitudinalStability import LongitudinalStability
 import numpy as np
 import json
 
-print(p['name'])
 MTOW=1946.34
 WS=618
 AR=7.44
