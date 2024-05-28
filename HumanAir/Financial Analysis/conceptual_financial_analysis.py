@@ -13,8 +13,26 @@ vol_jet_a1_price = 0.8 #US$/L
 jet_a1_dens = 0.8025 #kg/m3
 
 def hourly_operating_cost(mission_file, standard_aircraft_data = c206_data, aircraft_data = aircraft_data):
-    vc_ratio = standard_aircraft_data["Vc_m/s"]/aircraft_data["Vc_m/s"]
-    
+    """
+    Calculate the hourly operating cost of a new aircraft design based on the mission range. Overhaul taken 
+    from MAF values, so not yet dependent on the mission profile legs. Should be improved later. 
+    Maintenance _is_ dependent on flight time already though. Fuel cost based on inaccurate estimate of 
+    fuel burn (assuming cruise speed for all 600 nm), improved fuel burn estimate shall be used.  
+
+    Parameters
+    ----------
+    mission_file : str
+        The name of the mission file to read.
+    standard_ac_data : dict
+        The standard aircraft data to use for the calculation. Will use C206 data by default.
+    ac_data : dict
+        The aircraft data to use for the calculation. Will use main new design data by default.
+
+    Returns
+    -------
+    total_hourly_cost : float
+        The total new aircraft operating cost per hour of flight in (US$)
+    """
     overhaul_cost = standard_aircraft_data["overhaul_per_hour"] * standard_aircraft_data["Vc_m/s"] / aircraft_data["Vc_m/s"]
 
     mission_freqs = calculate_mission_freqs(mission_file)
