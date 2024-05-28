@@ -40,5 +40,6 @@ class Planform:
         plt.axis('equal')
         plt.show()
 
-WingConventional=Planform(1946.34, 618, 9.35, 0.4, 15)
+if __name__ == "__main__":
+    WingConventional=Planform(1946.34, 618, 9.35, 0.4, 15)
 

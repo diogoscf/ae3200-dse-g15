@@ -1,6 +1,9 @@
 from ISA import ISA
+import matplotlib.pyplot as plt
 from PlanformDesign import Planform
 from FlowParameters import Mach, Reynolds
+from LongitudinalStability import LongitudinalStability
+
 
 MTOW=1946.34
 WS=618
@@ -26,6 +29,10 @@ Reynolds=Reynolds(CruiseVelocity,ISACruise.DynamicViscosity(), WingPlanform.MAC(
 if checkflowparameters:
     print("MACH = ", MACH)
     print("Reynolds = ", Reynolds)
+
+Stab=LongitudinalStability(-0.5, 1.72, 0.343, 0.95, 1, WingPlanform.MAC(), -0.199498857, 0.287701353, 0.05, 5.93792624, 6.237426906, 0, 10.09, 0.75, 0.25)
+print(Stab.ShS())
+Stab.Plotting()
 
 
 
