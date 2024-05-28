@@ -1,10 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import Parameters.Parameters_ConvNoCanard as p
-import Equations as eq
-import Plotting as plot
+import sys
+import os
 
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Add the project root directory to the Python path
+project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
+sys.path.append(project_root)
+
+from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
+import HumanAir.LoadingDiagram.Equations as eq
+import HumanAir.LoadingDiagram.Plotting as plot
 
 
 class WP_WS:

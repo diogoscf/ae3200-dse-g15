@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import json
 
 class WeightEstm:
-    def __init__(self,file_path):
-        with open(file_path, 'r') as file:
-            self.dict = json.load(file)
+    def __init__(self,dict):
+
+        self.dict = dict
 
     def OEW_prime (self):
         return self.dict["A"]*self.dict["MTOW"]+self.dict["B"]
@@ -64,15 +64,17 @@ class WeightEstm:
         #plt.plot(bat,y_exp)
         #plt.plot(bat,y_pol)
         #plt.show()
-        print(coeff_exp)
-file_path='HumanAir/Configurations/conventional - Nicholas.json'
 
-data=WeightEstm(file_path)
 
-bat=0.11
-row=data.Iterations(bat)
-print(row)
-data.PolynomialRegression()
+if __name__ == "__main__":
+    file_path='HumanAir/Configurations/conventional - Nicholas.json'
+
+    data=WeightEstm(file_path)
+
+    bat=0.11
+    row=data.Iterations(bat)
+    print(row)
+    data.PolynomialRegression()
 
 
             
