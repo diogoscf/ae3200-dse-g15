@@ -11,7 +11,8 @@ from aircraft_data import aircraft_data
 
 def find_lg(ac_datafile = aircraft_data):
     # Import tyre database
-    tyres = pd.read_csv('../Weights_and_CG/tiredata.csv', index_col=0).to_numpy()
+    tyre_file = os.path.join(os.path.dirname(__file__), "tiredata.csv")
+    tyres = pd.read_csv(tyre_file, index_col=0).to_numpy()
 
     # Choose smallest available tyre
     Pmw = 0.90 * ac_datafile["Weights"]["MTOW_N"] / (2 * 9.81)
