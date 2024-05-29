@@ -3,6 +3,22 @@ import os
 import json
 import numpy as np
 import logging
+import colorlog
+
+handler = colorlog.StreamHandler()
+handler.setFormatter(colorlog.ColoredFormatter(
+    "%(log_color)s%(levelname)s:%(message)s",
+    log_colors={
+        'DEBUG': 'cyan',
+        'INFO': 'green',
+        'WARNING': 'yellow',
+        'ERROR': 'red',
+        'CRITICAL': 'bold_red',
+    }
+))
+logger = colorlog.getLogger()
+logger.addHandler(handler)
+logger.setLevel(logging.INFO)
 # integration in progress v2
 # initialise the logging
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +38,7 @@ from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
+from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -291,16 +308,32 @@ if __name__ == '__main__':
     print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
 
     logging.info(" Calculating the Xcg excursion successful")
+    logging.info(" Calculating the MAC")
 
-    logging.info(" Calculating the Aerodynamic Characterstics")
+    # this line is to comply with nicholas's mood, please dont remove it as it calculates the mac
+    mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
+    print(f'MAC: {round(mac,2)} [m]')
+    logging.info(" Calculating the MAC successful")
+    logging.info(" Calculating the aerodynamic design")
 
     # initialise the checking paramaters
-    check_flow_parameter = False
-    check_stability = False
-    check_wing_planform = False
-    check_horizontal_stabilizer_planform = False
+    check_flow_parameter = True
+    check_stability = True
+    check_wing_planform = True
+    check_horizontal_stabilizer_planform = True
 
+    # updating the xcg aft and xcg front
+    dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
+    dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
 
+    # run the aerodynamic design
+    aerodynamic_design(dict, checkwingplanform=check_wing_planform, checkflowparameters=check_flow_parameter, checkstability=check_stability, checkhsplanform=check_horizontal_stabilizer_planform)
+
+    logging.info(" Calculating the aerodynamic design successful")
+
+    logging.info("Saving the modified design.json file")
+    print("Finally, I am free")
+    logging.info("Program finished successfully")
 
 
 

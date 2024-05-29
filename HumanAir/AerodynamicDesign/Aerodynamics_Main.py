@@ -1,14 +1,17 @@
-from ISA import ISA
-import matplotlib.pyplot as plt
-from PlanformDesign import Planform
-from FlowParameters import Flow
-from LongitudinalStability import LongitudinalStability
 import numpy as np
 import json
 import os
 import sys
+import matplotlib.pyplot as plt
+
+from AerodynamicDesign.ISA import ISA
+from AerodynamicDesign.PlanformDesign import Planform
+from AerodynamicDesign.FlowParameters import Flow
+from AerodynamicDesign.LongitudinalStability import LongitudinalStability
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+
 
 from aircraft_data import aircraft_data
 
@@ -36,6 +39,7 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     FuselageLength=aircraft_data["Geometry"]["fus_length_m"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW=MTOW, WS=WS)
+
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
     if checkwingplanform:
@@ -53,8 +57,8 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     # replace with 'FX_63-137.json' and for pycharm 'NACA0012.json'
     # replace with 'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\FX_63-137.json' and same for the other airfoil for vscode (change nicho to your username)
     Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, 
-                               'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Aerodynamic Design\\Airfoils\\FX_63-137.json', 
-                               'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Aerodynamic Design\\Airfoils\\NACA0012.json')
+                               '../AerodynamicDesign/Airfoils/FX_63-137.json',
+                               '../AerodynamicDesign/Airfoils/NACA0012.json')
 
     if checkstability:
         Stab.Plotting()
@@ -63,9 +67,12 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 
+    mac = WingPlanform.MAC()
+    return mac
+
 if __name__ == "__main__":
     # replace with 'design.json' for pycharm
     # replace with 'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json' for vscode (change nicho to your username)
-    with open("c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json",'r') as f:
+    with open("design.json",'r') as f:
         dict = json.load(f)
     aerodynamic_design(dict,checkwingplanform=True, checkflowparameters=True, checkstability=True, checkhsplanform=True)
