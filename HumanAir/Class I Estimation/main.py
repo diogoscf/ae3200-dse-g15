@@ -5,6 +5,8 @@ import numpy as np
 import logging
 import colorlog
 
+"Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
+
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter(
     "%(log_color)s%(levelname)s:%(message)s",
@@ -19,9 +21,9 @@ handler.setFormatter(colorlog.ColoredFormatter(
 logger = colorlog.getLogger()
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
-# integration in progress v2
+
 # initialise the logging
-logging.basicConfig(level=logging.INFO)
+
 
 # Integration in progress v2
 logging.info(' Starting the program')
@@ -280,13 +282,13 @@ if __name__ == '__main__':
 
     find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing)
     logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
-
     logging.info(" Calculating the weight components")
 
     # getting the weight components
     WeightEstimation = WeightEstimation(dict)
     component_weights = WeightEstimation.Iterations(dict['Power_prop']['bat'])
 
+    # print the component weights
     print(f"Component weights: MTOW {round(component_weights[1],2)}[kg],"
           f" OEW {round(component_weights[2],2)}[kg],"
           f" Powertrain {round(component_weights[3],2)}[kg],"
@@ -318,7 +320,7 @@ if __name__ == '__main__':
 
     # initialise the checking paramaters
     check_flow_parameter = False
-    check_stability = True
+    check_stability = False
     check_wing_planform = False
     check_horizontal_stabilizer_planform = False
 
@@ -333,6 +335,8 @@ if __name__ == '__main__':
 
     logging.info("Saving the modified design.json file")
     print("Finally, I am free")
+
+    # save the modified design.json file and hope it doesnt break
     with open('../Configurations/design.json', 'w') as f:
         json.dump(dict, f, indent=4)
     logging.info("Program finished successfully")
