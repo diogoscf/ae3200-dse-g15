@@ -127,7 +127,7 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     if maintenance_standard_co2 is None:
         _, maintenance_standard_co2 = calculate_standard_co2(mission_freqs, standard_ac_data, ac_data["Performance"]["range_nm"])
     if V_standard_kts is None:
-        V_standard_kts = m_s_to_kt(standard_ac_data["Performance"]["Vc_m/s"])
+        V_standard_kts = m_s_to_kt(standard_ac_data["Vc_m/s"])
     
     FT_ratio = (V_standard_kts / vc_kts) # new_ac_FT / standard_ac_FT
     maintenance_cost_return_standard = maintenance_cost_per_hour(flight_time_h/FT_ratio/2) # V&V Note: the weighted average of this should be equal to $96 for a C206
