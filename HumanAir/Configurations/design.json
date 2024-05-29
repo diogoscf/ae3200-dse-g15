@@ -12,14 +12,24 @@
         "Wpl_des_kg": 630,
         "Wpl_max_kg": 720
     },
+    "Iterations Class I": {
+        "MTOW_kg": 2650.285,
+        "A":0.3632,
+        "B":-81.896,
+        "Aw":0.09,
+        "Bw":14.018,
+        "Wpl_des_kg": 630
+    },
     "Power_prop": {
         "E_bat_Wh": 186451,
         "E_fuel_Wh/kg": 11972,
-        "η_bat": 0.85,
-        "η_generator": 0.45,
+        "E_bat_Wh/kg": 350,
+        "P_ptr_kW/kg":1.5,
+        "eta_bat": 0.97,
+        "eta_generator": 0.45,
         "DoD_bat": 0.8,
-        "η_electricmotor": 0.925,
-        "η_powertrain": 0.9216,
+        "eta_electricmotor": 0.925,
+        "eta_powertrain": 0.9216,
         "P_req_cruise_W": 217309
     },
     "Geometry": {
@@ -38,9 +48,10 @@
     },
     "Performance": {
         "W/S_N/m2": 618,
-        "W/P_N/W": 0.118,
+        "W/P_N/W": 0.114,
         "Vc_m/s": 60,
         "range_nm": 600,
+        "endurance":5.2,
         "CO2_emissions_kg/kg": 3.16
     },
     "Landing_gear": {
