@@ -2,6 +2,16 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 
+plt.rcParams["axes.labelsize"] = 24
+plt.rcParams["axes.titlesize"] = 24
+plt.rcParams["xtick.labelsize"] = 18
+plt.rcParams["ytick.labelsize"] = 18
+plt.rcParams["legend.fontsize"] = 24
+# plt.rcParams["svg.fonttype"] = "none"
+# plt.rcParams["figure.labelsize"] = 16
+# plt.rcParams["font.family"] = "serif"
+# plt.rcParams["font.serif"] = "CMU Serif"
+
 # Define the trade off table
 criteria = ["Ground Clearance", "Emission reduction", "Development Risk", "Cost", "Operability"]
 initial_weights = np.array([0.1, 0.3, 0.2, 0.3, 0.1])
@@ -19,10 +29,10 @@ def calculate_scores(weights, importance):
     return np.sum(importance * weights, axis=1)
 
 # Generate weight ranges within ±25% of the initial weights
-weight_ranges_1 = [np.linspace(w * 0.75, w * 1.25, 15) for w in initial_weights]
-weight_ranges_2 = [np.linspace(w * 0.5, w * 1.5, 15) for w in initial_weights]
-weight_ranges_3 = [np.linspace(w * 0.25, w * 1.75, 15) for w in initial_weights]
-weight_ranges_4 = [np.linspace(w * 0, w * 2, 15) for w in initial_weights]
+weight_ranges_1 = [np.linspace(w * 0.75, w * 1.25, 10) for w in initial_weights]
+weight_ranges_2 = [np.linspace(w * 0.5, w * 1.5, 10) for w in initial_weights]
+weight_ranges_3 = [np.linspace(w * 0.25, w * 1.75, 10) for w in initial_weights]
+weight_ranges_4 = [np.linspace(w * 0, w * 2, 10) for w in initial_weights]
 
 # Generate all combinations of weights that sum to 1
 weight_combinations_1 = []
@@ -86,27 +96,29 @@ plt.figure(figsize=(12, 6))
 x_pos = np.arange(len(concepts))
 bar_width = 0.2
 
+total_cases = len(weight_combinations_1)  # Assuming weight_combinations_1 has the total number of cases
+
 # Plot frequency for each range
-plt.bar(x_pos - bar_width*1.5, [score_freq_1[concept] for concept in concepts], bar_width, label='±25%', color='blue')
-plt.bar(x_pos - bar_width/2, [score_freq_2[concept] for concept in concepts], bar_width, label='±50%', color='orange')
-plt.bar(x_pos + bar_width/2, [score_freq_3[concept] for concept in concepts], bar_width, label='±75%', color='red')
-plt.bar(x_pos + bar_width*1.5, [score_freq_4[concept] for concept in concepts], bar_width, label='±100%', color='green')
+plt.bar(x_pos - bar_width*1.5, [score_freq_1[concept]*100/total_cases for concept in concepts], bar_width, label='±25%', color='blue')
+plt.bar(x_pos - bar_width/2, [score_freq_2[concept]*100/total_cases for concept in concepts], bar_width, label='±50%', color='orange')
+plt.bar(x_pos + bar_width/2, [score_freq_3[concept]*100/total_cases for concept in concepts], bar_width, label='±75%', color='red')
+plt.bar(x_pos + bar_width*1.5, [score_freq_4[concept]*100/total_cases for concept in concepts], bar_width, label='±100%', color='green')
 
 # Add labels and title
-plt.xlabel('Concepts')
-plt.ylabel('Frequency of Winning')
-plt.xticks(x_pos, concepts)
+# plt.xlabel('Concepts')
+plt.ylabel('Win Frequency [%]')
+plt.xticks(x_pos, concepts, fontsize=24)
 plt.legend(loc = 'upper left')
 
 # Add text labels for each bar
-total_cases = len(weight_combinations_1)  # Assuming weight_combinations_1 has the total number of cases
+FONTSIZE_TXT = 16
 for i in range(len(concepts)):
-    plt.text(x_pos[i] - bar_width*1.5, score_freq_1[concepts[i]], f" ({(score_freq_1[concepts[i]] / total_cases) * 100:.2f}%)", ha='center', va='bottom', fontsize=10)
-    plt.text(x_pos[i] - bar_width/2, score_freq_2[concepts[i]], f" ({(score_freq_2[concepts[i]] / total_cases) * 100:.2f}%)", ha='center', va='bottom', fontsize=10)
-    plt.text(x_pos[i] + bar_width/2, score_freq_3[concepts[i]], f" ({(score_freq_3[concepts[i]] / total_cases) * 100:.2f}%)", ha='center', va='bottom', fontsize=10)
-    plt.text(x_pos[i] + bar_width*1.5, score_freq_4[concepts[i]], f" ({(score_freq_4[concepts[i]] / total_cases) * 100:.2f}%)", ha='center', va='bottom', fontsize=10)
+    plt.text(x_pos[i] - bar_width*1.5, score_freq_1[concepts[i]]*100/total_cases, f"{(score_freq_1[concepts[i]] / total_cases) * 100:.0f}%", ha='center', va='bottom', fontsize=FONTSIZE_TXT)
+    plt.text(x_pos[i] - bar_width/2, score_freq_2[concepts[i]]*100/total_cases, f"{(score_freq_2[concepts[i]] / total_cases) * 100:.0f}%", ha='center', va='bottom', fontsize=FONTSIZE_TXT)
+    plt.text(x_pos[i] + bar_width/2, score_freq_3[concepts[i]]*100/total_cases, f"{(score_freq_3[concepts[i]] / total_cases) * 100:.0f}%", ha='center', va='bottom', fontsize=FONTSIZE_TXT)
+    plt.text(x_pos[i] + bar_width*1.5, score_freq_4[concepts[i]]*100/total_cases, f"{(score_freq_4[concepts[i]] / total_cases) * 100:.0f}%", ha='center', va='bottom', fontsize=FONTSIZE_TXT)
 
 plt.tight_layout()
-plt.savefig('sensitivity_analysis.pdf')
+plt.savefig('Figures/sensitivity_analysis.pdf')
 plt.show()
 
