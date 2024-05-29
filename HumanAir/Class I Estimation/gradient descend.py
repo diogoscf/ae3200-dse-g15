@@ -86,7 +86,7 @@ def objective_function(params):
 
 # compute the gradient of the cost function for a specific parameter
 def compute_gradient_for_parameter(param_name, param_value):
-    maxi = 0
+
     params_up = params.copy()
     params_down = params.copy()
 
@@ -106,9 +106,10 @@ def compute_gradient_for_parameter(param_name, param_value):
     grad = (f_up - f_down) / (2 * tolerance)
 
     # saving the parameters for the best case
-    if f_up * 100 or f_down * 100 > maxi:
+    if f_up * 100 or f_down * 100 > 50:
         saving_dict = params.copy()
         saving_dict['CO2'] = f_up
+        saving_dict['Battery'] = bat_up
         if f_up > f_down:
             maxi = f_up
         else:
