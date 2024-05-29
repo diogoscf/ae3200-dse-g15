@@ -10,7 +10,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from aircraft_data import aircraft_data, c206_data
+from aircraft_data import aircraft_data
 
 MTOW=aircraft_data["Weights"]['MTOW_N']
 WS=aircraft_data["Performance"]["W/S_N/m2"]
@@ -39,7 +39,7 @@ checkflowparameters=True
 checkstability=True
 checkhsplanform=True
 
-WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW, WS)
+WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW=MTOW, WS=WS)
 ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
 if checkwingplanform:

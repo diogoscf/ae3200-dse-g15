@@ -18,7 +18,7 @@ class Planform:
         if self.S!=None:
             return self.S
         else:
-            return self.MTOW * self.g / self.WS
+            return self.MTOW/ self.WS
 
     def WingSpan(self):
         return np.sqrt(self.WingSurfaceArea()*self.AR)
