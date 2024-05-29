@@ -97,6 +97,11 @@ class FuselageSizing:
                 s_gear += 0.01 
                 w_battery = s_gear * 2 + (self.D_main / 2)
                 l_battery = self.l_battery(w_battery)
+            
+            l_fus = self.length_fus()
+            
+            if l_fus - self.l_tailcone < l_end_main_land:
+                print('Landing gear cannot be folded backward or forward')
                 
         else:
             print('Landing gear folds forward')
@@ -114,20 +119,39 @@ class FuselageSizing:
         return a if a > b else b
         
     def bottom_width(self, s_gear):
+        # s_gear is the distance between the two areas 
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # bottom width from seats:
         bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2
         
-        # bottom width from landing gear:
+        # bottom width from landing gear: 
         bw2 = 2 * (2 * s_gear + self.D_main + FuselageSizing.s_aft)
     
         return round(FuselageSizing.bigger_mag(bw1, bw2), 3)
     
-    def height(self):
+    def height(self): 
         return round(FuselageSizing.h_pax + (2 * FuselageSizing.t_fuse) + FuselageSizing.h_floor + FuselageSizing.s_bat_wheel + self.h_main, 3)
 
     def length_fus(self):
         return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock, 3)
+    
+    def fuselage_wetted(self, s_gear):
+        # assuming trapezoidal shape 
+        h_fus = self.height()
+        l_fus = self.length_fus()
+        wb_fus = self.bottom_width(s_gear)
+        wu_fus = self.top_width()
+        
+        # area of trapezium
+        A_trap = 0.5 * (wb_fus + wu_fus) * h_fus
+        
+        # length of the side of trapezium
+        side_c = (((wb_fus - wu_fus)/2)**2 + h_fus**2)**0.5
+        l_p = wb_fus + wu_fus + 2*side_c
+        a_lat = l_p*l_fus
+        
+        return 2*A_trap + a_lat
+        
 
 # Example usage:
 n_seat = 8
@@ -153,3 +177,4 @@ print(fuselage_size.top_width())
 print(fuselage_size.bottom_width(s_gear=0.2))
 print(fuselage_size.height())
 print(fuselage_size.length_fus())
+print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
