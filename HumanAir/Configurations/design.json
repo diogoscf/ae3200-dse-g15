@@ -1,27 +1,76 @@
 {
     "name": "final_design",
     "pretty_name": "Final Design",
-    "MTOW_N": 15269,
-    "OEW_N": 8816,
-    "MFW_N": 1390,
-    "Wpl_des_kg": 540,
-    "Wpl_max_kg": 630,
-    "CLmax_clean": 1.6,
-    "CLmax_land": 2.5,
-    "W/S_N/m2": 618,
-    "W/P_N/W": 0.118,
-    "Vc_m/s": 60,
-    "MGC_m": 1.93,
-    "CLalpha": 6.24,
-    "E_bat_Wh": 56349,
-    "E_fuel_Wh/kg": 11972,
-    "η_bat": 0.85,
-    "η_generator": 0.45,
-    "DoD_bat": 0.8,
-    "η_electricmotor": 0.925,
-    "η_powertrain": 0.9216,
-    "CD0": 0.02,
-    "AR": 9.38,
-    "e": 0.82,
-    "range_nm": 600
+    "Contingency": 1.2,
+    "Weights": {
+        "MTOW_N": 25753,
+        "OEW_N": 17651,
+        "MFW_N": 1390,
+        "WF_N": 1922,
+        "Wbat_N": 5094,
+        "Ww_N": 2477,
+        "Wpl_des_kg": 630,
+        "Wpl_max_kg": 720
+    },
+    "Power_prop": {
+        "E_bat_Wh": 186451,
+        "E_fuel_Wh/kg": 11972,
+        "η_bat": 0.85,
+        "η_generator": 0.45,
+        "DoD_bat": 0.8,
+        "η_electricmotor": 0.925,
+        "η_powertrain": 0.9216,
+        "P_req_cruise_W": 217309
+    },
+    "Geometry": {
+        "fus_height_m": 1.8,
+        "fus_length_m": 10.09,
+        "MGC_m": 1.93,
+        "XLEMAC_m": 3.2
+    },
+    "Aero": {
+        "CLmax_clean": 1.6,
+        "CLmax_land": 2.5,
+        "CLalpha": 6.24,
+        "CD0": 0.02,
+        "AR_Wing": 9.38,
+        "AR_HS": 5,
+        "e": 0.82,
+        "Taper_Wing": 0.4,
+        "Taper_HS": 0.4,
+        "QuarterChordSweep_Wing_deg": 0,
+        "QuarterChordSweep_HS_deg": 30,
+        "deda": 0,
+        "VhV": 1
+    },
+    "Performance": {
+        "W/S_N/m2": 618,
+        "W/P_N/W": 0.118,
+        "Vc_m/s": 60,
+        "range_nm": 600,
+        "CO2_emissions_kg/kg": 3.16,
+        "Altitude_Cruise_m": 3000,
+        "Altitude_TO_m": 1800,
+        "Altitude_Land_m:": 1800
+    },
+    "Landing_gear": {
+        "lm_m": 0.56,
+        "ln_m": 3.2,
+        "ymin_m": 2.2,
+        "Hs_m": 0.9,
+        "Dwm_m": 0.6,
+        "Dwn_m": 0.3,
+        "Wtm_m": 0.2,
+        "Wtn_m": 0.1
+    },
+    "Stability": {
+        "Cg_Aft": 0.75,
+        "Cg_Front": 0.25,
+        "Stability_Margin": 0.05,
+        "XLEMAC_m": 2.69,
+        "X_cg_HS": 0.95,
+        "C_L_h": -0.5,
+        "C_L_AH": 1.72
+
+    }
 }
