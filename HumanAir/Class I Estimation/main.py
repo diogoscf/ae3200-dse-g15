@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import numpy as np
+import logging
 #from tqdm import tqdm
 
 # Integration in progress v2
