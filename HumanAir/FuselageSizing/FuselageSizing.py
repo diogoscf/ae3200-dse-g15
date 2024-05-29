@@ -93,7 +93,7 @@ class FuselageSizing:
         return True if  l_end_main_land - l_end_nose_land < 0 else False
         
     def battery_dim(self, s_gear):        
-        if self.check_back(self, s_gear) < 0:
+        if self.check_back(s_gear) < 0:
             print('Landing gear folds backward')
             l_end_main_land = self.l_long_main + self.length_main_strut(s_gear) + (self.D_main / 2)
             w_battery = s_gear * 2 + (self.D_main / 2)
@@ -175,9 +175,7 @@ class FuselageSizing:
             patches.Rectangle((0,0), self.length_fus(), self.height(), linewidth=0.5, edgecolor='c', facecolor='none'), # outer fuselage
             patches.Rectangle((FuselageSizing.t_fuse, FuselageSizing.t_fuse), self.length_fus()-2*FuselageSizing.t_fuse, self.height()-2*FuselageSizing.t_fuse, linewidth=0.5, edgecolor='c', facecolor='none'),
             patches.Rectangle((self.l_long_nose, FuselageSizing.t_fuse + self.h_nose/2), self.h_nose_strut, 0.01, linewidth=1, edgecolor='k', facecolor='none'), # nose landing strut
-            patches.Rectangle((self.l_long_nose+self.h_nose_strut-self.D_nose/2, FuselageSizing.t_fuse), self.D_nose, self.h_nose, linewidth=1, edgecolor='m', facecolor='none'), # nose landing gear
-            patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), self.length_main_strut(s_gear), 0.01, linewidth=1, edgecolor='k', facecolor='none'), # main landing strut
-            patches.Rectangle((self.l_long_main+self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=1, edgecolor='m', facecolor='none'), # main landing gear
+            patches.Rectangle((self.l_long_nose+self.h_nose_strut-self.D_nose/2, FuselageSizing.t_fuse), self.D_nose, self.h_nose, linewidth=1, edgecolor='m', facecolor='none') # nose landing gear
         ]
         
         # Add passengers' rectangles
@@ -186,6 +184,16 @@ class FuselageSizing:
             passenger_x = self.t_fuse+self.s_engine + self.l_engine + self.l_cock + (self.l_pax) * i
             rect = patches.Rectangle((passenger_x, y_engine), self.l_pax, self.h_pax, linewidth=1, edgecolor='k', facecolor='none')
             rectangles.append(rect)
+            
+        if self.check_back(s_gear):
+            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), self.length_main_strut(s_gear), 0.01, linewidth=1, edgecolor='k', facecolor='none')
+            main_land_gear = patches.Rectangle((self.l_long_main+self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=1, edgecolor='m', facecolor='none')
+            rectangles.append(main_land_strut)
+            rectangles.append(main_land_gear)
+        
+        else:
+            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), self.length_main_strut(s_gear), 0.01, linewidth=1, edgecolor='k', facecolor='none')
+            main_land_gear = patches.Rectangle((self.l_long_main+self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=1, edgecolor='m', facecolor='none')
             
         # Add the rectangles to the axes
         for rect in rectangles:
@@ -213,7 +221,7 @@ h_nose_strut = 0.89
 h_main_strut = 0.89
 l_main_lateral = 1.93
 l_long_nose = 0.777
-l_long_main = 4 
+l_long_main = 2.2
 l_tailcone = 5.02 
 h_tail = 2.52 
 V_battery = 0.2
