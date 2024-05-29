@@ -21,7 +21,7 @@ from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction as co2
-
+from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -173,6 +173,48 @@ def calculate_weighted_score(point_data, weights):
         score += (worst_optimal_data[key] - point_data.get(key, 0))/worst_optimal_data[key] * weight # get a normalised value for the contribution of each key
     return score
 
+def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_threshold = 50, design_points = None, printing = False):
+
+    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold}
+    scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
+
+    sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
+
+    step = 0
+    value = np.inf
+    minimum = np.inf
+
+    while value > maximum_weight_battery:
+
+        optimum_design_option = design_points[sorted_design_points[step][0]]
+
+        # updating the design.json file with the optimum design option
+        dict['Aero']['AR'] = optimum_design_option['A']
+        dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
+        dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
+        dict['Aero']['CLmax_TO'] = optimum_design_option['Clmax_TO']
+        dict['Aero']['CLmax_Land'] = optimum_design_option['Clmax_Land']
+        dict['Aero']['CD0'] = optimum_design_option['Cd0']
+        dict['Performance']['Vc_m/s'] = optimum_design_option['V_cruise']
+        dict['Performance']['climb_rate'] = optimum_design_option['climbrate']
+        dict['Power_prop']['bat'] = optimum_design_option['bat']
+        dict['Performance']['W/S_N/m2'] = optimum_design_option['W/S']
+        dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
+        dict['Performance']['CO2'] = optimum_design_option['CO2']
+
+        value = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[4]
+
+        if value < minimum:
+            minimum = value
+
+        step += 1
+
+    # printing option
+    if printing:
+        print(sorted_design_points[step])
+        print(design_points[str(sorted_design_points[step][0])])
+        print(WeightEstimation(dict).Iterations(dict['Power_prop']['bat']))
+
 if __name__ == '__main__':
 
     # change this to run the iterations generator
@@ -181,7 +223,7 @@ if __name__ == '__main__':
         logging.info(" Starting generating the new possible design points. This may take a while.")
         Generate(p, dict, run)
 
-    logging.info(" Getting the data from the design point")
+    logging.info(" Getting the data from the design point options")
 
     # Get the directory of the current script
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -190,9 +232,12 @@ if __name__ == '__main__':
     design_json_path = os.path.join(script_dir, 'Configurations', 'data_iterations.json')
 
     # Print the absolute path for debugging
-    logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
+    logging.info(f" Looking for data_iterations.json at: {os.path.abspath(design_json_path)}")
+
     with open('../Configurations/data_iterations.json', 'r') as f:
         design_points = json.load(f)
+
+    logging.info(" Opening data_iterations.json successful")
 
     # Weights for each key
     # increasing score: positive weight
@@ -212,49 +257,51 @@ if __name__ == '__main__':
         'CO2': -0.1
     }
 
+    maximum_weight_battery = 1000
+    CO2_threshold = 50
+    printing = False
 
-    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 50}
-    scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
+    find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing)
+    logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
 
-    sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
+    logging.info(" Calculating the weight components")
 
-    value = 1000000
-    step = 0
-    minimum = 1000000000
+    # getting the weight components
+    WeightEstimation = WeightEstimation(dict)
+    component_weights = WeightEstimation.Iterations(dict['Power_prop']['bat'])
 
-    while value > 950:
+    print(f"Component weights: MTOW {round(component_weights[1],2)}[kg],"
+          f" OEW {round(component_weights[2],2)}[kg],"
+          f" Powertrain {round(component_weights[3],2)}[kg],"
+          f" Battery {round(component_weights[4],2)}[kg],"
+          f" Fuel {round(component_weights[5],2)}[kg],"
+          f" Wing {round(component_weights[6],2)}[kg],"
+          f" Wpl_des {round(component_weights[6],2)}[kg]")
 
-        optimum_design_option = design_points[sorted_design_points[step][0]]
+    print('Total weight:', round(component_weights[1],2), '[kg] including contingency')
+    print('Contingency:', (round((dict['Contingency']-1)*100,0)),"%")
 
-        # updating the design.json file with the optimum design option
-        dict['Aero']['AR'] = optimum_design_option['A']
-        dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
-        dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
-        dict['Aero']['CLmax_TO'] = optimum_design_option['Clmax_TO']
-        dict['Aero']['CLmax_Land'] = optimum_design_option['Clmax_Land']
-        dict['Aero']['CD0'] = optimum_design_option['Cd0']
-        dict['Performance']['Vc_m/s'] = optimum_design_option['V_cruise']
-        dict['Performance']['climb_rate'] = optimum_design_option['climbrate']
-        dict['Power_prop']['bat'] = optimum_design_option['bat']
-        dict['Performance']['W/S_N/m2'] = optimum_design_option['W/S']
-        dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
-        dict['Performance']['CO2'] = optimum_design_option['CO2']
+    logging.info(" Calculating the weight components successful")
 
-        # print(sorted_design_points[step])
-        # print(design_points[str(sorted_design_points[step][0])])
-        # print(WeightEstimation(dict).Iterations(dict['Power_prop']['bat']))
+    logging.info(" Calculating the Xcg excursion")
 
-        value = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[4]
+    #return wcg, CGlist, xlemac
+    wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile = dict)
 
-        if value<minimum:
-            mininim=value
-            print(sorted_design_points[step])
-            print(design_points[str(sorted_design_points[step][0])])
-            print("Minimum value: ", mininim)
-        step += 1
+    print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
 
-    logging.info(" Opening design.json successful")
+    logging.info(" Calculating the Xcg excursion successful")
 
-    logging.info("Calculating the weight components")
+    logging.info(" Calculating the Aerodynamic Characterstics")
+
+    # initialise the checking paramaters
+    check_flow_parameter = False
+    check_stability = False
+    check_wing_planform = False
+    check_horizontal_stabilizer_planform = False
+
+
+
+
 
 
