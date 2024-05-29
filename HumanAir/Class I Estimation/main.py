@@ -184,7 +184,23 @@ if __name__ == '__main__':
     scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
-    print(sorted_design_points[:1])
+
+    optimum_design_option = design_points[sorted_design_points[0][0]]
+
+    # updating the design.json file with the optimum design option
+    dict['Aero']['AR'] = optimum_design_option['A']
+    dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
+    dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
+    dict['Aero']['CLmax_TO'] = optimum_design_option['Clmax_TO']
+    dict['Aero']['CLmax_Land'] = optimum_design_option['Clmax_Land']
+    dict['Aero']['CD0'] = optimum_design_option['CD0']
+    dict['Performance']['Vc_m/s'] = optimum_design_option['V_cruise']
+    dict['Performance']['climbrate'] = optimum_design_option['climbrate']
+    dict['Power_prop']['bat'] = optimum_design_option['bat']
+    dict['Performance']['W/S_N/m2'] = optimum_design_option['W/S']
+    dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
+    dict['Performance']['CO2'] = optimum_design_option['CO2']
+    print(dict)
 
 
     logging.info(" Opening design.json successful")
