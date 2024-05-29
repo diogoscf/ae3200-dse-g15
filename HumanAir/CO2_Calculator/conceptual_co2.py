@@ -11,6 +11,7 @@ from aircraft_data import aircraft_data, c206_data
 from unit_conversions import m_s_to_kt
 
 MAINTENANCE_CO2_OVERHAUL = 0.2 # 20% of maintenance CO2 is overhaul
+LEGS = 4 # Number of legs per mission
 
 # Black Magic Maintenance Costs
 a_factor = 68.37332366 # [$/h] at 1 flight hour
@@ -75,9 +76,9 @@ def calculate_standard_co2(mission_freqs, ac_data = c206_data, design_range = 60
     """
 
     vc_kts = m_s_to_kt(ac_data["Vc_m/s"])
-    flight_time_h = mission_freqs[:,0] * 2 / vc_kts
+    flight_time_h = mission_freqs[:,0] * LEGS / vc_kts
     fuel_emissions_return = flight_time_h * ac_data["fuel_burn_L/h"] * ac_data["fuel_density_kg/L"] * ac_data["CO2_emissions_kg/kg"]
-    relevant_idx = np.where(mission_freqs[:,0]*2 <= design_range)
+    relevant_idx = np.where(mission_freqs[:,0]*LEGS <= design_range)
     weighted_fuel_co2 = np.sum(fuel_emissions_return[relevant_idx] * mission_freqs[relevant_idx, 2])/np.sum(mission_freqs[relevant_idx, 2])
 
     co2 = weighted_fuel_co2 / (ac_data["co2_fuel_%"] / 100)
@@ -108,16 +109,7 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     """
 
     vc_kts = m_s_to_kt(ac_data["Performance"]["Vc_m/s"])
-    flight_time_h = mission_freqs[:,0] * 2 / vc_kts
-
-    battery_usage_ratio = ac_data["Power_prop"]["E_bat_Wh"]/(flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
-    # print(flight_time_h)
-    # print(battery_usage_ratio)
-    # print(" ")
-    battery_usage_ratio[battery_usage_ratio > 1] = 1
-    fuel_required_return_kg = flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["Power_prop"]["E_fuel_Wh/kg"] * ac_data["Power_prop"]["eta_generator"]) # TODO: Check if power train efficiency matters
-    fuel_emissions_return = fuel_required_return_kg * ac_data["Performance"]["CO2_emissions_kg/kg"]
-
+    flight_time_h = mission_freqs[:,0] * LEGS / vc_kts
     battery_usage_ratio = ac_data["Power_prop"]["E_bat_Wh"]/(flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
     battery_usage_ratio[battery_usage_ratio > 1] = 1
     fuel_required_return_kg = flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["Power_prop"]["E_fuel_Wh/kg"] * ac_data["Power_prop"]["eta_generator"]) # TODO: Check if power train efficiency matters
@@ -130,12 +122,12 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
         V_standard_kts = m_s_to_kt(standard_ac_data["Vc_m/s"])
     
     FT_ratio = (V_standard_kts / vc_kts) # new_ac_FT / standard_ac_FT
-    maintenance_cost_return_standard = maintenance_cost_per_hour(flight_time_h/FT_ratio/2) # V&V Note: the weighted average of this should be equal to $96 for a C206
-    maintenance_cost_return_new = maintenance_cost_per_hour(flight_time_h/2)
+    maintenance_cost_return_standard = maintenance_cost_per_hour(flight_time_h/FT_ratio/LEGS) # V&V Note: the weighted average of this should be equal to $96 for a C206
+    maintenance_cost_return_new = maintenance_cost_per_hour(flight_time_h/LEGS)
 
     overhaul_co2 = MAINTENANCE_CO2_OVERHAUL * maintenance_standard_co2 * FT_ratio
 
-    relevant_idx = np.where(mission_freqs[:,0]*2 <= ac_data["Performance"]["range_nm"])
+    relevant_idx = np.where(mission_freqs[:,0]*LEGS <= ac_data["Performance"]["range_nm"])
     # Note: the following 2 don't use `relevant_idx` bc the maintenance cost for the 206 only adds up to 96 if it is calculated for the full range
     # In any case, the influence on the results is minimal
     maintenance_cost_return_standard_avg = np.sum(maintenance_cost_return_standard[:] * mission_freqs[:, 2])/np.sum(mission_freqs[:, 2])
