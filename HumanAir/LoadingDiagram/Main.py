@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import os
+import math
 # Integration in progress
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -51,13 +52,19 @@ class WP_WS:
         # Find the minimum values across all curves for each WS
         min_envelope = np.min(y_matrix, axis=0)
 
-
+        # Find the optimal W/P and W/S
         optimal_WP = np.max(min_envelope)
+        if optimal_WP == None:
+            optimal_WP = 0.0001
         optimal_WS = self.WS[0]
 
+        if all(math.isnan(value) for value in min_envelope):
+            idx = 1
+        else:
+            idx = self.WS[np.where(min_envelope == optimal_WP)[0][0]]
         # change this value to tune it but just god knows which is the optimal one
         WP_tolerance = 1e-3  # Define the tolerance for W/P change
-        WS_tolerance = 0.1 * self.WS[np.where(min_envelope == optimal_WP)[0][0]]   # Define the tolerance for W/S change
+        WS_tolerance = 0.1 * idx   # Define the tolerance for W/S change
 
 
         for y in range(len(min_envelope)-1):
@@ -72,6 +79,7 @@ class WP_WS:
 
         #print(np.max(min_envelope))
         # print(f"Optimal W/S = {optimal_WS}, Optimal W/P = {optimal_WP}")
+
         return optimal_WP, optimal_WS
 
 # index=np.where(np.abs(Cruise_y-Takeoff_y)<0.0005)[0][0]
