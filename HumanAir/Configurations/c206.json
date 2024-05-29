@@ -7,6 +7,6 @@
     "CO2_emissions_kg/kg": 3.05,
     "co2_fuel_%": 89,
     "fuel_per_hour": 144,
-    "maintenace_per_hour": 129,
+    "maintenance_per_hour": 129,
     "overhaul_per_hour": 55
 }
