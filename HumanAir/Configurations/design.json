@@ -47,7 +47,14 @@
         "CLalpha": 6.24,
         "CD0": 0.02,
         "AR": 9.38,
-        "e": 0.82
+        "AR_HS": 5,
+        "e": 0.82,
+        "Taper_Wing": 0.4,
+        "Taper_HS": 0.4,
+        "QuarterChordSweep_Wing_deg": 0,
+        "QuarterChordSweep_HS_deg": 30,
+        "deda": 0,
+        "VhV": 1
     },
     "Performance": {
         "W/S_N/m2": 618,
@@ -57,7 +64,10 @@
         "endurance":5.2,
         "climb_rate": 6,
         "CO2": 50.1,
-        "CO2_emissions_kg/kg": 3.16
+        "CO2_emissions_kg/kg": 3.16,
+        "Altitude_Cruise_m": 3000,
+        "Altitude_TO_m": 1800,
+        "Altitude_Land_m:": 1800
     },
     "Landing_gear": {
         "lm_m": 0.56,
@@ -68,5 +78,15 @@
         "Dwn_m": 0.3,
         "Wtm_m": 0.2,
         "Wtn_m": 0.1
+    },
+    "Stability": {
+        "Cg_Aft": 0.75,
+        "Cg_Front": 0.25,
+        "Stability_Margin": 0.05,
+        "XLEMAC_m": 2.69,
+        "X_cg_HS": 0.95,
+        "C_L_h": -0.5,
+        "C_L_AH": 1.72
+
     }
 }
