@@ -3,9 +3,13 @@ import os
 import json
 import numpy as np
 import logging
-#from tqdm import tqdm
+
+# initialise the logging
+logging.basicConfig(level=logging.INFO)
 
 # Integration in progress v2
+logging.info(' Starting the program')
+
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,14 +30,16 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 design_json_path = os.path.join(script_dir, 'Configurations', 'design.json')
 
 # Print the absolute path for debugging
-print(f"Looking for design.json at: {os.path.abspath(design_json_path)}")
-#C:\Users\nicho\Documents\GitHub\ae3200-dse-g15\HumanAir\Configurations # use this for vs code
-#'../Configurations/design.json', 'r' # use this for pycharm
+logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
 
+
+#"c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json" # use this for vs code
+#'../Configurations/design.json', 'r' # use this for pycharm
 # Attempt to open the file
 with open('../Configurations/design.json', 'r') as f:
     dict = json.load(f)
 
+logging.info(" Opening design.json successful")
 
 
 def Generate(p, dict, run=False):
@@ -133,3 +139,45 @@ def Generate(p, dict, run=False):
             json.dump(dict_iterations, file, indent=4)
                                     
                                     
+
+if __name__ == '__main__':
+
+    # change this to run the iterations generator
+    run = False
+    if run:
+        logging.info(" Starting generating the new possible design points. This may take a while.")
+        Generate(p, dict, run)
+
+    logging.info(" Getting the data from the design point")
+
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path to the data_iterations.json file
+    design_json_path = os.path.join(script_dir, 'Configurations', 'data_iterations.json')
+
+    # Print the absolute path for debugging
+    logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
+    with open('../Configurations/data_iterations.json', 'r') as f:
+        design_points = json.load(f)
+
+    # Weights for each key
+    weights = {
+        'A': 0.2,
+        'eta_p': 0.1,
+        'Clmax_clean': 0.1,
+        'Clmax_TO': 0.1,
+        'Clmax_Land': 0.1,
+        'Cd0': 0.1,
+        'V_cruise': 0.1,
+        'climbrate': 0.1,
+        'bat': 0.1
+    }
+
+
+    key_values = [point["CO2"] for point in design_points.values()]
+    logging.info(" Opening design.json successful")
+
+    logging.info("Calculating the weight components")
+
+
