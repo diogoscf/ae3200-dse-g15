@@ -56,7 +56,7 @@ def find_lg(ac_datafile = aircraft_data):
 
 def component_mass(ac_datafile = aircraft_data):
     # Import statistical weight fraction data
-    fracs_file= os.path.join(os.path.dirname(__file__), "fraction-database.csv.csv")
+    fracs_file= os.path.join(os.path.dirname(__file__), "fraction-database.csv")
     fracs = pd.read_csv(fracs_file, index_col=0).to_numpy()
 
     # Convert weights to kg and with contingency
