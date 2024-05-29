@@ -180,11 +180,12 @@ if __name__ == '__main__':
     }
 
 
-    good_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 55}
-    scores = [(key, calculate_weighted_score(value, weights)) for key, value in design_points.items()]
+    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 55}
+    scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
     print(sorted_design_points[:1])
+
 
     logging.info(" Opening design.json successful")
 
