@@ -8,31 +8,31 @@ class WeightEstm:
         self.dict = dict
 
     def OEW_prime(self):
-        return self.dict["A"] * self.dict["MTOW"] + self.dict["B"]
+        return self.dict["Iterations Class I"]["A"] * self.dict["Iterations Class I"]["MTOW_kg"] + self.dict["Iterations Class I"]["B"]
 
     def PowertrainWeight(self, bat):
-        return 9.81 * self.dict["MTOW"] / 1000 / self.dict["W/P"] / self.dict["eta_gb"] / self.dict["eta_ptr"] * (
-                    1 - bat) / self.dict["ptr_specific_power"]
+        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / 1000 / self.dict["Performance"]["W/P_N/W"] / self.dict["Power_prop"]["eta_powertrain"] * (
+                    1 - bat) / self.dict["Power_prop"]["P_ptr_kW/kg"]
 
     def BatteryWeight(self, bat):
-        return 9.81 * self.dict["MTOW"] / self.dict["W/P"] * self.dict["endurance"] * bat / self.dict[
-            "bat_specific_energy"] / self.dict["eta_bat"] / self.dict["DoD"] / self.dict["eta_EM"]
+        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * self.dict["Performance"]["endurance"] * bat / self.dict["Power_prop"][
+            "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / self.dict["Power_prop"]["eta_electricmotor"]
 
     def FuelWeight(self, bat):
-        return 9.81 * self.dict["MTOW"] / self.dict["W/P"] * (1 - bat) * self.dict["endurance"] / self.dict[
-            "fuel_specific_energy"] / self.dict["eta_thermal_engine"]
+        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
+            "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
 
     def WingWeight(self):
-        return self.dict["Aw"] * self.dict["MTOW"] + self.dict["Bw"]
+        return self.dict["Iterations Class I"]["Aw"] * self.dict["Iterations Class I"]["MTOW_kg"] + self.dict["Iterations Class I"]["Bw"]
 
     def Iterations(self, bat):
         MTOW_new = 0
-        MTOW_old = self.dict["MTOW"]
+        MTOW_old = self.dict["Iterations Class I"]["MTOW_kg"]
         ok = False
 
-        while np.abs((MTOW_new - self.dict["MTOW"]) / self.dict["MTOW"]) > 0.02:
+        while np.abs((MTOW_new - self.dict["Iterations Class I"]["MTOW_kg"]) / self.dict["Iterations Class I"]["MTOW_kg"]) > 0.02:
             if ok:
-                self.dict["MTOW"] = MTOW_new
+                self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_new
 
             OEW_prime = self.OEW_prime()
             PowertrainWeight = self.PowertrainWeight(bat)
@@ -40,7 +40,11 @@ class WeightEstm:
             FuelWeight = self.FuelWeight(bat)
             WingWeight = self.WingWeight()
 
-            MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + self.dict["Payload"]
+           
+
+            MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + self.dict["Iterations Class I"]["Wpl_des_kg"]
+
+            if bat==0.134: print(MTOW_new, OEW_prime, PowertrainWeight, BatteryWeight, FuelWeight, WingWeight)
 
             if MTOW_new > 8000:
                 break
@@ -48,28 +52,28 @@ class WeightEstm:
             ok = True
 
         if MTOW_new < 8000:
-            self.dict["MTOW"] = MTOW_old
+            self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             return (
                 MTOW_new,
-                self.dict["cont"] * MTOW_new,
-                self.dict["cont"] * OEW_prime,
-                self.dict["cont"] * PowertrainWeight,
-                self.dict["cont"] * BatteryWeight,
-                self.dict["cont"] * FuelWeight,
-                self.dict["cont"] * WingWeight,
-                self.dict["cont"] * self.dict["Payload"]
+                self.dict["Contingency"] * MTOW_new,
+                self.dict["Contingency"] * OEW_prime,
+                self.dict["Contingency"] * PowertrainWeight,
+                self.dict["Contingency"] * BatteryWeight,
+                self.dict["Contingency"] * FuelWeight,
+                self.dict["Contingency"] * WingWeight,
+                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
             )
         else:
-            self.dict["MTOW"] = MTOW_old
+            self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             return (
                 0,
-                self.dict["cont"] * MTOW_new,
-                self.dict["cont"] * OEW_prime,
-                self.dict["cont"] * PowertrainWeight,
-                self.dict["cont"] * BatteryWeight,
-                self.dict["cont"] * FuelWeight,
-                self.dict["cont"] * WingWeight,
-                self.dict["cont"] * self.dict["Payload"]
+                self.dict["Contingency"] * MTOW_new,
+                self.dict["Contingency"] * OEW_prime,
+                self.dict["Contingency"] * PowertrainWeight,
+                self.dict["Contingency"] * BatteryWeight,
+                self.dict["Contingency"] * FuelWeight,
+                self.dict["Contingency"] * WingWeight,
+                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
             )
 
     def PolynomialRegression(self, bat):
@@ -79,7 +83,7 @@ class WeightEstm:
         for pbat in bat:
             row = self.Iterations(pbat)
             if row[0] != 0:
-                lst_P.append(9.81 * row[1] / self.dict["W/P"])
+                lst_P.append(9.81 * row[1] / self.dict["Performance"]["W/P_N/W"])
                 lst_bat.append(pbat)
 
         lst_bat = np.array(lst_bat)
@@ -92,7 +96,7 @@ class WeightEstm:
 
         if len(lst_P) == 0:
             #print("No valid power values to fit.")
-            return np.array([10,10]), np.array([10,10])
+            return np.array([20,20]), np.array([20,20])
 
         coeff_exp = np.polyfit(lst_bat, np.log(lst_P), 1)
         coeff_pol = np.polyfit(lst_bat, lst_P, 2)
@@ -104,15 +108,17 @@ class WeightEstm:
 
 
 if __name__ == "__main__":
-    # Replace 'file_path' with the correct path to your JSON configuration file
-    file_path = 'HumanAir/Configurations/conventional - Nicholas.json'
+    with open("c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json",'r') as f:
+        dict = json.load(f)
 
-    data=WeightEstm(file_path)
+    data=WeightEstm(dict)
 
     bat=0.11
     row=data.Iterations(bat)
-    print(row)
-    data.PolynomialRegression()
+
+    bat_lst = np.arange(0, 0.15, 0.001)
+    coeff_exp,coeff_pol=data.PolynomialRegression(bat_lst)
+    print(coeff_exp)
 
 
             
