@@ -35,6 +35,7 @@ logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}"
 
 #"c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json" # use this for vs code
 #'../Configurations/design.json', 'r' # use this for pycharm
+
 # Attempt to open the file
 with open('../Configurations/design.json', 'r') as f:
     dict = json.load(f)
@@ -43,6 +44,8 @@ logging.info(" Opening design.json successful")
 
 
 def Generate(p, dict, run=False):
+
+    # tune the parameters with a reasonable range
     A_lst = np.arange(7.5, 9.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
     Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
@@ -52,13 +55,17 @@ def Generate(p, dict, run=False):
     V_cruise_lst = np.arange(60, 63.1, 1)
     climbrate_lst = np.arange(3.5, 4.51, 0.5)
 
+    # calculate the total numbers of iterations
     total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
                         len(Clmax_TO_lst) * len(Clmax_Land_lst) * len(Cd0_lst) *
                         len(V_cruise_lst) * len(climbrate_lst))
 
+    # initialise the iteration counter
     current_iteration = 0
+
+    # run condition to not run the loop by mistake
     if run:
-        idx=-1
+        idx = -1
         dict_iterations= {}
         for A in A_lst:
             for eta_p in eta_p_lst:
@@ -67,13 +74,17 @@ def Generate(p, dict, run=False):
                         for Clmax_Land in Clmax_Land_lst:
                             for Cd0 in Cd0_lst:
                                 for V_cruise in V_cruise_lst:
-                                    
+
+                                    # update the endurance based on v cruise
                                     dict["endurance"]=1111200/V_cruise/3600
+
                                     for climbrate in climbrate_lst:
                                         current_iteration+=1
 
+                                        # print the iteration number every 500 steps
                                         if current_iteration%500==0: print("Iteration:"+str(current_iteration)+"/"+str(total_iterations))
-                                        
+
+                                        # update the parameters
                                         p.A = A
                                         p.eta_p = eta_p
                                         p.Clmax_clean = Clmax_clean
@@ -95,29 +106,30 @@ def Generate(p, dict, run=False):
                                         coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
 
                                         # run the regression to find power required cruise
-                                        co2_ratio_max=0
-                                        
-                                        ok=0
+                                        co2_ratio_max = 0
+
+                                        # set the condition to find the first point with co2 ratio > 50
+                                        ok = 0
                                         for step in range(len(bat)):
 
                                             # calculate the power required cruise
                                             dict['P_req_cruise_W'] = dict['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
-
                                             dict['E_bat_Wh'] = dict['P_req_cruise_W'] * dict['endurance'] / dict['P_cruise/P_TO'] * bat[step]
 
-                                            
+                                            # calculate the co2 ratio for the specific combination of parameters
                                             co2_ratio = co2(ac_data=dict)
-                                            if co2_ratio * 100 > 50 and ok==0: 
-                                                
-                                                print(co2_ratio*100)
-                                                idx+=1
-                                                ok=1
+
+                                            if co2_ratio * 100 > 50 and ok == 0:
+
+                                                idx += 1
+                                                ok = 1
 
 
 
-                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >50 and dict['E_bat_Wh']<250000:
+                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >50 and dict['E_bat_Wh']<250000: # the <250000 condition is for the battery to be able to be charged
                                                 CO2 = co2_ratio
 
+                                                # save the combination of parameters
                                                 dict_iterations[str(idx)] = {}
                                                 dict_iterations[str(idx)]['A'] = A
                                                 dict_iterations[str(idx)]['eta_p'] = eta_p
@@ -134,14 +146,31 @@ def Generate(p, dict, run=False):
 
                                                 co2_ratio_max=co2_ratio
 
+        # save the json file with all possible design options
         file_name = 'data_iterations.json'
         with open(file_name, 'w') as file:
             json.dump(dict_iterations, file, indent=4)
                                     
 def calculate_weighted_score(point_data, weights):
+
+    # setting the worst optimal data
+    worst_optimal_data = {'A': 9.5,
+                    'eta_p': 0.85,
+                    'Clmax_clean': 2.2,
+                    'Clmax_TO': 2.6,
+                    'Clmax_Land': 2.6,
+                    'Cd0': 0.026,
+                    'V_cruise': 60,
+                    'climbrate': 3.5,
+                    'bat': 0.12,
+                    'CO2': 50}
+
+    # initialing the score
     score = 0
+
+    # calculate the score
     for key, weight in weights.items():
-        score += point_data.get(key, 0) * weight
+        score += (worst_optimal_data[key] - point_data.get(key, 0))/worst_optimal_data[key] * weight # get a normalised value for the contribution of each key
     return score
 
 if __name__ == '__main__':
@@ -166,42 +195,63 @@ if __name__ == '__main__':
         design_points = json.load(f)
 
     # Weights for each key
+    # increasing score: positive weight
+    # decreasing score: negative weight
+    # no influence: weight = 0
+
     weights = {
-        'A': 0,
-        'eta_p': -0.1,
-        'Clmax_clean': -0.15,
-        'Clmax_TO': 0,
-        'Clmax_Land': 0,
-        'Cd0': -0.25,
-        'V_cruise': 0.2,
-        'climbrate': 0.15,
-        'bat': 0,
-        'CO2': 0.15
+        'A': +0.05,
+        'eta_p': +0.1,
+        'Clmax_clean': +0.15,
+        'Clmax_TO': +0,
+        'Clmax_Land': +0,
+        'Cd0': -0.35,
+        'V_cruise': -0.1,
+        'climbrate': -0.15,
+        'bat': +0,
+        'CO2': -0.1
     }
 
 
-    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 55}
+    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 50}
     scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
 
-    optimum_design_option = design_points[sorted_design_points[0][0]]
+    value = 1000000
+    step = 0
+    minimum = 1000000000
 
-    # updating the design.json file with the optimum design option
-    dict['Aero']['AR'] = optimum_design_option['A']
-    dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
-    dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
-    dict['Aero']['CLmax_TO'] = optimum_design_option['Clmax_TO']
-    dict['Aero']['CLmax_Land'] = optimum_design_option['Clmax_Land']
-    dict['Aero']['CD0'] = optimum_design_option['CD0']
-    dict['Performance']['Vc_m/s'] = optimum_design_option['V_cruise']
-    dict['Performance']['climbrate'] = optimum_design_option['climbrate']
-    dict['Power_prop']['bat'] = optimum_design_option['bat']
-    dict['Performance']['W/S_N/m2'] = optimum_design_option['W/S']
-    dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
-    dict['Performance']['CO2'] = optimum_design_option['CO2']
-    print(dict)
+    while value > 950:
 
+        optimum_design_option = design_points[sorted_design_points[step][0]]
+
+        # updating the design.json file with the optimum design option
+        dict['Aero']['AR'] = optimum_design_option['A']
+        dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
+        dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
+        dict['Aero']['CLmax_TO'] = optimum_design_option['Clmax_TO']
+        dict['Aero']['CLmax_Land'] = optimum_design_option['Clmax_Land']
+        dict['Aero']['CD0'] = optimum_design_option['Cd0']
+        dict['Performance']['Vc_m/s'] = optimum_design_option['V_cruise']
+        dict['Performance']['climb_rate'] = optimum_design_option['climbrate']
+        dict['Power_prop']['bat'] = optimum_design_option['bat']
+        dict['Performance']['W/S_N/m2'] = optimum_design_option['W/S']
+        dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
+        dict['Performance']['CO2'] = optimum_design_option['CO2']
+
+        # print(sorted_design_points[step])
+        # print(design_points[str(sorted_design_points[step][0])])
+        # print(WeightEstimation(dict).Iterations(dict['Power_prop']['bat']))
+
+        value = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[4]
+
+        if value<minimum:
+            mininim=value
+            print(sorted_design_points[step])
+            print(design_points[str(sorted_design_points[step][0])])
+            print("Minimum value: ", mininim)
+        step += 1
 
     logging.info(" Opening design.json successful")
 

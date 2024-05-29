@@ -62,12 +62,13 @@ class WP_WS:
             idx = 1
         else:
             idx = self.WS[np.where(min_envelope == optimal_WP)[0][0]]
+
         # change this value to tune it but just god knows which is the optimal one
-        WP_tolerance = 1e-3  # Define the tolerance for W/P change
-        WS_tolerance = 0.1 * idx   # Define the tolerance for W/S change
+        WP_tolerance = 1e-4  # Define the tolerance for W/P change
+        WS_tolerance = 0.05 * idx   # Define the tolerance for W/S change
 
 
-        for y in range(len(min_envelope)-1):
+        for y in range(len(min_envelope) - 1):
             if np.abs(min_envelope[y] - optimal_WP) < WP_tolerance: # check if the numbers are increasing and update the optimal values
                 if np.abs(self.WS[y] - optimal_WS) > WS_tolerance:
                     optimal_WP = min_envelope[y]
@@ -126,5 +127,5 @@ class WP_WS:
         
 if __name__ == "__main__":
     wp = WP_WS()
-    wp.plot()
     print(wp.calculate_optimal_point())
+    wp.plot()
