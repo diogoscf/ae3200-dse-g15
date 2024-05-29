@@ -18,22 +18,6 @@ from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2Calculator.conceptual_co2 import calculate_co2_reduction as co2
 
 
-A_lst = np.arange(7.5,9.51,0.5)
-eta_p_lst = np.arange(0.8,0.851,0.05)
-Clmax_clean_lst = np.arange(1.6,2.21,0.2)
-Clmax_TO_lst = np.arange(2,2.61,0.2)
-Clmax_Land_lst = np.arange(2,2.61,0.2)
-Cd0_lst = np.arange(0.026,0.0281,0.002)
-V_cruise_lst = np.arange(60,63.1,1)
-climbrate_lst = np.arange(3.5,4.51,0.5)
-
-total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
-                    len(Clmax_TO_lst) * len(Clmax_Land_lst) * len(Cd0_lst) *
-                    len(V_cruise_lst) * len(climbrate_lst))
-
-current_iteration = 0
-
-
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -42,15 +26,30 @@ design_json_path = os.path.join(script_dir, 'Configurations', 'design.json')
 
 # Print the absolute path for debugging
 print(f"Looking for design.json at: {os.path.abspath(design_json_path)}")
-#C:\Users\nicho\Documents\GitHub\ae3200-dse-g15\HumanAir\Configurations
+#C:\Users\nicho\Documents\GitHub\ae3200-dse-g15\HumanAir\Configurations # use this for vs code
+#'../Configurations/design.json', 'r' # use this for pycharm
 
 # Attempt to open the file
-with open("c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json", 'r') as f:
+with open('../Configurations/design.json', 'r') as f:
     dict = json.load(f)
 
 
 
 def Generate(p, dict, run=False):
+    A_lst = np.arange(7.5, 9.51, 0.5)
+    eta_p_lst = np.arange(0.8, 0.851, 0.05)
+    Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
+    Clmax_TO_lst = np.arange(2, 2.61, 0.2)
+    Clmax_Land_lst = np.arange(2, 2.61, 0.2)
+    Cd0_lst = np.arange(0.026, 0.0281, 0.002)
+    V_cruise_lst = np.arange(60, 63.1, 1)
+    climbrate_lst = np.arange(3.5, 4.51, 0.5)
+
+    total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
+                        len(Clmax_TO_lst) * len(Clmax_Land_lst) * len(Cd0_lst) *
+                        len(V_cruise_lst) * len(climbrate_lst))
+
+    current_iteration = 0
     if run:
         idx=-1
         dict_iterations= {}
@@ -98,11 +97,6 @@ def Generate(p, dict, run=False):
                                             dict['P_req_cruise_W'] = dict['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
 
                                             dict['E_bat_Wh'] = dict['P_req_cruise_W'] * dict['endurance'] / dict['P_cruise/P_TO'] * bat[step]
-                                            # print("STEP:", step)
-                                            # print("Battery Percentage:", bat[step]*100)
-                                            # print("Energy:",dict["E_bat_Wh"])
-                                            # print("Power required cruise",dict['P_req_cruise_W'])
-                                            # print(bat[step]*100)
 
                                             
                                             co2_ratio = co2(ac_data=dict)
@@ -138,16 +132,3 @@ def Generate(p, dict, run=False):
             json.dump(dict_iterations, file, indent=4)
                                     
                                     
-
-
-
-
-
-
-
-# Specify the file name
-file_name = 'data_iterations.json'
-
-# Open the file in write mode and use json.dump to write the dictionary
-with open(file_name, 'w') as file:
-    json.dump(dict_iterations, file, indent=4)
