@@ -317,10 +317,10 @@ if __name__ == '__main__':
     logging.info(" Calculating the aerodynamic design")
 
     # initialise the checking paramaters
-    check_flow_parameter = True
+    check_flow_parameter = False
     check_stability = True
-    check_wing_planform = True
-    check_horizontal_stabilizer_planform = True
+    check_wing_planform = False
+    check_horizontal_stabilizer_planform = False
 
     # updating the xcg aft and xcg front
     dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
@@ -333,6 +333,8 @@ if __name__ == '__main__':
 
     logging.info("Saving the modified design.json file")
     print("Finally, I am free")
+    with open('../Configurations/design.json', 'w') as f:
+        json.dump(dict, f, indent=4)
     logging.info("Program finished successfully")
 
 
