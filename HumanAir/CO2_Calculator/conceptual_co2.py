@@ -177,7 +177,7 @@ def calculate_co2_reduction(mission_file = "maf_mission_graph.csv", ac_data = ai
     else:
         c206_co2, c206_maintenance_co2 = relevant_c206_data
 
-    new_co2,_ = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Performance"]["Vc_m/s"]), standard_ac_data)
+    new_co2,_ = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
 
     co2_ratio = 1 - (new_co2 / c206_co2)
     return co2_ratio
