@@ -138,7 +138,11 @@ def Generate(p, dict, run=False):
         with open(file_name, 'w') as file:
             json.dump(dict_iterations, file, indent=4)
                                     
-                                    
+def calculate_weighted_score(point_data, weights):
+    score = 0
+    for key, weight in weights.items():
+        score += point_data.get(key, 0) * weight
+    return score
 
 if __name__ == '__main__':
 
@@ -163,19 +167,25 @@ if __name__ == '__main__':
 
     # Weights for each key
     weights = {
-        'A': 0.2,
-        'eta_p': 0.1,
-        'Clmax_clean': 0.1,
-        'Clmax_TO': 0.1,
-        'Clmax_Land': 0.1,
-        'Cd0': 0.1,
-        'V_cruise': 0.1,
-        'climbrate': 0.1,
-        'bat': 0.1
+        'A': 0,
+        'eta_p': -0.1,
+        'Clmax_clean': -0.15,
+        'Clmax_TO': 0,
+        'Clmax_Land': 0,
+        'Cd0': -0.25,
+        'V_cruise': 0.2,
+        'climbrate': 0.15,
+        'bat': 0,
+        'CO2': 0.15
     }
 
 
-    key_values = [point["CO2"] for point in design_points.values()]
+    good_design_points = {key: value for key, value in design_points.items() if value['CO2'] > 55}
+    scores = [(key, calculate_weighted_score(value, weights)) for key, value in design_points.items()]
+
+    sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
+    print(sorted_design_points[:1])
+
     logging.info(" Opening design.json successful")
 
     logging.info("Calculating the weight components")
