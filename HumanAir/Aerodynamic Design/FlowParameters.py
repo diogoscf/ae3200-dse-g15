@@ -1,7 +1,7 @@
 import numpy as np
 class Flow:
-    def __init__(self, V, ISA, Wing):
-        self.V = V
+    def __init__(self, V_Cruise, ISA, Wing):
+        self.V = V_Cruise
         self.a = ISA.SpeedOfSound()
         self.Mu = ISA.DynamicViscosity()
         self.MAC = Wing.MAC()
