@@ -30,6 +30,8 @@
         "DoD_bat": 0.8,
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
+        "eta_p":0.85,
+        "bat": 0.134,
         "P_req_cruise_W": 217309
     },
     "Geometry": {
@@ -41,6 +43,7 @@
     "Aero": {
         "CLmax_clean": 1.6,
         "CLmax_land": 2.5,
+        "CLmax_TO": 2.6,
         "CLalpha": 6.24,
         "CD0": 0.02,
         "AR": 9.38,
@@ -52,6 +55,8 @@
         "Vc_m/s": 60,
         "range_nm": 600,
         "endurance":5.2,
+        "climb_rate": 6,
+        "CO2": 50.1,
         "CO2_emissions_kg/kg": 3.16
     },
     "Landing_gear": {
