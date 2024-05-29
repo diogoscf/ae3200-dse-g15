@@ -109,7 +109,7 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
 
     vc_kts = m_s_to_kt(ac_data["Performance"]["Vc_m/s"])
     flight_time_h = mission_freqs[:,0] * 2 / vc_kts
-<<<<<<<< HEAD:HumanAir/CO2Calculator/conceptual_co2.py
+
     battery_usage_ratio = ac_data["E_bat_Wh"]/(flight_time_h * ac_data["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
     # print(flight_time_h)
     # print(battery_usage_ratio)
@@ -117,12 +117,12 @@ def calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standa
     battery_usage_ratio[battery_usage_ratio > 1] = 1
     fuel_required_return_kg = flight_time_h * ac_data["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["E_fuel_Wh/kg"] * ac_data["n_generator"]) # TODO: Check if power train efficiency matters
     fuel_emissions_return = fuel_required_return_kg * ac_data["CO2_emissions_kg/kg"]
-========
+
     battery_usage_ratio = ac_data["Power_prop"]["E_bat_Wh"]/(flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"]) # TODO: Check if E_bat_Wh is before or after efficiency
     battery_usage_ratio[battery_usage_ratio > 1] = 1
     fuel_required_return_kg = flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"] * (1 - battery_usage_ratio) / (ac_data["Power_prop"]["E_fuel_Wh/kg"] * ac_data["Power_prop"]["η_generator"]) # TODO: Check if power train efficiency matters
     fuel_emissions_return = fuel_required_return_kg * ac_data["Performance"]["CO2_emissions_kg/kg"]
->>>>>>>> origin/master:HumanAir/CO2_Calculator/conceptual_co2.py
+
 
     if maintenance_standard_co2 is None:
         _, maintenance_standard_co2 = calculate_standard_co2(mission_freqs, standard_ac_data, ac_data["Performance"]["range_nm"])
@@ -176,13 +176,9 @@ def calculate_co2_reduction(mission_file = "maf_mission_graph.csv", ac_data = ai
         relevant_c206_data = (c206_co2, c206_maintenance_co2)
     else:
         c206_co2, c206_maintenance_co2 = relevant_c206_data
-<<<<<<<< HEAD:HumanAir/CO2Calculator/conceptual_co2.py
 
-    new_co2 = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
-========
-    
     new_co2,_ = calculate_new_co2(mission_freqs, ac_data, c206_maintenance_co2, m_s_to_kt(standard_ac_data["Vc_m/s"]), standard_ac_data)
->>>>>>>> origin/master:HumanAir/CO2_Calculator/conceptual_co2.py
+
     co2_ratio = 1 - (new_co2 / c206_co2)
     return co2_ratio
 
