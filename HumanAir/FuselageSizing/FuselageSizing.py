@@ -131,7 +131,7 @@ class FuselageSizing:
         bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2
         
         # bottom width from landing gear: 
-        bw2 = 2 * (2 * s_gear + self.D_main + FuselageSizing.s_aft)
+        bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft + FuselageSizing.s)
     
         return round(FuselageSizing.bigger_mag(bw1, bw2), 3)
     
@@ -166,30 +166,31 @@ class FuselageSizing:
         
         y_floor = self.y_floorheight()
         y_engine = y_floor + self.h_floor
+        ax.axhline(y=0, color='gray', linewidth=0.3)
         
         # Define the position and size of the rectangles
         rectangles = [
-            patches.Rectangle((FuselageSizing.t_fuse, y_floor), self.length_fus() - 2*FuselageSizing.t_fuse, self.h_floor, linewidth=1, edgecolor='b', facecolor='none', label='floor'),  # Floor
-            patches.Rectangle((FuselageSizing.t_fuse + self.s_engine, y_engine), self.l_engine, self.h_engine, linewidth=1, edgecolor='r', facecolor='none', label='engine'),  # Engine
-            patches.Rectangle((FuselageSizing.t_fuse + self.s_engine + self.l_engine, y_engine), self.l_cock, self.h_cock, linewidth=1, edgecolor='g', facecolor='none', label='cockpit'),  # Cockpit
+            patches.Rectangle((FuselageSizing.t_fuse, y_floor), self.length_fus() - 2*FuselageSizing.t_fuse, self.h_floor, linewidth=0.5, edgecolor='b', facecolor='none', label='floor'),  # Floor
+            patches.Rectangle((FuselageSizing.t_fuse + self.s_engine, y_engine), self.l_engine, self.h_engine, linewidth=0.5, edgecolor='r', facecolor='none', label='engine'),  # Engine
+            patches.Rectangle((FuselageSizing.t_fuse + self.s_engine + self.l_engine, y_engine), self.l_cock, self.h_cock, linewidth=0.5, edgecolor='g', facecolor='none', label='cockpit'),  # Cockpit
             patches.Rectangle((0,0), self.length_fus(), self.height(), linewidth=0.5, edgecolor='c', facecolor='none'), # outer fuselage
             patches.Rectangle((FuselageSizing.t_fuse, FuselageSizing.t_fuse), self.length_fus()-2*FuselageSizing.t_fuse, self.height()-2*FuselageSizing.t_fuse, linewidth=0.5, edgecolor='c', facecolor='none'),
-            patches.Rectangle((self.l_long_nose, FuselageSizing.t_fuse + self.h_nose/2), self.h_nose_strut, 0.01, linewidth=1, edgecolor='k', facecolor='none'), # nose landing strut
-            patches.Rectangle((self.l_long_nose+self.h_nose_strut-self.D_nose/2, FuselageSizing.t_fuse), self.D_nose, self.h_nose, linewidth=1, edgecolor='m', facecolor='none') # nose landing gear
+            patches.Rectangle((self.l_long_nose, FuselageSizing.t_fuse + self.h_nose/2), self.h_nose_strut, 0.01, linewidth=0.5, edgecolor='k', facecolor='none'), # nose landing strut
+            patches.Rectangle((self.l_long_nose+self.h_nose_strut-self.D_nose/2, FuselageSizing.t_fuse), self.D_nose, self.h_nose, linewidth=0.5, edgecolor='m', facecolor='none') # nose landing gear
         ]
         
         # Add passengers' rectangles
         num_passengers = self.n_row()
         for i in range(num_passengers):
             passenger_x = self.t_fuse+self.s_engine + self.l_engine + self.l_cock + (self.l_pax) * i
-            rect = patches.Rectangle((passenger_x, y_engine), self.l_pax, self.h_pax, linewidth=1, edgecolor='k', facecolor='none')
+            rect = patches.Rectangle((passenger_x, y_engine), self.l_pax, self.h_pax, linewidth=0.5, edgecolor='k', facecolor='none')
             rectangles.append(rect)
             
         if self.check_back(s_gear):
             l_battery, w_battery, s_gears = self.battery_dim(s_gear)
-            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), self.length_main_strut(s_gear), 0.01, linewidth=1, edgecolor='k', facecolor='none')
-            main_land_gear = patches.Rectangle((self.l_long_main+self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=1, edgecolor='m', facecolor='none')
-            battery = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse), l_battery, self.h_battery, linewidth=1, edgecolor='g', facecolor='none')
+            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), self.length_main_strut(s_gear), 0.01, linewidth=0.5, edgecolor='k', facecolor='none')
+            main_land_gear = patches.Rectangle((self.l_long_main+self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=0.5, edgecolor='m', facecolor='none')
+            battery = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse), l_battery, self.h_battery, linewidth=0.5, edgecolor='g', facecolor='none')
             rectangles.append(main_land_strut)
             rectangles.append(main_land_gear)
             rectangles.append(battery)
@@ -198,9 +199,9 @@ class FuselageSizing:
         
         else:
             l_battery, w_battery, s_gears = self.battery_dim(s_gear)
-            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), -self.length_main_strut(s_gear), 0.01, linewidth=1, edgecolor='k', facecolor='none')
-            main_land_gear = patches.Rectangle((self.l_long_main-self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=1, edgecolor='m', facecolor='none')
-            battery = patches.Rectangle((self.l_end_nose_land()+FuselageSizing.t_fuse, FuselageSizing.t_fuse), l_battery, self.h_battery, linewidth=1, edgecolor='g', facecolor='none')
+            main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), -self.length_main_strut(s_gear), 0.01, linewidth=0.5, edgecolor='k', facecolor='none')
+            main_land_gear = patches.Rectangle((self.l_long_main-self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=0.5, edgecolor='m', facecolor='none')
+            battery = patches.Rectangle((self.l_end_nose_land()+FuselageSizing.t_fuse, FuselageSizing.t_fuse), l_battery, self.h_battery, linewidth=0.5, edgecolor='g', facecolor='none')
             rectangles.append(main_land_strut)
             rectangles.append(main_land_gear)
             rectangles.append(battery)
@@ -211,12 +212,68 @@ class FuselageSizing:
         for rect in rectangles:
             ax.add_patch(rect)
         
-        ax.set_xlim(-0.05, self.length_fus() + 0.2)
-        ax.set_ylim(-0.05, self.height() + 0.2)
+        #ax.set_xlim(-0.05, self.length_fus() + 0.2)
+        #ax.set_ylim(-0.05, self.height() + 0.2)
         
         plt.legend()
         plt.title('Fuselage side view')
+        plt.axis('equal')
         plt.show()
+    
+    def plot_front_view(self, s_gear):
+        fig, ax = plt.subplots()
+        ax.axhline(y=0, color='gray', linewidth=0.3)
+
+        # vertices of the trapezoid
+        
+        vertice1 = [(-self.bottom_width(s_gear)/2, self.h_nose_strut),
+                    (self.bottom_width(s_gear)/2, self.h_nose_strut),
+                    (self.top_width()/2, self.h_nose_strut + self.height()),
+                    (-self.top_width()/2, self.h_nose_strut + self.height())]
+        vertice2 = [(-self.bottom_width(s_gear)/2+FuselageSizing.s, self.h_nose_strut + FuselageSizing.s),
+                    (self.bottom_width(s_gear)/2 -FuselageSizing.s, self.h_nose_strut + FuselageSizing.s),
+                    (self.top_width()/2 - FuselageSizing.s, self.h_nose_strut + self.height()-FuselageSizing.s),
+                    (-self.top_width()/2 + FuselageSizing.s, self.h_nose_strut + self.height()-FuselageSizing.s)]
+        
+         
+        l_battery, w_battery, s_gear = self.battery_dim(s_gear)
+                             
+        trapezoid1 = patches.Polygon(vertice1, closed=True, edgecolor='c', facecolor='none', linewidth=0.5)
+        trapezoid2 = patches.Polygon(vertice2, closed=True, edgecolor='c', facecolor='none', linewidth=0.5)
+        #circle1 = patches.Circle((self.l_main_lateral, self.D_main/2), self.D_main/2, edgecolor='r', facecolor='none')
+        #circle2 = patches.Circle((-self.l_main_lateral, self.D_main/2), self.D_main/2, edgecolor='r', facecolor='none')
+        circle3 = patches.Circle((s_gear + self.D_main/2, self.h_nose_strut + FuselageSizing.s + self.h_main/2), 0.05, edgecolor = 'r', facecolor='none')
+        circle4 = patches.Circle((-s_gear - self.D_main/2,  self.h_nose_strut + FuselageSizing.s + self.h_main/2), 0.05, edgecolor = 'r', facecolor='none')
+        
+        rectangles = [
+            patches.Rectangle((self.l_main_lateral - self.h_main/2, 0), self.h_main, self.D_main, edgecolor = 'm', facecolor='none'), 
+            patches.Rectangle((-self.l_main_lateral - self.h_main/2,0), self.h_main, self.D_main, edgecolor = 'm', facecolor='none'),
+            patches.Rectangle((-self.top_width()/2, self.y_floorheight()+self.h_nose_strut), self.top_width(), self.h_floor, linewidth=0.5, edgecolor='b', facecolor='none')
+            ]
+        
+        
+        # Line between two points:
+        x_val1 = [self.l_main_lateral, s_gear + self.D_main/2]
+        x_val2 = [-self.l_main_lateral, -s_gear - self.D_main/2]
+        y_val1 = [self.D_main/2, self.h_nose_strut + FuselageSizing.s + self.h_main/2]
+        
+        for rect in rectangles:
+            ax.add_patch(rect)
+        
+        ax.plot(x_val1, y_val1, 'k-', linewidth=1)
+        ax.plot(x_val2, y_val1, 'k-', linewidth=1)
+        
+        ax.add_patch(trapezoid1)
+        ax.add_patch(trapezoid2)
+        #ax.add_patch(circle1)
+        #ax.add_patch(circle2)
+        ax.add_patch(circle3)
+        ax.add_patch(circle4)
+        ax.axvline(x=0, color='gray', linestyle='--', linewidth=1)
+        plt.axis('equal')
+        plt.title('Fuselage front view')
+        plt.show()       
+             
 
 
 # Example usage:
@@ -228,7 +285,7 @@ s_engine = 0.1
 D_nose = 0.33 
 h_nose = 0.13
 D_main = 0.6
-h_main = 0.19
+h_main = 0.23
 h_nose_strut = 0.89
 h_main_strut = 0.89
 l_main_lateral = 1.93
@@ -246,3 +303,4 @@ print(fuselage_size.height())
 print(fuselage_size.length_fus())
 print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
 fuselage_size.plot_side_drawing(s_gear=0.2)
+fuselage_size.plot_front_view(s_gear=0.2)
