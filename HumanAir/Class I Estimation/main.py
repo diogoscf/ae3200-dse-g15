@@ -15,7 +15,7 @@ sys.path.append(project_root)
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
-from HumanAir.CO2Calculator.conceptual_co2 import calculate_co2_reduction as co2
+from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction as co2
 
 
 # Get the directory of the current script
