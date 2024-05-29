@@ -5,31 +5,41 @@ from FlowParameters import Flow
 from LongitudinalStability import LongitudinalStability
 import numpy as np
 import json
+import os
+import sys
 
-MTOW=1946.34
-WS=618
-AR=9
-Taper = 0.4
-QuarterChordSweep = 0
-CruiseHeight=3000
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from aircraft_data import aircraft_data, c206_data
+
+MTOW=aircraft_data["Weights"]['MTOW_N']
+WS=aircraft_data["Performance"]["W/S_N/m2"]
+AR_Wing = aircraft_data["Aero"]["AR_Wing"]
+AR_HS = aircraft_data["Aero"]["AR_HS"]
+Taper_Wing = aircraft_data["Aero"]["Taper_Wing"]
+Taper_HS = aircraft_data["Aero"]["Taper_HS"]
+QuarterChordSweep_Wing = aircraft_data["Aero"]["QuarterChordSweep_Wing_deg"]
+QuarterChordSweep_HS = aircraft_data["Aero"]["QuarterChordSweep_HS_deg"]
+CruiseHeight=aircraft_data["Performance"]["Altitude_Cruise_m"]
 TemperatureGradient=-0.0065
-CruiseVelocity=60
-CLh=-0.5
-CLah=1.72
-Xcgh=0.95
-XLEMAC=2.69
-CgAft=0.75
-CgFwd=0.25
-SM=0.05
-deda=0
-VhV=1
-FuselageLength=10.09
+CruiseVelocity=aircraft_data["Performance"]["Vc_m/s"]
+CLh=aircraft_data["Stability"]["C_L_h"]
+CLah=aircraft_data["Stability"]["C_L_AH"]
+Xcgh=aircraft_data["Stability"]["X_cg_HS"]
+XLEMAC=aircraft_data["Stability"]["XLEMAC_m"]
+CgAft=aircraft_data["Stability"]["Cg_Aft"]
+CgFwd=aircraft_data["Stability"]["Cg_Front"]
+SM=aircraft_data["Stability"]["Stability_Margin"]
+deda=aircraft_data["Aero"]["deda"]
+VhV=aircraft_data["Aero"]["VhV"]
+FuselageLength=aircraft_data["Geometry"]["fus_length_m"]
 
 checkwingplanform=True
 checkflowparameters=True
 checkstability=True
+checkhsplanform=True
 
-WingPlanform = Planform(AR, Taper, QuarterChordSweep,MTOW, WS)
+WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW, WS)
 ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
 if checkwingplanform:
@@ -49,6 +59,8 @@ Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV,
 if checkstability:
     Stab.Plotting()
 
-HSPlanform = Planform(5, 0.4, 30, S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+if checkhsplanform:
+    HSPlanform.PlotWingPlanform()
 
 
