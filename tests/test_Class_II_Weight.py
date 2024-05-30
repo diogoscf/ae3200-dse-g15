@@ -2,6 +2,7 @@ from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
 import numpy as np
 from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp
 import math
+# work in progress
 def test_class_II_weight_init():
     # Mock input data
     aircraft_data = {
