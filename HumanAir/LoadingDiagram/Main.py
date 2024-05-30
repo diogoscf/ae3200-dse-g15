@@ -3,8 +3,20 @@ import matplotlib.pyplot as plt
 import Parameters.Parameters_ConvNoCanard as p
 import Equations as eq
 import Plotting as plot
+import sys
+import os
+import math
+# Integration in progress
+# Get the directory of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
+# Add the project root directory to the Python path
+project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
+sys.path.append(project_root)
 
+from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
+import HumanAir.LoadingDiagram.Equations as eq
+import HumanAir.LoadingDiagram.Plotting as plot
 
 
 class WP_WS:
@@ -43,16 +55,23 @@ class WP_WS:
         # Find the minimum values across all curves for each WS
         min_envelope = np.min(y_matrix, axis=0)
 
-
+        # Find the optimal W/P and W/S
         optimal_WP = np.max(min_envelope)
+        if optimal_WP == None:
+            optimal_WP = 0.0001
         optimal_WS = self.WS[0]
 
-        # change this value to tune it but just which is the optimal one
-        WP_tolerance = 1e-3  # Define the tolerance for W/P change
-        WS_tolerance = 0.1 * self.WS[np.where(min_envelope == optimal_WP)[0][0]]   # Define the tolerance for W/S change
+        if all(math.isnan(value) for value in min_envelope):
+            idx = 1
+        else:
+            idx = self.WS[np.where(min_envelope == optimal_WP)[0][0]]
+
+        # change this value to tune it but just god knows which is the optimal one
+        WP_tolerance = 1e-4  # Define the tolerance for W/P change
+        WS_tolerance = 0.05 * idx   # Define the tolerance for W/S change
 
 
-        for y in range(len(min_envelope)-1):
+        for y in range(len(min_envelope) - 1):
             if np.abs(min_envelope[y] - optimal_WP) < WP_tolerance: # check if the numbers are increasing and update the optimal values
                 if np.abs(self.WS[y] - optimal_WS) > WS_tolerance:
                     optimal_WP = min_envelope[y]
@@ -62,8 +81,9 @@ class WP_WS:
                 optimal_WP = min_envelope[y]
                 optimal_WS = self.WS[y]
 
-        # print(np.max(min_envelope))
+        #print(np.max(min_envelope))
         # print(f"Optimal W/S = {optimal_WS}, Optimal W/P = {optimal_WP}")
+
         return optimal_WP, optimal_WS
 
 # index=np.where(np.abs(Cruise_y-Takeoff_y)<0.0005)[0][0]
@@ -113,6 +133,5 @@ class WP_WS:
         
 if __name__ == "__main__":
     wp = WP_WS()
-    wp.plot()
-    print("Optimal point: ")
     print(wp.calculate_optimal_point())
+    wp.plot()

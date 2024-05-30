@@ -54,7 +54,7 @@ if __name__ == "__main__":
     # V&V
     input = {
         "mission_file": f"maf_mission_graph.csv", 
-        "standard_aircraft_data": {'name': 'c206', 'pretty_name': 'Cessna 206', 'Vc_m/s': 73, 'fuel_burn_L/h': 62.5, 'fuel_density_kg/L': 0.717, 'CO2_emissions_kg/kg': 3.05, 'co2_fuel_%': 89, 'fuel_per_hour': 144, 'maintenace_per_hour': 129, 'overhaul_per_hour': 55},
+        "standard_aircraft_data": {'name': 'c206', 'pretty_name': 'Cessna 206', 'Vc_m/s': 73, 'fuel_burn_L/h': 62.5, 'fuel_density_kg/L': 0.717, 'CO2_emissions_kg/kg': 3.05, 'co2_fuel_%': 89, 'fuel_per_hour': 144, 'maintenance_per_hour': 129, 'overhaul_per_hour': 55},
         "aircraft_data": {'name': 'final_design', 'pretty_name': 'Final Design', 'MTOW_N': 15269, 'OEW_N': 8816, 'MFW_N': 1390, 'Wpl_des_kg': 540, 'Wpl_max_kg': 630, 'CLmax_clean': 1.6, 'CLmax_land': 2.5, 'W/S_N/m2': 618, 'W/P_N/W': 0.118, 'Vc_m/s': 60, 'MGC_m': 1.93, 'CLalpha': 6.24, 'E_bat_Wh': 186451, 'E_fuel_Wh/kg': 11972, 'η_bat': 0.85, 'η_generator': 0.45, 'DoD_bat': 0.8, 'η_electricmotor': 0.925, 'η_powertrain': 0.9216, 'CD0': 0.02, 'AR': 9.38, 'e': 0.82, 'range_nm': 600, 'P_req_cruise_W': 217309, 'CO2_emissions_kg/kg': 3.16}
     }
 

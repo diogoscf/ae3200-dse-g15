@@ -1,6 +1,6 @@
 """========== Aircraft Design Parameters =========="""
 name="Conventional Aircraft, No Canard"
-A=9.38 #Cessna 206: 9.38, B2: 5.75
+A=9.5 #Cessna 206: 9.38, B2: 5.75
 e=0.82
 eta_p=0.85
 
@@ -9,7 +9,7 @@ Clmax_TO = 2.0
 Clmax_Land = 2.5
 
 
-Cdo=0.03 #Cessna :0.028 B2: 0.0065, 0.0165
+Cdo=0.028 #Cessna :0.028 B2: 0.0065, 0.0165
 
 """========== Mission Parameters =========="""
 TOP = 60

@@ -29,7 +29,7 @@ class LongitudinalStability:
             data = json.load(HSAirfoil)
             self.Clalphah=data['C_L_Alpha']
             self.Cm_0_HS = data['Cm_0']
-        print("Longitudinal Stability Initialized")
+        #print("Longitudinal Stability Initialized")
 
     def CMac_Wing(self):
         return self.Cm_0_Wing*(self.AR*(np.cos(np.deg2rad(self.QuarterChordSweep)))**2/(self.AR+2*np.cos(np.deg2rad(self.QuarterChordSweep))))
