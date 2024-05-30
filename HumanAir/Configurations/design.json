@@ -4,13 +4,15 @@
     "Contingency": 1.2,
     "Weights": {
         "MTOW_N": 25753,
+        "W_L_N": ,
         "OEW_N": 17651,
         "MFW_N": 1390,
         "WF_N": 1922,
         "Wbat_N": 5094,
         "Ww_N": 2477,
         "Wpl_des_kg": 630,
-        "Wpl_max_kg": 720
+        "Wpl_max_kg": 720,
+        "W_Pilot_N": 882.9
     },
     "Iterations Class I": {
         "MTOW_kg": 2650.285,
@@ -32,13 +34,21 @@
         "eta_powertrain": 0.9216,
         "eta_p":0.85,
         "bat": 0.134,
-        "P_req_cruise_W": 217309
+        "P_req_cruise_W": 217309,
+        "P_TO": ,
+        "K_n": 0.24,
+        "int_fueltanks_fraction": 0,
+        "N_e": 1,
+        "N_t": 2
     },
     "Geometry": {
         "fus_height_m": 1.8,
         "fus_length_m": 10.09,
+        "fus_width_m": ,
         "MGC_m": 1.93,
-        "XLEMAC_m": 3.2
+        "XLEMAC_m": 3.2,
+        "l_f_nonosecone": ,
+        "fuselage_max_perimeter":
     },
     "Aero": {
         "CLmax_clean": 1.6,
@@ -48,18 +58,33 @@
         "CD0": 0.02,
         "AR": 9.38,
         "AR_HS": 5,
+        "AR_v": 2,
         "e": 0.82,
         "Taper_Wing": 0.4,
         "Taper_HS": 0.4,
         "QuarterChordSweep_Wing_deg": 0,
         "QuarterChordSweep_HS_deg": 30,
+        "HalfChordSweep_Wing_deg": ,
+        "HalfChordSweep_v_deg": ,
         "deda": 0,
-        "VhV": 1
+        "VhV": 1,
+        "S_Wing": ,
+        "S_h": ,
+        "S_v": ,
+        "tc_m_Wing": 0.1367,
+        "b_Wing": ,
+        "b_h": ,
+        "b_v": ,
+        "t_root_max_Wing": ,
+        "t_root_max_h": ,
+        "t_root_max_v":
     },
     "Performance": {
         "W/S_N/m2": 618,
         "W/P_N/W": 0.114,
         "Vc_m/s": 60,
+        "VH_m/s": ,
+        "M_D": ,
         "range_nm": 600,
         "endurance":5.2,
         "climb_rate": 6,
@@ -67,7 +92,8 @@
         "CO2_emissions_kg/kg": 3.16,
         "Altitude_Cruise_m": 3000,
         "Altitude_TO_m": 1800,
-        "Altitude_Land_m:": 1800
+        "Altitude_Land_m:": 1800,
+        "n_ult":
     },
     "Landing_gear": {
         "lm_m": 0.56,
@@ -77,7 +103,10 @@
         "Dwm_m": 0.6,
         "Dwn_m": 0.3,
         "Wtm_m": 0.2,
-        "Wtn_m": 0.1
+        "Wtn_m": 0.1,
+        "l_s_m": ,
+        "l_s_n": ,
+        "Retractable": true
     },
     "Stability": {
         "Cg_Aft": 0.75,
@@ -86,7 +115,14 @@
         "XLEMAC_m": 2.69,
         "X_cg_HS": 0.95,
         "C_L_h": -0.5,
-        "C_L_AH": 1.72
-
+        "C_L_AH": 1.72,
+        "QCW_to_QCh":
+    },
+    "General": {
+        "Paint": false,
+        "N_pax": 7,
+        "N_row": ,
+        "PoweredFlightControls": ,
+        "DuplicatedFlightControls":
     }
 }

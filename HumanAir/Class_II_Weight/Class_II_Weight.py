@@ -7,70 +7,70 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
-from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp
+from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 class Class_II_Weight:
     def __init__(self, aircraft_data):
         self.W_TO=N_to_lbs(aircraft_data["Weights"]["MTOW_N"])
-        self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L"]) #Not in dict yet
+        self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L"])
         self.W_F=N_to_lbs(aircraft_data["Weights"]["WF_N"])
-        self.W_E=N_to_lbs(aircraft_data["Weights"]["W_E"]) #Not sure if in dict, as only OEW is given
+        self.W_E=N_to_lbs(aircraft_data["Weights"]["W_OEW"]-aircraft_data['Weights']['W_Pilot_N'])
 
-        self.S_Wing = m_squared_to_ft_squared(aircraft_data["Aero"]["S_Wing"]) #Not in dict yet
-        self.S_h = m_squared_to_ft_squared(aircraft_data["Aero"]["S_h"]) #Not in dict yet
-        self.S_v = m_squared_to_ft_squared(aircraft_data["Aero"]["S_v"]) #Not in dict yet
+        self.S_Wing = m_squared_to_ft_squared(aircraft_data["Aero"]["S_Wing"])
+        self.S_h = m_squared_to_ft_squared(aircraft_data["Aero"]["S_h"])
+        self.S_v = m_squared_to_ft_squared(aircraft_data["Aero"]["S_v"])
 
-        self.n_ult = aircraft_data["Performance"]["n_ult"]  #Not in dict yet
+        self.n_ult = aircraft_data["Performance"]["n_ult"]
         self.n_ult_l = 5.7
 
         self.AR_Wing = aircraft_data["Aero"]["AR"]
         self.AR_h = aircraft_data["Aero"]["AR_HS"]
-        self.AR_v = aircraft_data["Aero"]["AR_v"] #Not in dict yet
+        self.AR_v = aircraft_data["Aero"]["AR_v"]
 
         self.QuarterChordSweep_Wing = np.deg2rad(aircraft_data["Aero"]["QuarterChordSweep_Wing_deg"])
-        self.HalfChordSweep_Wing = np.deg2rad(aircraft_data["Aero"]["HalfChordSweep_Wing_deg"]) #Not in dict yet
-        self.QuarterChordSweep_v = np.deg2rad(aircraft_data["Aero"]["QuarterChordSweep_v_deg"]) #Not in dict yet
+        self.HalfChordSweep_Wing = np.deg2rad(aircraft_data["Aero"]["HalfChordSweep_Wing_deg"])
+        self.QuarterChordSweep_v = np.deg2rad(aircraft_data["Aero"]["QuarterChordSweep_v_deg"])
 
         self.Taper_Wing = aircraft_data["Aero"]["Taper_Wing"]
-        self.tc_m_Wing = m_to_ft(aircraft_data["Aero"]["tc_m_Wing"]) #Not in dict yet
+        self.tc_m_Wing = m_to_ft(aircraft_data["Aero"]["tc_m_Wing"])
 
-        self.b_Wing = m_to_ft(aircraft_data["Aero"]["b_Wing"]) #Not in dict yet
-        self.b_h = m_to_ft(aircraft_data["Aero"]["b_h"]) #Not in dict yet
-        self.b_v = m_to_ft(aircraft_data["Aero"]["b_v"]) #Not in dict yet
+        self.b_Wing = m_to_ft(aircraft_data["Aero"]["b_Wing"])
+        self.b_h = m_to_ft(aircraft_data["Aero"]["b_h"])
+        self.b_v = m_to_ft(aircraft_data["Aero"]["b_v"])
 
-        self.t_root_max_Wing = m_to_ft(aircraft_data["Aero"]["t_root_max_Wing"]) #Not in dict yet
-        self.t_root_max_h = m_to_ft(aircraft_data["Aero"]["t_root_max_h"]) #Not in dict yet
-        self.t_root_max_v = m_to_ft(aircraft_data["Aero"]["t_root_max_v"]) #Not in dict yet
+        self.t_root_max_Wing = m_to_ft(aircraft_data["Aero"]["t_root_max_Wing"])
+        self.t_root_max_h = m_to_ft(aircraft_data["Aero"]["t_root_max_h"])
+        self.t_root_max_v = m_to_ft(aircraft_data["Aero"]["t_root_max_v"])
 
-        self.V_H = m_s_to_kt(aircraft_data["Performance"]["V_H"]) #Not in dict yet
+        self.V_H = m_s_to_kt(aircraft_data["Performance"]["VH_m/s"])
         self.V_c = m_s_to_kt(aircraft_data["Performance"]["Vc_m/s"])
-        self.M_D = m_s_to_kt(aircraft_data["Performance"]["M_D"]) #Not in dict yet
-        self.QCW_to_QCh = m_to_ft(aircraft_data["Stability"]["QCW_to_QCh"]) #Not in dict yet
-        self.l_f_nonosecone = m_to_ft(aircraft_data["Geometry"]["l_f_nonosecone"]) #Not sure if this is the same as fuselage length
+        self.M_D = aircraft_data["Performance"]["M_D"]
+        self.QCW_to_QCh = m_to_ft(aircraft_data["Stability"]["QCW_to_QCh"])
+        self.l_f_nonosecone = m_to_ft(aircraft_data["Geometry"]["l_f_nonosecone"])
         self.paint = aircraft_data["General"]["Paint"]
         self.p_max = m_to_ft(aircraft_data["Geometry"]["fuselage_max_perimeter"])
-        self.N_pax = aircraft_data["Performance"]["N_pax"] #Includes pilots and is not in dict yet
-        self.N_row = aircraft_data["Geometry"]["N_row"] #Not in dict yet
+        self.N_pax = aircraft_data["Performance"]["N_pax"]
+        self.N_row = aircraft_data["Geometry"]["N_row"]
         self.l_f = m_to_ft(aircraft_data["Geometry"]["fus_length_m"])
-        self.w_f = m_to_ft(aircraft_data["Geometry"]["fus_width_m"]) #Not in dict yet
-        self.h_f = m_to_ft(aircraft_data["Geometry"]["fus_height_m"]) #Not in dict yet
+        self.w_f = m_to_ft(aircraft_data["Geometry"]["fus_width_m"])
+        self.h_f = m_to_ft(aircraft_data["Geometry"]["fus_height_m"])
 
-        self.P_TO = W_to_hp(aircraft_data["Power_prop"]["P_TO"]) #Not in dict yet
-        self.K_n = aircraft_data["Power_prop"]["K_n"] #Not in dict yet, 0.37 for radial, 0.24 for horizontally opposed
+        self.P_TO = W_to_hp(aircraft_data["Power_prop"]["P_TO"])
+        self.K_n = aircraft_data["Power_prop"]["K_n"] #0.37 for radial, 0.24 for horizontally opposed
         self.K_p = 1.1
         self.K_pg = 1.16
         self.K_fsp = 6.55
 
-        self.int = aircraft_data["Power_prop"]["int"] #Fraction of integral fuel tanks, Not in dict yet
+        self.int = aircraft_data["Power_prop"]["int_fueltanks_fraction"]
 
-        self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"]) #Not sure if in dict
-        self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"]) #Not sure if in dict
+        self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"])
+        self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"])
         self.retractable = aircraft_data["Landing_gear"]["Retractable"]
 
-        self.N_e = aircraft_data["Power_prop"]["N_e"] #Not in dict yet
-        self.N_t = aircraft_data["Power_prop"]["N_t"] #Not in dict yet
+        self.N_e = aircraft_data["Power_prop"]["N_e"]
+        self.N_t = aircraft_data["Power_prop"]["N_t"]
 
-        self.PoweredFlightControls = aircraft_data["General"]["PoweredFlightControls"] #Not in dict yet
-        self.DuplicatedFlightControls = aircraft_data["General"]["DuplicatedFlightControls"] #Not in dict yet
+        self.PoweredFlightControls = aircraft_data["General"]["PoweredFlightControls"]
+        self.DuplicatedFlightControls = aircraft_data["General"]["DuplicatedFlightControls"]
 
 
 
@@ -90,12 +90,14 @@ class Class_II_Weight:
     def EmpennageWeight(self):
         results = {}
         """ Cessna """
+        results["Cessna"]={}
         results["Cessna"]["W_h"] = (3.184*self.W_TO**0.887*self.S_h**0.101*self.AR_h**0.138)/(174.04*self.t_root_max_h**0.223)
         results["Cessna"]["W_v"] = (1.68*self.W_TO**0.567*self.S_v**0.1249*self.AR_v**0.482)/(639.95*self.t_root_max_v**0.747*(np.cos(self.QuarterChordSweep_v))**0.882)
         results["Cessna"]["W_c"] = 0
         results["Cessna"]["Total"] = results["Cessna"]["W_h"]+results["Cessna"]["W_v"]+results["Cessna"]["W_c"]
 
         """ USAF """
+        results["USAF"]={}
         results["USAF"]["W_h"] = 127*((self.W_TO*self.n_ult*10**(-5))**0.87*(self.S_h/100)**1.2*0.289*(self.QCW_to_QCh/10)**0.483*(self.b_h/self.t_root_max_h)**0.5)**0.458
         results["USAF"]["W_v"] = 98.5*((self.W_TO*self.n_ult*10**(-5))**0.87*(self.S_v/100)**1.2*0.289*(self.b_v/self.t_root_max_v)**0.5)**0.458
         results["USAF"]["W_c"] = 0
@@ -157,9 +159,12 @@ class Class_II_Weight:
 
     def PowerplantWeight_Total(self):
         results = {}
+
+        results["USAF"]={}
         results["USAF"]["WeWaiWpropWp"] = 2.575*(self.K_p*self.P_TO)**0.922*self.N_e
         results["USAF"]["Total"]=results["USAF"]["WeWaiWpropWp"]+self.FuelSystemWeight()["USAF"]-self.NacelleWeight()["Average"]
 
+        results["Torenbeek"]={}
         results["Torenbeek"]["Total"] = self.K_pg*(self.K_p*self.P_TO+0.24*self.P_TO)
         return np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
 
@@ -244,35 +249,38 @@ class Class_II_Weight:
         return self.FlightControlSystem()["Average"]+self.HydraulicsPneumatics()["Average"]+self.InstrumentsAvionicsElectronics()["Average"]+self.ElectricalSystemWeight()["Average"]+self.AirconPressurizationAntiDeicingWeight()["Average"]+self.OxygenSystem()["Average"]+self.APU()["Average"]+self.Furnishings()["Average"]+self.AuxiliaryGear()["Average"]+self.Paint()["Average"]
 
     def NewEmptyWeight(self):
-        return self.PowerplantWeight_Total()+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total()
+        return lbs_to_N(self.PowerplantWeight_Total()+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total())
 
-
+    def NewOEW(self):
+        return self.NewEmptyWeight()+aircraft_data["Weights"]["W_Pilot_N"]
 def RunClassII(aircraft_data, check):
     p=Class_II_Weight(aircraft_data)
 
     if check:
         print("========== Structures Weight ==========")
-        print('\nWing Weight = ', p.WingWeight()["Average"])
-        print('Empennage Weight =', p.EmpennageWeight()['Average'])
-        print('Fuselage Weight = ', p.FuselageWeight()["Average"])
-        print('Nacelle Weight = ', p.NacelleWeight()["Average"])
-        print('Landing Gear Weight = ', p.LandingGearWeight()["Average"])
-        print('\nTotal Structures Weight = ', p.StructureWeight_Total())
+        print('\nWing Weight = ', lbs_to_N(p.WingWeight()["Average"]), " [N]")
+        print('Empennage Weight =', lbs_to_N(p.EmpennageWeight()['Average']), " [N]")
+        print('Fuselage Weight = ', lbs_to_N(p.FuselageWeight()["Average"]), " [N]")
+        print('Nacelle Weight = ', lbs_to_N(p.NacelleWeight()["Average"]), " [N]")
+        print('Landing Gear Weight = ', lbs_to_N(p.LandingGearWeight()["Average"]), " [N]")
+        print('\nTotal Structures Weight = ', lbs_to_N(p.StructureWeight_Total()), " [N]")
         print('\n\n ========== Powerplant Weight ==========')
-        print('\n Fuel System Weight = ', p.FuelSystemWeight()["Average"])
-        print('\n Total Powerplant Weight = ', p.PowerplantWeight_Total())
+        print('\n Fuel System Weight = ', lbs_to_N(p.FuelSystemWeight()["Average"]), " [N]")
+        print('\n Total Powerplant Weight = ', lbs_to_N(p.PowerplantWeight_Total()), " [N]")
         print('\n\n ========== Fixed Equipment Weight ==========')
-        print('\n Flight Control Systems Weight = ', p.FlightControlSystem()["Average"])
-        print("Hydraulics and/or Pneumatics Weight = ", p.HydraulicsPneumatics()["Average"])
-        print("Instruments, Avionics and Electronics Weight = ", p.InstrumentsAvionicsElectronics()["Average"])
-        print("Electrical System Weight = ", p.ElectricalSystemWeight()["Average"])
-        print("Airconditioning, Pressurization and Anti or Deicing Weight = ", p.AirconPressurizationAntiDeicingWeight()["Average"])
-        print("Oxygen System Weight = ", p.OxygenSystem()["Average"])
-        print("APU Weight = ", p.APU()["Average"])
-        print("Furnishings Weight = ", p.Furnishings()["Average"])
-        print("Auxiliary Gear Weight = ", p.AuxiliaryGear()["Average"])
-        print("Paint Weight = ", p.Paint()["Average"])
-        print("\nTotal Fixed Equipment Weight = ", p.FixedEquipmentWeight_Total())
-        print("\n\nTotal Empty Weight = ", p.NewEmptyWeight())
+        print('\n Flight Control Systems Weight = ', lbs_to_N(p.FlightControlSystem()["Average"]), " [N]")
+        print("Hydraulics and/or Pneumatics Weight = ", lbs_to_N(p.HydraulicsPneumatics()["Average"]), " [N]")
+        print("Instruments, Avionics and Electronics Weight = ", lbs_to_N(p.InstrumentsAvionicsElectronics()["Average"]), " [N]")
+        print("Electrical System Weight = ", lbs_to_N(p.ElectricalSystemWeight()["Average"]), " [N]")
+        print("Airconditioning, Pressurization and Anti or Deicing Weight = ", lbs_to_N(p.AirconPressurizationAntiDeicingWeight()["Average"]), " [N]")
+        print("Oxygen System Weight = ", lbs_to_N(p.OxygenSystem()["Average"]), " [N]")
+        print("APU Weight = ", lbs_to_N(p.APU()["Average"]), " [N]")
+        print("Furnishings Weight = ", lbs_to_N(p.Furnishings()["Average"]), " [N]")
+        print("Auxiliary Gear Weight = ", lbs_to_N(p.AuxiliaryGear()["Average"]), " [N]")
+        print("Paint Weight = ", lbs_to_N(p.Paint()["Average"]), " [N]")
+        print("\nTotal Fixed Equipment Weight = ", lbs_to_N(p.FixedEquipmentWeight_Total()), " [N]")
+        print("\n\nTotal Empty Weight = ", p.NewEmptyWeight(), " [N]")
+        print("Total Operating Empty Weight = ", p.NewOEW(), " [N]")
 
-    return p.NewEmptyWeight()
+
+    return p.NewOEW()

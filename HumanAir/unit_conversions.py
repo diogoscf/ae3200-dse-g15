@@ -28,6 +28,9 @@ def m_s_to_kt(a):
 def N_to_lbs(a):
     return 0.224808943*a
 
+def lbs_to_N(a):
+    return a/0.224808943
+
 def m_squared_to_ft_squared(a):
     return 10.7639104*a
 
