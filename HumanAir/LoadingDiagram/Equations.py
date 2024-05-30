@@ -36,7 +36,7 @@ def Climbrate(etap, A, e, h, temp_offset, Cdo, climbrate, WS, T0=288.15, constla
     a=climbrate+(np.sqrt(WS)*np.sqrt(2/(Density(h, temp_offset))))/(1.345*(A*e)**0.75/(Cdo**0.25))
     return etap/a
 
-def Climbgradient(etap, WS, climbgradient, V, A, e, Clmax, Clsafetyfactor, Cdo, h, temp_offset, T0=288.15, constlambda=-0.0065):
+def Climbgradient(etap, WS, climbgradient, V, A, e, Clmax, Clsafetyfactor, Cdo, h, temp_offset):
     return etap/(np.sqrt(WS)*(climbgradient+Cd(Cdo, A, e, Clmax/Clsafetyfactor)/(Clmax/Clsafetyfactor))*np.sqrt(2/(Density(h, temp_offset)*(Clmax/Clsafetyfactor))))
 
 #def Manouvering(Cdo, h, V, WS, nmax, A, e, etap, T0=288.15, constlambda=-0.0065):
