@@ -300,7 +300,7 @@ fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D
 print(fuselage_size.top_width())
 print(fuselage_size.bottom_width(s_gear=0.2))
 print(fuselage_size.height())
-print(fuselage_size.length_fus())
+print('start_of tailcone', fuselage_size.length_fus()-l_tailcone)
 print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
 fuselage_size.plot_side_drawing(s_gear=0.2)
 fuselage_size.plot_front_view(s_gear=0.2)
