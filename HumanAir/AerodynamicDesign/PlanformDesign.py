@@ -63,10 +63,12 @@ class Planform:
         plt.show()
 
 if __name__ == "__main__":
-    WingConventional=Planform(7.44, 0.4, 0, 25753, 618)
-    print(WingConventional.RootChord())
-    print(WingConventional.TipChord())
-    print(WingConventional.HalfChordSweep())
-    print(WingConventional.WingSpan()/2)
+    WingConventional=Planform(7.44, 0.4, 0, 0.1367, 25753, 618)
+    print("S = ", WingConventional.WingSurfaceArea())
+    print("b = ", WingConventional.WingSpan())
+    print('Root Chord Length = ', WingConventional.RootChord())
+    print('Tip Chord Length = ', WingConventional.TipChord())
+    print("Max root thickness = ", WingConventional.t_root_max())
+
     WingConventional.PlotWingPlanform()
 

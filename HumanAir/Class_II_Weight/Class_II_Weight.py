@@ -11,9 +11,9 @@ from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_
 class Class_II_Weight:
     def __init__(self, aircraft_data):
         self.W_TO=N_to_lbs(aircraft_data["Weights"]["MTOW_N"])
-        self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L"])
+        self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L_N"])
         self.W_F=N_to_lbs(aircraft_data["Weights"]["WF_N"])
-        self.W_E=N_to_lbs(aircraft_data["Weights"]["W_OEW"]-aircraft_data['Weights']['W_Pilot_N'])
+        self.W_E=N_to_lbs(aircraft_data["Weights"]["OEW_N"]-aircraft_data['Weights']['W_Pilot_N'])
 
         self.S_Wing = m_squared_to_ft_squared(aircraft_data["Aero"]["S_Wing"])
         self.S_h = m_squared_to_ft_squared(aircraft_data["Aero"]["S_h"])
@@ -48,8 +48,8 @@ class Class_II_Weight:
         self.l_f_nonosecone = m_to_ft(aircraft_data["Geometry"]["l_f_nonosecone"])
         self.paint = aircraft_data["General"]["Paint"]
         self.p_max = m_to_ft(aircraft_data["Geometry"]["fuselage_max_perimeter"])
-        self.N_pax = aircraft_data["Performance"]["N_pax"]
-        self.N_row = aircraft_data["Geometry"]["N_row"]
+        self.N_pax = aircraft_data["General"]["N_pax"]
+        self.N_row = aircraft_data["General"]["N_row"]
         self.l_f = m_to_ft(aircraft_data["Geometry"]["fus_length_m"])
         self.w_f = m_to_ft(aircraft_data["Geometry"]["fus_width_m"])
         self.h_f = m_to_ft(aircraft_data["Geometry"]["fus_height_m"])
@@ -82,7 +82,7 @@ class Class_II_Weight:
 
         results["Cessna"] = 0.002933*self.S_Wing**1.018*self.AR_Wing**2.473*self.n_ult**0.611
         results["USAF"] = 96.948*((self.W_TO*self.n_ult*10**(-5))**0.65*(self.AR_Wing/np.cos(self.QuarterChordSweep_Wing))**0.57*(self.S_Wing/100)**0.61*((1+self.Taper_Wing)/2*self.tc_m_Wing)**0.36*(1+self.V_H/500)**0.5)**0.993
-        results["Torenbeek"] = 0.00125*self.W_TO*(self.b_Wing/np.cos(self.HalfChordSweep_Wing))**0.75*(1+(6.3*np.cos(self.HalfChordSweep_Wing)/self.b_Wing)**0.5)*self.n_ult**0.55*(self.b_Wing*self.S_Wing/self.t_root_max_Wing*self.W_TO*np.cos(self.HalfChordSweep_Wing))**0.30
+        results["Torenbeek"] = 0.00125*self.W_TO*(self.b_Wing/np.cos(self.HalfChordSweep_Wing))**0.75*(1+(6.3*np.cos(self.HalfChordSweep_Wing)/self.b_Wing)**0.5)*self.n_ult**0.55*(self.b_Wing*self.S_Wing/(self.t_root_max_Wing*self.W_TO*np.cos(self.HalfChordSweep_Wing)))**0.30
 
         results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
         return results
@@ -279,8 +279,13 @@ def RunClassII(aircraft_data, check):
         print("Auxiliary Gear Weight = ", lbs_to_N(p.AuxiliaryGear()["Average"]), " [N]")
         print("Paint Weight = ", lbs_to_N(p.Paint()["Average"]), " [N]")
         print("\nTotal Fixed Equipment Weight = ", lbs_to_N(p.FixedEquipmentWeight_Total()), " [N]")
-        print("\n\nTotal Empty Weight = ", p.NewEmptyWeight(), " [N]")
+        print('\n\n ========== Total Operating Weights ==========')
+        print("\nTotal Empty Weight = ", p.NewEmptyWeight(), " [N]")
         print("Total Operating Empty Weight = ", p.NewOEW(), " [N]")
 
 
     return p.NewOEW()
+
+
+if __name__=="__main__":
+    RunClassII(aircraft_data, check=True)
