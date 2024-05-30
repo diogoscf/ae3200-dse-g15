@@ -41,7 +41,7 @@ def InternalLoads(L, T, W, D, M, n, y_points, Cl_DATA, AoA, sweep):
     b = Cl_DATA[AoA]['y_span'][-1] * 2 
     Dtot = T - D  # drag and thrust act on the x axis
     Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)), y_points)[::-1]
-    Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)), y_points)[::-1]
+    Vz = -integrate.cumtrapz(np.flip((L-W) * b / (2 * n)), y_points)[::-1]
     Vx = np.append(Vx, [0])
     Vz = np.append(Vz, [0])
 
@@ -86,7 +86,7 @@ Sw = 39  # [m2]
 taper_ratio = 0.4
 Vcruise = 60  # [m/s]
 rho = 0.9  # [kg/m3]
-structuralmass = 20000
+structuralmass = 2000 
 batterymass_w = 0
 T = 0
 sweep = 0.157
