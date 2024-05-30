@@ -99,12 +99,12 @@ class WP_WS:
         
         plt.figure(figsize=(10,7))
 
-        plot.Plotx(self.Stallspeed_x, self.ylst, "Stall speed")
-        plot.Plotx(self.Landing_x, self.ylst, "Landing distance")
-        plot.Ploty(self.WS, self.Takeoff_y, "Take-off distance")
+        plot.Plotx(self.Stallspeed_x, self.ylst, "Stall Speed")
+        plot.Plotx(self.Landing_x, self.ylst, "Landing Distance")
+        plot.Ploty(self.WS, self.Takeoff_y, "Take-off Distance")
         plot.Ploty(self.WS, self.Cruise_y, "Cruise")
-        plot.Ploty(self.WS, self.Climbrate_y, "Climbrate")
-        plot.Ploty(self.WS, self.Climbgradient_y, "Climbgradient")
+        plot.Ploty(self.WS, self.Climbrate_y, "Climb Rate")
+        plot.Ploty(self.WS, self.Climbgradient_y, "Climb Gradient")
 
 
         plt.fill_between(self.WS, self.Takeoff_y, 1, color='red', alpha=.1)
