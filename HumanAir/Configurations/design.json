@@ -14,39 +14,39 @@
     },
     "Iterations Class I": {
         "MTOW_kg": 2650.285,
-        "A":0.3632,
-        "B":-81.896,
-        "Aw":0.09,
-        "Bw":14.018,
+        "A": 0.3632,
+        "B": -81.896,
+        "Aw": 0.09,
+        "Bw": 14.018,
         "Wpl_des_kg": 630
     },
     "Power_prop": {
         "E_bat_Wh": 186451,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
-        "P_ptr_kW/kg":1.5,
+        "P_ptr_kW/kg": 1.5,
         "eta_bat": 0.97,
         "eta_generator": 0.45,
         "DoD_bat": 0.8,
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
-        "eta_p":0.85,
-        "bat": 0.134,
+        "eta_p": 0.8500000000000001,
+        "bat": 0.156,
         "P_req_cruise_W": 217309
     },
     "Geometry": {
         "fus_height_m": 1.8,
         "fus_length_m": 10.09,
         "MGC_m": 1.93,
-        "XLEMAC_m": 3.2
+        "XLEMAC_m": 2.8243032656138887
     },
     "Aero": {
         "CLmax_clean": 1.6,
         "CLmax_land": 2.5,
-        "CLmax_TO": 2.6,
+        "CLmax_TO": 2.6000000000000005,
         "CLalpha": 6.24,
-        "CD0": 0.02,
-        "AR": 9.38,
+        "CD0": 0.027999999999999997,
+        "AR": 9.5,
         "AR_HS": 5,
         "e": 0.82,
         "Taper_Wing": 0.4,
@@ -54,39 +54,39 @@
         "QuarterChordSweep_Wing_deg": 0,
         "QuarterChordSweep_HS_deg": 30,
         "deda": 0,
-        "VhV": 1
+        "VhV": 1,
+        "CLmax_Land": 2.0
     },
     "Performance": {
-        "W/S_N/m2": 618,
-        "W/P_N/W": 0.114,
-        "Vc_m/s": 60,
+        "W/S_N/m2": 796.7001,
+        "W/P_N/W": 0.11887497097824512,
+        "Vc_m/s": 60.0,
         "range_nm": 600,
-        "endurance":5.2,
-        "climb_rate": 6,
-        "CO2": 50.1,
+        "endurance": 5.2,
+        "climb_rate": 4.5,
+        "CO2": 53.92,
         "CO2_emissions_kg/kg": 3.16,
         "Altitude_Cruise_m": 3000,
         "Altitude_TO_m": 1800,
         "Altitude_Land_m:": 1800
     },
     "Landing_gear": {
-        "lm_m": 0.56,
-        "ln_m": 3.2,
-        "ymin_m": 2.2,
-        "Hs_m": 0.9,
-        "Dwm_m": 0.6,
-        "Dwn_m": 0.3,
-        "Wtm_m": 0.2,
-        "Wtn_m": 0.1
+        "lm_m": 0.5637543829073849,
+        "ln_m": 2.5368947230832317,
+        "ymin_m": 2.211731286364467,
+        "Hs_m": 0.9029699999999999,
+        "Dwm_m": 0.60198,
+        "Dwn_m": 0.3302,
+        "Wtm_m": 0.1905,
+        "Wtn_m": 0.127
     },
     "Stability": {
-        "Cg_Aft": 0.75,
-        "Cg_Front": 0.25,
+        "Cg_Aft": 0.510843722534535,
+        "Cg_Front": 0.26563873571795826,
         "Stability_Margin": 0.05,
         "XLEMAC_m": 2.69,
         "X_cg_HS": 0.95,
         "C_L_h": -0.5,
         "C_L_AH": 1.72
-
     }
 }

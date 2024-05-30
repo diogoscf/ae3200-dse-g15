@@ -47,7 +47,7 @@ from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the design.json file
-design_json_path = os.path.join(script_dir, 'Configurations', 'design.json')
+design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
 
 # Print the absolute path for debugging
 logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
@@ -57,7 +57,7 @@ logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}"
 #'../Configurations/design.json', 'r' # use this for pycharm
 
 # Attempt to open the file
-with open('../Configurations/design.json', 'r') as f:
+with open(design_json_path, 'r') as f:
     dict = json.load(f)
 
 logging.info(" Opening design.json successful")
@@ -254,7 +254,10 @@ if __name__ == '__main__':
     # Print the absolute path for debugging
     logging.info(f" Looking for data_iterations.json at: {os.path.abspath(design_json_path)}")
 
-    with open('../Configurations/data_iterations.json', 'r') as f:
+    # Construct the absolute path to the design.json file
+    data_iterations_json_path = os.path.join(script_dir,'..', 'Configurations', 'data_iterations.json')
+
+    with open(data_iterations_json_path, 'r') as f:
         design_points = json.load(f)
 
     logging.info(" Opening data_iterations.json successful")
@@ -337,8 +340,12 @@ if __name__ == '__main__':
     logging.info("Saving the modified design.json file")
     print("Finally, I am free")
 
+
+    # Construct the absolute path to the design.json file
+    design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
+
     # save the modified design.json file and hope it doesnt break
-    with open('../Configurations/design.json', 'w') as f:
+    with open(design_json_path, 'w') as f:
         json.dump(dict, f, indent=4)
     logging.info("Program finished successfully")
 

@@ -56,9 +56,18 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     """========== Stability Analysis =========="""
     # replace with 'FX_63-137.json' and for pycharm 'NACA0012.json'
     # replace with 'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\FX_63-137.json' and same for the other airfoil for vscode (change nicho to your username)
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path to the design.json file
+    airfoil_wing_json_path = os.path.join(script_dir, 'Airfoils','FX_63-137.json')
+    airfoil_elevator_json_path = os.path.join(script_dir, 'Airfoils','NACA0012.json')
+
+    #Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, '../AerodynamicDesign/Airfoils/FX_63-137.json','../AerodynamicDesign/Airfoils/NACA0012.json')
+    
     Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, 
-                               '../AerodynamicDesign/Airfoils/FX_63-137.json',
-                               '../AerodynamicDesign/Airfoils/NACA0012.json')
+                               airfoil_wing_json_path,
+                               airfoil_elevator_json_path)
 
     if checkstability:
         Stab.Plotting()
