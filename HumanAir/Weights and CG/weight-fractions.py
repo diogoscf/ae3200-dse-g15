@@ -14,8 +14,8 @@ def find_lg(ac_datafile = aircraft_data):
     tyres = pd.read_csv('tiredata.csv', index_col=0).to_numpy()
 
     # Choose smallest available tyre
-    Pmw = 0.90 * ac_datafile["Weights"]["MTOW_N"] / (2 * 9.81)
-    Pnw = 0.10 * ac_datafile["Weights"]["MTOW_N"] / 9.81
+    Pmw = 0.91 * ac_datafile["Weights"]["MTOW_N"] / (2 * 9.81)
+    Pnw = 0.12 * ac_datafile["Weights"]["MTOW_N"] / 9.81 # accounts for additional load from front CG
     for tyre in range(len(tyres[:, 0])):
         Wt_m = tyres[tyre, 0]
         Dw_m = tyres[tyre, 1]
@@ -51,7 +51,7 @@ def find_lg(ac_datafile = aircraft_data):
     ac_datafile["Landing_gear"]["Wtm_m"] = Wt_m
     ac_datafile["Landing_gear"]["Wtn_m"] = Wt_n
 
-    return l_m, l_n, ymin, H_s, Dw_m, Wt_m, Dw_n, Wt_n
+    return l_m, l_n, Pmw, Pnw, ymin, H_s, Dw_m, Wt_m, Dw_n, Wt_n
 
 def component_mass(ac_datafile = aircraft_data):
     # Import statistical weight fraction data
@@ -130,9 +130,16 @@ def iterate_cg_lg(ac_datafile = aircraft_data):
         Xcg_f = xlemac + 0.4 * ac_datafile["Geometry"]["MGC_m"]
         CGlist = [Xcg_OEW, (Xcg_OEW * wcg[1, -1] + Xcg_pld * WPL_cont) / (wcg[1, -1] + WPL_cont), (Xcg_OEW * wcg[1, -1] + Xcg_f * WF_cont) / (wcg[1, -1] + WF_cont), (Xcg_OEW * wcg[1, -1] + Xcg_pld * WPL_cont + Xcg_f * WF_cont) / (wcg[1, -1] + WPL_cont + WF_cont)]
         aftcg = np.max(CGlist)
-        l_m, l_n = find_lg(ac_datafile)[0:2]
+        l_m, l_n, Pmw, Pnw = find_lg(ac_datafile)[0:4]
         wcg[2, 1] = aftcg + l_m
         wcg[2, 3] = aftcg - l_n
+        nose_distance = 0.2
+        if wcg[2, 3] > nose_distance:
+            wcg[2, 3] = nose_distance
+            l_n = aftcg - wcg[2, 3]
+            l_m = l_n*Pnw/Pmw
+            wcg[2, 1] = aftcg + l_m
+
         wcg[2, -1] = Xcg_OEW
         cgwg = np.average(wcg[2, 0:2] - xlemac, weights=wcg[1, 0:2])
         xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8])+ac_datafile["Geometry"]["MGC_m"]*((cgwg/ac_datafile["Geometry"]["MGC_m"])*np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])-0.2*(1+np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])))
@@ -144,6 +151,6 @@ def iterate_cg_lg(ac_datafile = aircraft_data):
 
 if __name__ == "__main__":
     init = time.process_time()
-    print(iterate_cg_lg(aircraft_data)[2])
+    print(iterate_cg_lg(aircraft_data)[0])
     total = time.process_time() - init
     print(total)
