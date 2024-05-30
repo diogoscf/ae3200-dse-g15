@@ -47,6 +47,7 @@
         "fus_width_m": 1.6,
         "MGC_m": 1.93,
         "XLEMAC_m": 3.2,
+        "tail_length_m": 4.5,
         "l_f_nonosecone": 9.5,
         "fuselage_max_perimeter": 6.8
     },
