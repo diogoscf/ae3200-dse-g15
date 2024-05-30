@@ -17,31 +17,37 @@ Loadfactor = 0
 
 #define the forces along half span
 
-def force_distribution(WING_SPAN, AoA, DATA_EXAMPLE, CHORD_LENGTH,V, rho):
+def chord(Sw, taper_ratio, WING_SPAN, AoA, N):
+    b = WING_SPAN[AoA]['y_span'][-1] * 2  
+    # Generate spanwise coordinate points
+    y = np.linspace(WING_SPAN[AoA]['y_span'][0], WING_SPAN[AoA]['y_span'][-1], N)  # N is the number of nodes
+    # Calculate the chord distribution
+    chord_length = 2 * Sw / (1 + taper_ratio) / b * (1 - (1 - taper_ratio) * np.abs(2 * y / b))
+    return chord_length
+
+def force_distribution(WING_SPAN, AoA, DATA_EXAMPLE, c ,V, rho):
     Cl = WING_SPAN[AoA]['Cl']
     Cdi = DATA_EXAMPLE['CDi']
-    c = CHORD_LENGTH[AoA]['Chord']
     L = Cl*0.5*rho*V**2*c # [N/m]
     D = Cdi*0.5*rho*V**2*c # [N/m]    
     return L, D
 
-def weight_distribution(structuralmass, batterymass_w, WING_SPAN, CHORD_LENGTH,AoA):
+def weight_distribution(structuralmass, batterymass_w, WING_SPAN, c,AoA):
     W_ave = (structuralmass + batterymass_w)/2*9.81/WING_SPAN[AoA]['y_span'][-1] # [N/m]
-    W = W_ave*CHORD_LENGTH[AoA]['Chord']/((CHORD_LENGTH[AoA]['Chord'][0]+CHORD_LENGTH[AoA]['Chord'][-1])/2)
+    W = W_ave*c/((c[0]+c[-1])/2)
     return W
 
-def moment_distribution(CHORD_LENGTH, AoA, V, rho, DATA_EXAMPLE):
-    return DATA_EXAMPLE['Cm']*0.5*rho*V**2*CHORD_LENGTH[AoA]['Chord']
+def moment_distribution(c, V, rho, DATA_EXAMPLE):
+    return DATA_EXAMPLE['Cm']*0.5*rho*V**2*c
 
-def TestForces(Lcruise, Ltakeoff, Tcruise, W, WING_SPAN, CHORD_LENGTH, AoA):
+def TestForces(Lcruise, W, WING_SPAN, c, AoA):
     dy = (WING_SPAN[AoA]['y_span'][-1]- WING_SPAN[AoA]['y_span'][0]) / n
-    c = CHORD_LENGTH[AoA]['Chord']
     print('Ltot = ',np.trapz(Lcruise/9.81, WING_SPAN[AoA]['y_span']),' kg')
     print('Wtot = ',np.trapz(W/9.81, WING_SPAN[AoA]['y_span']),' kg')
 
 sweep = 0 #add sweep angle 
-def InternalLoads(L,T,W,D,M,n,y_points,data,sweep):
-    b = data['y-span'][-1]*2
+def InternalLoads(L,T,W,D,M,n,y_points,WING_SPAN, AoA, sweep):
+    b = WING_SPAN[AoA]['y_span'][-1]*2 
     Dtot = T-D # drag and thrust act on the x axis
     Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)))[::-1]
     Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)))[::-1]
