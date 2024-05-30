@@ -16,8 +16,7 @@ def Cd(cdo, A, e, Cl):
 """========== Flight Operations =========="""
 def Stallspeedx(h, temp_offset, Vs, Clmax, T0=288.15, constlambda=-0.0065):
     Temp = (T0 + constlambda * h) # temperature correction is for temperature offset
-    Correction = Temp / (Temp + temp_offset)
-    return 0.5*Correction*Density(h, temp_offset)*Vs**2*Clmax
+    return 0.5*Density(h, temp_offset)*Vs**2*Clmax
 
 def Takeoff(TOP, WS, h, temp_offset, ClmaxTO, rho0=1.225, T0=288.15, constlambda=-0.0065):
     constsigma=Density(h, temp_offset)/rho0
