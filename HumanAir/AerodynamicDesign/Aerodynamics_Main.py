@@ -77,6 +77,7 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
         HSPlanform.PlotWingPlanform()
 
     mac = WingPlanform.MAC()
+
     return mac
 
 if __name__ == "__main__":
