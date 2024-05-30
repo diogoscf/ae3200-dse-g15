@@ -1,74 +1,109 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 from scipy import integrate
-from Functions import import_data, import_data2
-
-n = 100 # resolution of data along half span 
-#Mass in the wing
-Batterymass_f = 0 #kg from 2nd weight estimation, say 0 if on the wing
-Batterymass_w = 0 #kg if the battery is on the wing
-Structuralmass = 0 #kg from 2nd weight estimation 
-Enginemass = 0 #kg from propulsion team 
-
-T=0 #no engines on the wing
-
-Loadfactor = 0 
+from Functions import import_data2
 
 #define the forces along half span
 
-def chord(Sw, taper_ratio, WING_SPAN, AoA, N):
-    b = WING_SPAN[AoA]['y_span'][-1] * 2  
+def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
+    b = Cl_DATA[AoA]['y_span'][-1] * 2  
     # Generate spanwise coordinate points
-    y = np.linspace(WING_SPAN[AoA]['y_span'][0], WING_SPAN[AoA]['y_span'][-1], N)  # N is the number of nodes
+    y = np.linspace(Cl_DATA[AoA]['y_span'][0], Cl_DATA[AoA]['y_span'][-1], n)  # n is the number of nodes
     # Calculate the chord distribution
     chord_length = 2 * Sw / (1 + taper_ratio) / b * (1 - (1 - taper_ratio) * np.abs(2 * y / b))
-    return chord_length
+    return chord_length, y
 
-def force_distribution(WING_SPAN, AoA, DATA_EXAMPLE, c ,V, rho):
-    Cl = WING_SPAN[AoA]['Cl']
-    Cdi = DATA_EXAMPLE['CDi']
-    L = Cl*0.5*rho*V**2*c # [N/m]
-    D = Cdi*0.5*rho*V**2*c # [N/m]    
+def force_distribution(Cl_DATA, Cdi_DATA, AoA, c ,V, rho):
+    Cl = np.array(Cl_DATA[AoA]['coefficient'])
+    Cdi = np.array(Cdi_DATA[AoA]['coefficient'])
+    c = np.array(c)
+    L = Cl * 0.5 * rho * V**2 * c  # [N/m]
+    D = Cdi * 0.5 * rho * V**2 * c  # [N/m]    
     return L, D
 
-def weight_distribution(structuralmass, batterymass_w, WING_SPAN, c,AoA):
-    W_ave = (structuralmass + batterymass_w)/2*9.81/WING_SPAN[AoA]['y_span'][-1] # [N/m]
-    W = W_ave*c/((c[0]+c[-1])/2)
+def weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA):
+    c = np.array(c)
+    W_ave = (structuralmass + batterymass_w) / 2 * 9.81 / Cl_DATA[AoA]['y_span'][-1]  # [N/m]
+    W = W_ave * c / ((c[0] + c[-1]) / 2)
     return W
 
-def moment_distribution(c, V, rho, DATA_EXAMPLE):
-    return DATA_EXAMPLE['Cm']*0.5*rho*V**2*c
+def moment_distribution(c, V, rho, Cm_DATA, AoA):
+    c = np.array(c)
+    return np.array(Cm_DATA[AoA]['coefficient']) * 0.5 * rho * V**2 * c
 
-def TestForces(Lcruise, W, WING_SPAN, c, AoA):
-    dy = (WING_SPAN[AoA]['y_span'][-1]- WING_SPAN[AoA]['y_span'][0]) / n
-    print('Ltot = ',np.trapz(Lcruise/9.81, WING_SPAN[AoA]['y_span']),' kg')
-    print('Wtot = ',np.trapz(W/9.81, WING_SPAN[AoA]['y_span']),' kg')
+def TestForces(Lcruise, W, Cl_DATA, AoA):
+    dy = (Cl_DATA[AoA]['y_span'][-1] - Cl_DATA[AoA]['y_span'][0]) / n
+    print('Ltot = ', np.trapz(Lcruise / 9.81, Cl_DATA[AoA]['y_span']), ' kg')
+    print('Wtot = ', np.trapz(W / 9.81, Cl_DATA[AoA]['y_span']), ' kg')
 
-sweep = 0 #add sweep angle 
-def InternalLoads(L,T,W,D,M,n,y_points,WING_SPAN, AoA, sweep):
-    b = WING_SPAN[AoA]['y_span'][-1]*2 
-    Dtot = T-D # drag and thrust act on the x axis
-    Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)))[::-1]
-    Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)))[::-1]
-    Vx = np.append(Vx,[0])
-    Vz = np.append(Vz,[0])
+
+def InternalLoads(L, T, W, D, M, n, y_points, Cl_DATA, AoA, sweep):
+    b = Cl_DATA[AoA]['y_span'][-1] * 2 
+    Dtot = T - D  # drag and thrust act on the x axis
+    Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)), y_points)[::-1]
+    Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)), y_points)[::-1]
+    Vx = np.append(Vx, [0])
+    Vz = np.append(Vz, [0])
 
     #add the moment about x 
-    Mx = integrate.cumtrapz(np.flip(Vz * b / (2 * n)))[::-1]
-    Mx = np.append(Mx,[0])
+    Mx = -integrate.cumtrapz(np.flip(Vz * b / (2 * n)), y_points)[::-1]
+    Mx = np.append(Mx, [0])
 
     #add the torque function
-    Mz = integrate.cumtrapz(np.flip(Vz*np.tan(sweep)*b/(2*n)))[::-1]
-    #dy = (Excel_TO['y-span'][-1]- Excel_TO['y-span'][0]) / n
-    #Mz = integrate.cumtrapz(Vz*np.tan(sweep)*(y_points[1:]-y_points[:-1]),dx=dy)
-    Mz = np.append(Mz,[0])
+    Ml = []
+    Mw =[]
+    yp = y_points
+    count = 2
 
-    return Vx, Vz, Mx, Mz
+    # due to lift and weight moment arm
+    for i in yp[1:]:
+        Mli = IntegrateTorqueFromLift(count, yp, -L, sweep)
+        Mwi = IntegrateTorqueFromLift(count, yp, W, sweep)
+        Ml.append(Mli)
+        Mw.append(Mwi)
+        count += 1
 
-Excel_cruise, Excel_TO, y_points = import_data(n)
-Lcruise, Ltakeoff, W, M_cruise, M_TO, Dcruise, Dtakeoff = forces(Excel_cruise, Excel_TO, y_points, n)
-Vx, Vz, Mx, Mz = InternalLoads(Lcruise, T, W, Dcruise, M_cruise, n, y_points, Excel_cruise) #for the cruise
+    # due to aerodynamic moment:
+    Mym = integrate.cumtrapz(np.flip(M), np.flip(yp))
+    My = (np.array(Ml) + np.array(Mw) + np.array(Mym))[::-1]
+    My = np.append(My, [0])
+
+    return Vx, Vz, Mx, My
+
+def IntegrateTorqueFromLift(c, axis, data, sweep):
+    data = np.flip(data)
+    data = data[:c]
+    axis = np.flip(axis)
+    axis = axis[:c]
+    data = data * np.tan(sweep) * (axis - axis[c-1])
+
+    M = np.trapz(data, axis)
+    return M
+
+# Data
+AoA = -6
+Sw = 39  # [m2]
+taper_ratio = 0.4
+Vcruise = 60  # [m/s]
+rho = 0.9  # [kg/m3]
+structuralmass = 20000
+batterymass_w = 0
+T = 0
+sweep = 0.157
+
+# import files
+Cl_DATA = import_data2('HumanAir/FuselageSizing/Cl_DATA.txt')
+Cm_DATA = import_data2('HumanAir/FuselageSizing/Cm_DATA.txt')
+Cdi_DATA = import_data2('HumanAir/FuselageSizing/Cdi_DATA.txt')
+
+n = len(Cl_DATA[AoA]['coefficient'])
+
+c, y_points = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
+L_cruise, D_cruise = force_distribution(Cl_DATA, Cdi_DATA, AoA, c ,Vcruise, rho)
+W_cruise = weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA)
+M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
+
+Vx, Vz, Mx, Mz = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruise, n, y_points, Cl_DATA, AoA, sweep=0.157)
 
 plt.figure(figsize=(12, 8))
 
@@ -77,24 +112,28 @@ plt.plot(y_points, Vx)
 plt.title('Shear Force Vx along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Vx [N]')
+plt.xlim(left=0)
 
 plt.subplot(2, 2, 2)
 plt.plot(y_points, Vz)
 plt.title('Shear Force Vz along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Vz [N]')
+plt.xlim(left=0)
 
 plt.subplot(2, 2, 3)
 plt.plot(y_points, Mx)
 plt.title('Bending Moment Mx along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Mx [Nm]')
+plt.xlim(left=0)
 
 plt.subplot(2, 2, 4)
 plt.plot(y_points, Mz)
 plt.title('Torque Mz along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Mz [Nm]')
+plt.xlim(left=0)
 
 plt.tight_layout()
 plt.show()
