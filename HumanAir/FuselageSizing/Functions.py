@@ -51,8 +51,8 @@ def import_data2(file_path):
                 lift_distribution = float(values[i + 1]) 
                 
                 if angle not in data:
-                    data[angle] = {"y_positions": [], "lift_distribution": []}
+                    data[angle] = {"y_span": [], "Cl": []}
 
-                data[angle]["y_positions"].append(y_positions)
-                data[angle]["lift_distribution"].append(lift_distribution)
+                data[angle]["y_span"].append(y_positions)
+                data[angle]["Cl"].append(lift_distribution)
     return data
