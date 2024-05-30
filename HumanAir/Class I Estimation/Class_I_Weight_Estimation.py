@@ -19,7 +19,7 @@ class WeightEstm:
             "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / self.dict["Power_prop"]["eta_electricmotor"]
 
     def FuelWeight(self, bat):
-        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
+        return 1.15 * 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
             "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
 
     def WingWeight(self):
@@ -44,14 +44,12 @@ class WeightEstm:
 
             MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + self.dict["Iterations Class I"]["Wpl_des_kg"]
 
-            if bat==0.134: print(MTOW_new, OEW_prime, PowertrainWeight, BatteryWeight, FuelWeight, WingWeight)
-
             if MTOW_new > 8000:
                 break
 
             ok = True
 
-        if MTOW_new < 8000:
+        if MTOW_new < 4000:
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             return (
                 MTOW_new,
@@ -95,7 +93,6 @@ class WeightEstm:
         lst_P = lst_P[valid_indices]
 
         if len(lst_P) == 0:
-            #print("No valid power values to fit.")
             return np.array([20,20]), np.array([20,20])
 
         coeff_exp = np.polyfit(lst_bat, np.log(lst_P), 1)
