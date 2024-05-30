@@ -82,8 +82,6 @@ class Class_II_Weight:
 
 
 
-
-
         """========== Structure Weight =========="""
     def WingWeight(self):
         results = {}
