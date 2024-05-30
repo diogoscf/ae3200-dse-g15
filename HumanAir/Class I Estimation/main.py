@@ -42,7 +42,9 @@ from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
+from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 
+"Getting the design.json file"
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -62,7 +64,7 @@ with open(design_json_path, 'r') as f:
 
 logging.info(" Opening design.json successful")
 
-
+"Generating the design points"
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
@@ -170,7 +172,8 @@ def Generate(p, dict, run=False):
         file_name = 'data_iterations.json'
         with open(file_name, 'w') as file:
             json.dump(dict_iterations, file, indent=4)
-                                    
+
+"Calculating the weighted score to find the best design point"
 def calculate_weighted_score(point_data, weights):
 
     # setting the worst optimal data
@@ -193,6 +196,7 @@ def calculate_weighted_score(point_data, weights):
         score += (worst_optimal_data[key] - point_data.get(key, 0))/worst_optimal_data[key] * weight # get a normalised value for the contribution of each key
     return score
 
+"Finding the optimal design point with the highest score and the lowest battery weight"
 def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_threshold = 50, design_points = None, printing = False):
 
     optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold}
@@ -235,8 +239,11 @@ def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_thres
         print(design_points[str(sorted_design_points[step][0])])
         print(WeightEstimation(dict).Iterations(dict['Power_prop']['bat']))
 
+"Main Function to run the program"
 if __name__ == '__main__':
 
+
+    "Getting the data_iterations.json file"
     # change this to run the iterations generator
     run = False
     if run:
@@ -262,6 +269,7 @@ if __name__ == '__main__':
 
     logging.info(" Opening data_iterations.json successful")
 
+    "Setting up the weights to get the optimal design point"
     # Weights for each key
     # increasing score: positive weight
     # decreasing score: negative weight
@@ -288,6 +296,7 @@ if __name__ == '__main__':
     logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
     logging.info(" Calculating the weight components")
 
+    "Calculate the component weights"
     # getting the weight components
     WeightEstimation = WeightEstimation(dict)
     component_weights = WeightEstimation.Iterations(dict['Power_prop']['bat'])
@@ -308,6 +317,7 @@ if __name__ == '__main__':
 
     logging.info(" Calculating the Xcg excursion")
 
+    "Calculate the Xcg excursion"
     #return wcg, CGlist, xlemac
     wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile = dict)
 
@@ -316,6 +326,7 @@ if __name__ == '__main__':
     logging.info(" Calculating the Xcg excursion successful")
     logging.info(" Calculating the MAC")
 
+    "Finding the aerodynamic characteristics"
     # this line is to comply with nicholas's mood, please dont remove it as it calculates the mac
     mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
     print(f'MAC: {round(mac,2)} [m]')
@@ -336,8 +347,13 @@ if __name__ == '__main__':
     aerodynamic_design(dict, checkwingplanform=check_wing_planform, checkflowparameters=check_flow_parameter, checkstability=check_stability, checkhsplanform=check_horizontal_stabilizer_planform)
 
     logging.info(" Calculating the aerodynamic design successful")
+    logging.info(" Calculating the hourly price")
 
-    logging.info("Saving the modified design.json file")
+    cost = hourly_operating_cost("maf_mission_graph.csv")
+    print(f"Cost: {round(cost,2)} [US$]")
+
+    logging.info(" Calculating the hourly price successful")
+    logging.info(" Saving the modified design.json file")
     print("Finally, I am free")
 
 
@@ -347,7 +363,7 @@ if __name__ == '__main__':
     # save the modified design.json file and hope it doesnt break
     with open(design_json_path, 'w') as f:
         json.dump(dict, f, indent=4)
-    logging.info("Program finished successfully")
+    logging.info(" Program finished successfully")
 
 
 
