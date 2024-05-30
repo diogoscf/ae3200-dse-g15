@@ -1,19 +1,3 @@
-"""
-Input parameters:
----
-W_TO [lbs]
-S_Wing [ft^2]
-n_ult [-]
-AR_Wing [-]
-Sweep_c/4_Wing [deg]
-Sweep_c/2_Wing [deg]
-Taper_Wing [-]
-(t/c)_max_Wing [-]
-V_H (Maximum level speed at sea level) [kts]
-b_wing [ft]
-t_r_wing (Maximum thickness of wing root chord) [ft]
-
-"""
 import sys
 import os
 
@@ -262,4 +246,33 @@ class Class_II_Weight:
     def NewEmptyWeight(self):
         return self.PowerplantWeight_Total()+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total()
 
-def R
+
+def RunClassII(aircraft_data, check):
+    p=Class_II_Weight(aircraft_data)
+
+    if check:
+        print("========== Structures Weight ==========")
+        print('\nWing Weight = ', p.WingWeight()["Average"])
+        print('Empennage Weight =', p.EmpennageWeight()['Average'])
+        print('Fuselage Weight = ', p.FuselageWeight()["Average"])
+        print('Nacelle Weight = ', p.NacelleWeight()["Average"])
+        print('Landing Gear Weight = ', p.LandingGearWeight()["Average"])
+        print('\nTotal Structures Weight = ', p.StructureWeight_Total())
+        print('\n\n ========== Powerplant Weight ==========')
+        print('\n Fuel System Weight = ', p.FuelSystemWeight()["Average"])
+        print('\n Total Powerplant Weight = ', p.PowerplantWeight_Total())
+        print('\n\n ========== Fixed Equipment Weight ==========')
+        print('\n Flight Control Systems Weight = ', p.FlightControlSystem()["Average"])
+        print("Hydraulics and/or Pneumatics Weight = ", p.HydraulicsPneumatics()["Average"])
+        print("Instruments, Avionics and Electronics Weight = ", p.InstrumentsAvionicsElectronics()["Average"])
+        print("Electrical System Weight = ", p.ElectricalSystemWeight()["Average"])
+        print("Airconditioning, Pressurization and Anti or Deicing Weight = ", p.AirconPressurizationAntiDeicingWeight()["Average"])
+        print("Oxygen System Weight = ", p.OxygenSystem()["Average"])
+        print("APU Weight = ", p.APU()["Average"])
+        print("Furnishings Weight = ", p.Furnishings()["Average"])
+        print("Auxiliary Gear Weight = ", p.AuxiliaryGear()["Average"])
+        print("Paint Weight = ", p.Paint()["Average"])
+        print("\nTotal Fixed Equipment Weight = ", p.FixedEquipmentWeight_Total())
+        print("\n\nTotal Empty Weight = ", p.NewEmptyWeight())
+
+    return p.NewEmptyWeight()
