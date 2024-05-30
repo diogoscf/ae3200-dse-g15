@@ -29,6 +29,7 @@ class Class_II_Weight:
         self.W_TO=N_to_lbs(aircraft_data["Weights"]["MTOW_N"])
         self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L"]) #Not in dict yet
         self.W_F=N_to_lbs(aircraft_data["Weights"]["WF_N"])
+        self.W_E=N_to_lbs(aircraft_data["Weights"]["W_E"]) #Not sure if in dict, as only OEW is given
 
         self.S_Wing = m_squared_to_ft_squared(aircraft_data["Aero"]["S_Wing"]) #Not in dict yet
         self.S_h = m_squared_to_ft_squared(aircraft_data["Aero"]["S_h"]) #Not in dict yet
@@ -58,10 +59,13 @@ class Class_II_Weight:
 
         self.V_H = m_s_to_kt(aircraft_data["Performance"]["V_H"]) #Not in dict yet
         self.V_c = m_s_to_kt(aircraft_data["Performance"]["Vc_m/s"])
+        self.M_D = m_s_to_kt(aircraft_data["Performance"]["M_D"]) #Not in dict yet
         self.QCW_to_QCh = m_to_ft(aircraft_data["Stability"]["QCW_to_QCh"]) #Not in dict yet
         self.l_f_nonosecone = m_to_ft(aircraft_data["Geometry"]["l_f_nonosecone"]) #Not sure if this is the same as fuselage length
+        self.paint = aircraft_data["General"]["Paint"]
         self.p_max = m_to_ft(aircraft_data["Geometry"]["fuselage_max_perimeter"])
         self.N_pax = aircraft_data["Performance"]["N_pax"] #Includes pilots and is not in dict yet
+        self.N_row = aircraft_data["Geometry"]["N_row"] #Not in dict yet
         self.l_f = m_to_ft(aircraft_data["Geometry"]["fus_length_m"])
         self.w_f = m_to_ft(aircraft_data["Geometry"]["fus_width_m"]) #Not in dict yet
         self.h_f = m_to_ft(aircraft_data["Geometry"]["fus_height_m"]) #Not in dict yet
@@ -74,11 +78,15 @@ class Class_II_Weight:
 
         self.int = aircraft_data["Power_prop"]["int"] #Fraction of integral fuel tanks, Not in dict yet
 
-        self.l_s_m = aircraft_data["Landing_gear"]["l_s_m"] #Not sure if in dict
-        self.l_s_n = aircraft_data["Landing_gear"]["l_s_n"] #Not sure if in dict
+        self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"]) #Not sure if in dict
+        self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"]) #Not sure if in dict
+        self.retractable = aircraft_data["Landing_gear"]["Retractable"]
 
         self.N_e = aircraft_data["Power_prop"]["N_e"] #Not in dict yet
         self.N_t = aircraft_data["Power_prop"]["N_t"] #Not in dict yet
+
+        self.PoweredFlightControls = aircraft_data["General"]["PoweredFlightControls"] #Not in dict yet
+        self.DuplicatedFlightControls = aircraft_data["General"]["DuplicatedFlightControls"] #Not in dict yet
 
 
 
@@ -134,11 +142,11 @@ class Class_II_Weight:
         results["Average"] = np.average([results["Cessna"], results["Torenbeek"]])
         return results
 
-    def LandingGearWeight(self, retractable):
+    def LandingGearWeight(self):
         results = {}
 
         results["Cessna"] = 0.013*self.W_TO+0.362*self.W_L**0.417*self.n_ult_l**0.950*self.l_s_m**0.183*6.2+0.0013*self.W_TO+0.007157*self.W_L**0.749*self.n_ult_l*self.l_s_n**0.788
-        if retractable:
+        if self.retractable:
             results["Cessna"]+=0.014*self.W_TO
 
         results["USAF"] = 0.054*self.l_s_m**0.501*self.W_L*self.n_ult_l**0.684
@@ -152,18 +160,106 @@ class Class_II_Weight:
 
 
     """========== Powerplant Weight =========="""
+    def FuelSystemWeight(self):
+        results={}
+
+        results["Cessna"] = 0.40*self.W_F/self.K_fsp
+        results["USAF"] = 2.49*((self.W_F/self.K_fsp)**0.6*(1/(1+self.int))**0.3*self.N_t**0.20*self.N_e**0.13)**1.21
+        results["Torenbeek"] = 2*(self.W_F/5.87)**0.667
+
+        results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
+
+        return results
+
     def PowerplantWeight_Total(self):
         results = {}
         results["USAF"]["WeWaiWpropWp"] = 2.575*(self.K_p*self.P_TO)**0.922*self.N_e
-        results["USAF"]["Wfs"] = 2.49*((self.W_F/self.K_fsp)**0.6*(1/(1+self.int))**0.3*self.N_t**0.20*self.N_e**0.13)**1.21
-        results["USAF"]["Total"]=results["USAF"]["WeWaiWpropWp"]+results["USAF"]["Wfs"]-self.NacelleWeight()["Average"]
+        results["USAF"]["Total"]=results["USAF"]["WeWaiWpropWp"]+self.FuelSystemWeight()["USAF"]-self.NacelleWeight()["Average"]
 
         results["Torenbeek"]["Total"] = self.K_pg*(self.K_p*self.P_TO+0.24*self.P_TO)
         return np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
 
     """========== Fixed Equipment Weight =========="""
+    def FlightControlSystem(self):
+        results={}
+
+        results["Cessna"]=0.016*self.W_TO
+        if not self.PoweredFlightControls:
+            results["USAF"] = 1.066*self.W_TO**0.626
+            if not self.DuplicatedFlightControls:
+                results["Torenbeek"]=0.33*self.W_TO**(2/3)
+        else:
+            results["USAF"] = 1.08*self.W_TO**0.7
+            results["Torenbeek"]=False
+
+        finalresults=[]
+        for i in results.values():
+            if i!=False:
+                finalresults.append(i)
+        results["Average"]=np.average(finalresults)
+        return results
+
+    def HydraulicsPneumatics(self):
+        return {"Average": 0.008*self.W_TO}
+    def InstrumentsAvionicsElectronics(self):
+        return {"Average": 33*self.N_pax}
+
+
+    def ElectricalSystemWeight(self):
+        results={}
+        results["Cessna"] = 0.0268*self.W_TO
+        results["USAF"] = 426*((self.FuelSystemWeight()["Average"]+self.InstrumentsAvionicsElectronics()["Average"])/1000)**0.51
+
+        results["Average"] = np.average([results["Cessna"],results["USAF"]])
+        return results
+
+    def AirconPressurizationAntiDeicingWeight(self):
+        results={}
+
+        results["USAF"] = 0.265*self.W_TO**0.52*self.N_pax**0.68*self.InstrumentsAvionicsElectronics()["Average"]**0.17*self.M_D**0.08
+        if self.N_e>1:
+            results["Torenbeek"]=0.018*self.W_E
+        else:
+            results["Torenbeek"] = 2.5*self.N_pax
+
+        results["Average"]= np.average([results["USAF"], results["Torenbeek"]])
+        return results
+
+    def OxygenSystem(self):
+        return {"Average": 20+0.5*self.N_pax}
+
+    def APU(self):
+        results={}
+        if self.APU:
+            results["Average"] = 0.0085*self.W_TO
+        else:
+            results["Average"] = 0
+        return results
+
+    def Furnishings(self):
+        results = {}
+        results["Cessna"] = 0.412*self.N_pax**1.145*self.W_TO**0.489
+        results["Torenbeek"] = 5+13*self.N_pax+25*self.N_row
+
+        results["Average"] = np.average([results["Cessna"], results["Torenbeek"]])
+        return results
+
+    def AuxiliaryGear(self):
+        return {"Average": 0.01*self.W_E}
+
+    def Paint(self):
+        if self.paint:
+            results={"Average": 0.0045*self.W_TO}
+        else:
+            results={"Average": 0}
+        return results
+
 
 
     def FixedEquipmentWeight_Total(self):
+        return self.FlightControlSystem()["Average"]+self.HydraulicsPneumatics()["Average"]+self.InstrumentsAvionicsElectronics()["Average"]+self.ElectricalSystemWeight()["Average"]+self.AirconPressurizationAntiDeicingWeight()["Average"]+self.OxygenSystem()["Average"]+self.APU()["Average"]+self.Furnishings()["Average"]+self.AuxiliaryGear()["Average"]+self.Paint()["Average"]
 
-        return 1
+    def NewEmptyWeight(self):
+        return self.PowerplantWeight_Total()+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total()
+
+def R
