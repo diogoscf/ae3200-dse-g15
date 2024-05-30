@@ -25,7 +25,7 @@ def weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA):
     c = np.array(c)
     W_ave = (structuralmass + batterymass_w) / 2 * 9.81 / Cl_DATA[AoA]['y_span'][-1]  # [N/m]
     W = W_ave * c / ((c[0] + c[-1]) / 2)
-    return W
+    return -W
 
 def moment_distribution(c, V, rho, Cm_DATA, AoA):
     c = np.array(c)
@@ -40,13 +40,13 @@ def TestForces(Lcruise, W, Cl_DATA, AoA):
 def InternalLoads(L, T, W, D, M, n, y_points, Cl_DATA, AoA, sweep):
     b = Cl_DATA[AoA]['y_span'][-1] * 2 
     Dtot = T - D  # drag and thrust act on the x axis
-    Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)), y_points)[::-1]
-    Vz = -integrate.cumtrapz(np.flip((L-W) * b / (2 * n)), y_points)[::-1]
+    Vx = integrate.cumtrapz(np.flip(Dtot * b / (2 * n)),y_points)[::-1]
+    Vz = -integrate.cumtrapz(np.flip((L - W) * b / (2 * n)), np.abs(y_points))[::-1]
     Vx = np.append(Vx, [0])
     Vz = np.append(Vz, [0])
 
     #add the moment about x 
-    Mx = -integrate.cumtrapz(np.flip(Vz * b / (2 * n)), y_points)[::-1]
+    Mx = integrate.cumtrapz(np.flip(Vz * b / (2 * n)), y_points)[::-1]
     Mx = np.append(Mx, [0])
 
     #add the torque function
@@ -81,12 +81,12 @@ def IntegrateTorqueFromLift(c, axis, data, sweep):
     return M
 
 # Data
-AoA = -6
+AoA = 6
 Sw = 39  # [m2]
 taper_ratio = 0.4
 Vcruise = 60  # [m/s]
 rho = 0.9  # [kg/m3]
-structuralmass = 2000 
+structuralmass = 20000
 batterymass_w = 0
 T = 0
 sweep = 0.157
@@ -105,7 +105,16 @@ M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
 
 Vx, Vz, Mx, Mz = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruise, n, y_points, Cl_DATA, AoA, sweep=0.157)
 
-plt.figure(figsize=(12, 8))
+
+
+plt.plot(y_points, L_cruise)
+plt.plot(y_points, W_cruise)
+plt.title('Lift')
+plt.xlim(left=0)
+plt.tight_layout()
+plt.grid()
+plt.show()
+
 
 plt.subplot(2, 2, 1)
 plt.plot(y_points, Vx)
@@ -113,6 +122,8 @@ plt.title('Shear Force Vx along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Vx [N]')
 plt.xlim(left=0)
+plt.grid()
+
 
 plt.subplot(2, 2, 2)
 plt.plot(y_points, Vz)
@@ -120,6 +131,8 @@ plt.title('Shear Force Vz along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Vz [N]')
 plt.xlim(left=0)
+plt.grid()
+
 
 plt.subplot(2, 2, 3)
 plt.plot(y_points, Mx)
@@ -127,6 +140,8 @@ plt.title('Bending Moment Mx along span')
 plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Mx [Nm]')
 plt.xlim(left=0)
+plt.grid()
+
 
 plt.subplot(2, 2, 4)
 plt.plot(y_points, Mz)
@@ -135,5 +150,7 @@ plt.xlabel('Spanwise Position [m]')
 plt.ylabel('Mz [Nm]')
 plt.xlim(left=0)
 
+
 plt.tight_layout()
+plt.grid()
 plt.show()
