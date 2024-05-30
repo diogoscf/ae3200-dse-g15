@@ -16,7 +16,7 @@ handler.setFormatter(colorlog.ColoredFormatter(
         'INFO': 'green',
         'WARNING': 'yellow',
         'ERROR': 'red',
-        'CRITICAL': 'bold_red',
+        'CRITICAL': 'bold_red'
     }
 ))
 logger = colorlog.getLogger()
@@ -68,14 +68,14 @@ logging.info(" Opening design.json successful")
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(7.5, 9.51, 0.5)
+    A_lst = np.arange(9.5, 9.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
     Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
     Clmax_TO_lst = np.arange(2, 2.61, 0.2)
     Clmax_Land_lst = np.arange(2, 2.61, 0.2)
     Cd0_lst = np.arange(0.026, 0.0281, 0.002)
     V_cruise_lst = np.arange(60, 63.1, 1)
-    climbrate_lst = np.arange(3.5, 4.51, 0.5)
+    climbrate_lst = np.arange(2.5, 4.51, 0.5)
 
     # calculate the total numbers of iterations
     total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
@@ -98,13 +98,15 @@ def Generate(p, dict, run=False):
                                 for V_cruise in V_cruise_lst:
 
                                     # update the endurance based on v cruise
-                                    dict["endurance"]=1111200/V_cruise/3600
+                                    dict["Performance"]["endurance"]=1111200/V_cruise/3600
 
                                     for climbrate in climbrate_lst:
                                         current_iteration+=1
 
                                         # print the iteration number every 500 steps
-                                        if current_iteration%500==0: print("Iteration:"+str(current_iteration)+"/"+str(total_iterations))
+                                        if current_iteration%500==0: 
+                                            logging.info(" Iteration: "+str(current_iteration)+"/"+str(total_iterations))
+                                            #print()
 
                                         # update the parameters
                                         p.A = A
@@ -118,7 +120,7 @@ def Generate(p, dict, run=False):
                                         
 
                                         # initialise the loading diagram to get W/P and W/S
-                                        dict['W/P'], dict['W/S'] = WP_WS().calculate_optimal_point()
+                                        dict['Performance']['W/P_N/W'], dict['Performance']['W/S_N/m2'] = WP_WS().calculate_optimal_point()
 
                                         # initialise the class I weight estimation
                                         WeightEstm = WeightEstimation(dict)
@@ -135,20 +137,20 @@ def Generate(p, dict, run=False):
                                         for step in range(len(bat)):
 
                                             # calculate the power required cruise
-                                            dict['P_req_cruise_W'] = dict['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
-                                            dict['E_bat_Wh'] = dict['P_req_cruise_W'] * dict['endurance'] / dict['P_cruise/P_TO'] * bat[step]
+                                            dict['Power_prop']['P_req_cruise_W'] = dict['Performance']['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
+                                            dict['Power_prop']['E_bat_Wh'] = dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * bat[step]
 
                                             # calculate the co2 ratio for the specific combination of parameters
                                             co2_ratio = co2(ac_data=dict)
 
-                                            if co2_ratio * 100 > 50 and ok == 0:
+                                            if co2_ratio * 100 > 30 and ok == 0:
 
                                                 idx += 1
                                                 ok = 1
 
 
 
-                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >50 and dict['E_bat_Wh']<250000: # the <250000 condition is for the battery to be able to be charged
+                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >30 and dict['Power_prop']['E_bat_Wh']<250000: # the <250000 condition is for the battery to be able to be charged
                                                 CO2 = co2_ratio
 
                                                 # save the combination of parameters
@@ -162,8 +164,8 @@ def Generate(p, dict, run=False):
                                                 dict_iterations[str(idx)]['V_cruise'] = V_cruise
                                                 dict_iterations[str(idx)]['climbrate'] = climbrate
                                                 dict_iterations[str(idx)]['CO2'] = np.round(CO2*100, 2)
-                                                dict_iterations[str(idx)]['W/P'] = dict['W/P']
-                                                dict_iterations[str(idx)]['W/S'] = dict['W/S']
+                                                dict_iterations[str(idx)]['W/P'] = dict['Performance']['W/P_N/W']
+                                                dict_iterations[str(idx)]['W/S'] = dict['Performance']['W/S_N/m2']
                                                 dict_iterations[str(idx)]['bat'] = bat[step]
 
                                                 co2_ratio_max=co2_ratio
@@ -289,7 +291,7 @@ if __name__ == '__main__':
     }
 
     maximum_weight_battery = 1000
-    CO2_threshold = 50
+    CO2_threshold = 30
     printing = False
 
     find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing)
@@ -308,7 +310,7 @@ if __name__ == '__main__':
           f" Battery {round(component_weights[4],2)}[kg],"
           f" Fuel {round(component_weights[5],2)}[kg],"
           f" Wing {round(component_weights[6],2)}[kg],"
-          f" Wpl_des {round(component_weights[6],2)}[kg]")
+          f" Wpl_des {round(component_weights[7],2)}[kg]")
 
     print('Total weight:', round(component_weights[1],2), '[kg] including contingency')
     print('Contingency:', (round((dict['Contingency']-1)*100,0)),"%")
