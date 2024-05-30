@@ -74,8 +74,8 @@ class Class_II_Weight:
 
         self.int = aircraft_data["Power_prop"]["int"] #Fraction of integral fuel tanks, Not in dict yet
 
-        self.l_s_m = aircraft_data["Landing_gear"]["l_s_m"] #Not sure if in dict
-        self.l_s_n = aircraft_data["Landing_gear"]["l_s_n"] #Not sure if in dict
+        self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"]) #Not sure if in dict
+        self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"]) #Not sure if in dict
 
         self.N_e = aircraft_data["Power_prop"]["N_e"] #Not in dict yet
         self.N_t = aircraft_data["Power_prop"]["N_t"] #Not in dict yet
@@ -88,9 +88,13 @@ class Class_II_Weight:
 
         results["Cessna"] = 0.002933*self.S_Wing**1.018*self.AR_Wing**2.473*self.n_ult**0.611
         results["USAF"] = 96.948*((self.W_TO*self.n_ult*10**(-5))**0.65*(self.AR_Wing/np.cos(self.QuarterChordSweep_Wing))**0.57*(self.S_Wing/100)**0.61*((1+self.Taper_Wing)/2*self.tc_m_Wing)**0.36*(1+self.V_H/500)**0.5)**0.993
-        results["Torenbeek"] = 0.00125*self.W_TO*(self.b_Wing/np.cos(self.HalfChordSweep_Wing))**0.75*(1+(6.3*np.cos(self.HalfChordSweep_Wing)/self.b_Wing)**0.5)*self.n_ult**0.55*(self.b_Wing*self.S_Wing/self.t_root_max_Wing*self.W_TO*np.cos(self.HalfChordSweep_Wing))**0.30
-
+        results["Torenbeek"] = (0.00125 *
+                                self.W_TO*(self.b_Wing/np.cos(self.HalfChordSweep_Wing))**0.75
+                                *(1+(6.3*np.cos(self.HalfChordSweep_Wing)/self.b_Wing)**0.5)
+                                *self.n_ult**0.55
+                                *(self.b_Wing*self.S_Wing/self.t_root_max_Wing*self.W_TO*np.cos(self.HalfChordSweep_Wing))**0.30)
         results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
+        print(results)
         return results
 
     def EmpennageWeight(self):
