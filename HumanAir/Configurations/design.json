@@ -8,8 +8,8 @@
         "OEW_N": 17651,
         "MFW_N": 1390,
         "WF_N": 1922,
-        "Wbat_N": 5094,
-        "Ww_N": 2477,
+        "Wbat_N": 11772,
+        "Ww_N": 5000,
         "Wpl_des_kg": 630,
         "Wpl_max_kg": 720,
         "W_Pilot_N": 882.9
@@ -107,7 +107,11 @@
         "Wtn_m": 0.1,
         "l_s_m": 1,
         "l_s_n": 1,
-        "Retractable": true
+        "Retractable": true,
+        "PMW_N": 3500,
+        "PNW_N": 350,
+        "Xnw_m": 0.20,
+        "Xmw_m": 4
     },
     "Stability": {
         "Cg_Aft": 0.75,
