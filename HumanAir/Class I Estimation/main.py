@@ -39,7 +39,7 @@ sys.path.append(project_root)
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
-from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction as co2
+from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 
