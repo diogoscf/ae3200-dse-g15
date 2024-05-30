@@ -11,7 +11,8 @@ from aircraft_data import aircraft_data
 
 def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
     # Import tyre database
-    tyres = pd.read_csv('tiredata.csv', index_col=0).to_numpy()
+    tyre_file = os.path.join(os.path.dirname(__file__), "tiredata.csv")
+    tyres = pd.read_csv(tyre_file, index_col=0).to_numpy()
 
     # Choose smallest available tyre
     nose_loading = nose_loading
@@ -68,7 +69,8 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
 
 def component_mass(ac_datafile = aircraft_data):
     # Import statistical weight fraction data
-    fracs = pd.read_csv('fraction-database.csv', index_col=0).to_numpy()
+    fracs_file= os.path.join(os.path.dirname(__file__), "fraction-database.csv")
+    fracs = pd.read_csv(fracs_file, index_col=0).to_numpy()
 
     # Convert weights to kg and with contingency
     # TODO: Change to actual datafile
