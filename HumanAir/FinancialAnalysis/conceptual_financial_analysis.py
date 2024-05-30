@@ -6,7 +6,7 @@ import math
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data, c206_data
-from CO2_Calculator.conceptual_co2 import calculate_new_co2, calculate_mission_freqs
+from CO2_Calculator.conceptual_co2 import _calculate_new_co2_flight_lengths, _calculate_mission_freqs
 from unit_conversions import nm_to_m
 
 vol_jet_a1_price = 0.8 #US$/L
@@ -35,8 +35,8 @@ def hourly_operating_cost(mission_file, standard_aircraft_data = c206_data, airc
     """
     overhaul_cost = standard_aircraft_data["overhaul_per_hour"] * standard_aircraft_data["Vc_m/s"] / aircraft_data["Performance"]["Vc_m/s"]
 
-    mission_freqs = calculate_mission_freqs(mission_file)
-    _, maintenance_cost = calculate_new_co2(mission_freqs, ac_data = aircraft_data, maintenance_standard_co2 = None, V_standard_kts = None, standard_ac_data = standard_aircraft_data)
+    mission_freqs = _calculate_mission_freqs(mission_file)
+    _, maintenance_cost = _calculate_new_co2_flight_lengths(mission_freqs, ac_data = aircraft_data, maintenance_standard_co2 = None, V_standard_kts = None, standard_ac_data = standard_aircraft_data) # NOTE: This maintenance cost estimate is not really correct now
 
     endurance = nm_to_m(aircraft_data["Performance"]["range_nm"])/aircraft_data["Performance"]["Vc_m/s"]/3600
 
