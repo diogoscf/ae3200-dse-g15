@@ -43,7 +43,7 @@ class Class_II_Weight:
 
         self.V_H = m_s_to_kt(aircraft_data["Performance"]["V_H"]) #Not in dict yet
         self.V_c = m_s_to_kt(aircraft_data["Performance"]["Vc_m/s"])
-        self.M_D = m_s_to_kt(aircraft_data["Performance"]["M_D"]) #Not in dict yet
+        self.M_D = aircraft_data["Performance"]["M_D"] #Not in dict yet
         self.QCW_to_QCh = m_to_ft(aircraft_data["Stability"]["QCW_to_QCh"]) #Not in dict yet
         self.l_f_nonosecone = m_to_ft(aircraft_data["Geometry"]["l_f_nonosecone"]) #Not sure if this is the same as fuselage length
         self.paint = aircraft_data["General"]["Paint"]
@@ -89,6 +89,9 @@ class Class_II_Weight:
 
     def EmpennageWeight(self):
         results = {}
+        results["Cessna"] = {}
+        results["USAF"] = {}
+
         """ Cessna """
         results["Cessna"]["W_h"] = (3.184*self.W_TO**0.887*self.S_h**0.101*self.AR_h**0.138)/(174.04*self.t_root_max_h**0.223)
         results["Cessna"]["W_v"] = (1.68*self.W_TO**0.567*self.S_v**0.1249*self.AR_v**0.482)/(639.95*self.t_root_max_v**0.747*(np.cos(self.QuarterChordSweep_v))**0.882)
@@ -105,7 +108,6 @@ class Class_II_Weight:
         results["Torenbeek"] = 0.04*(self.n_ult*(self.S_v+self.S_h)**2)**0.75
 
         results["Average"]=np.average([results["Cessna"]["Total"], results["USAF"]["Total"], results["Torenbeek"]])
-
         return results
 
     def FuselageWeight(self):
