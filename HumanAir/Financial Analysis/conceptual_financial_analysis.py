@@ -43,6 +43,8 @@ def hourly_operating_cost(mission_file, standard_aircraft_data = c206_data, airc
     fuel_burn = aircraft_data["Weights"]["MFW_N"]/9.80665/endurance
     fuel_cost = fuel_burn*vol_jet_a1_price/jet_a1_dens
 
+    # solar arrays
+
     return overhaul_cost + maintenance_cost + fuel_cost
 
 
