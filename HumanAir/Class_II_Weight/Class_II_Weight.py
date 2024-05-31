@@ -57,9 +57,9 @@ class Class_II_Weight:
 
         self.P_TO = W_to_hp(aircraft_data["Power_prop"]["P_TO"])
         self.K_n = aircraft_data["Power_prop"]["K_n"] #0.37 for radial, 0.24 for horizontally opposed
-        self.K_p = 1.1
+        self.K_p = 1.1 #TODO: check if supercharging is used (pg.84)
         self.K_pg = 1.16
-        self.K_fsp = 6.55
+        self.K_fsp = 6.65 #TODO: check if this is the correct fuel in lbs/gal (pg.91)
 
         self.int = aircraft_data["Power_prop"]["int_fueltanks_fraction"]
 
@@ -73,7 +73,7 @@ class Class_II_Weight:
         self.PoweredFlightControls = aircraft_data["General"]["PoweredFlightControls"]
         self.DuplicatedFlightControls = aircraft_data["General"]["DuplicatedFlightControls"]
 
-
+        self.APU = aircraft_data["General"]["APU"]
 
 
 
@@ -132,11 +132,11 @@ class Class_II_Weight:
     def LandingGearWeight(self):
         results = {}
 
-        results["Cessna"] = 0.013*self.W_TO+0.362*self.W_L**0.417*self.n_ult_l**0.950*self.l_s_m**0.183*6.2+0.0013*self.W_TO+0.007157*self.W_L**0.749*self.n_ult_l*self.l_s_n**0.788
+        results["Cessna"] = 0.013*self.W_TO+0.362*self.W_L**0.417*self.n_ult_l**0.950*self.l_s_m**0.183 + 6.2 +0.0013*self.W_TO+0.007157*self.W_L**0.749*self.n_ult_l*self.l_s_n**0.788
         if self.retractable:
             results["Cessna"]+=0.014*self.W_TO
 
-        results["USAF"] = 0.054*self.l_s_m**0.501*self.W_L*self.n_ult_l**0.684
+        results["USAF"] = 0.054*self.l_s_m**0.501*(self.W_L*self.n_ult_l)**0.684
 
         results["Average"] = np.average([results["Cessna"], results["USAF"]])
         return results
@@ -155,7 +155,6 @@ class Class_II_Weight:
         results["Torenbeek"] = 2*(self.W_F/5.87)**0.667
 
         results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
-
         return results
 
     def PowerplantWeight_Total(self):
@@ -167,13 +166,14 @@ class Class_II_Weight:
 
         results["Torenbeek"]={}
         results["Torenbeek"]["Total"] = self.K_pg*(self.K_p*self.P_TO+0.24*self.P_TO)
-        return np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
+        results["Average"] = np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
+        return results
 
     """========== Fixed Equipment Weight =========="""
     def FlightControlSystem(self):
         results={}
 
-        results["Cessna"]=0.016*self.W_TO
+        results["Cessna"]=0.0168*self.W_TO
         if not self.PoweredFlightControls:
             results["USAF"] = 1.066*self.W_TO**0.626
             if not self.DuplicatedFlightControls:
@@ -190,7 +190,8 @@ class Class_II_Weight:
         return results
 
     def HydraulicsPneumatics(self):
-        return {"Average": 0.008*self.W_TO}
+        constant = (0.006 + 0.0120) / 2 # TODO: check which value to take more accurately(pg.101)
+        return {"Average": constant *self.W_TO}
     def InstrumentsAvionicsElectronics(self):
         return {"Average": 33*self.N_pax}
 
@@ -218,7 +219,7 @@ class Class_II_Weight:
     def OxygenSystem(self):
         return {"Average": 20+0.5*self.N_pax}
 
-    def APU(self):
+    def APU_Weight(self):
         results={}
         if self.APU:
             results["Average"] = 0.0085*self.W_TO
@@ -229,7 +230,7 @@ class Class_II_Weight:
     def Furnishings(self):
         results = {}
         results["Cessna"] = 0.412*self.N_pax**1.145*self.W_TO**0.489
-        results["Torenbeek"] = 5+13*self.N_pax+25*self.N_row
+        results["Torenbeek"] = 5+13*self.N_pax+25*self.N_row #TODO: check if there is multiengine or not (pg.108)
 
         results["Average"] = np.average([results["Cessna"], results["Torenbeek"]])
         return results
@@ -253,10 +254,10 @@ class Class_II_Weight:
             "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
 
     def FixedEquipmentWeight_Total(self):
-        return self.FlightControlSystem()["Average"]+self.HydraulicsPneumatics()["Average"]+self.InstrumentsAvionicsElectronics()["Average"]+self.ElectricalSystemWeight()["Average"]+self.AirconPressurizationAntiDeicingWeight()["Average"]+self.OxygenSystem()["Average"]+self.APU()["Average"]+self.Furnishings()["Average"]+self.AuxiliaryGear()["Average"]+self.Paint()["Average"]
+        return self.FlightControlSystem()["Average"]+self.HydraulicsPneumatics()["Average"]+self.InstrumentsAvionicsElectronics()["Average"]+self.ElectricalSystemWeight()["Average"]+self.AirconPressurizationAntiDeicingWeight()["Average"]+self.OxygenSystem()["Average"]+self.APU_Weight()["Average"]+self.Furnishings()["Average"]+self.AuxiliaryGear()["Average"]+self.Paint()["Average"]
 
     def NewEmptyWeight(self):
-        return lbs_to_N(self.PowerplantWeight_Total()+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total())
+        return lbs_to_N(self.PowerplantWeight_Total()['Average']+self.StructureWeight_Total()+self.FixedEquipmentWeight_Total())
 
     def NewOEW(self):
         return self.NewEmptyWeight()+aircraft_data["Weights"]["W_Pilot_N"]
@@ -321,7 +322,7 @@ def RunClassII(aircraft_data, check):
         print('\nTotal Structures Weight = ', lbs_to_N(p.StructureWeight_Total()), " [N]")
         print('\n\n ========== Powerplant Weight ==========')
         print('\n Fuel System Weight = ', lbs_to_N(p.FuelSystemWeight()["Average"]), " [N]")
-        print('\n Total Powerplant Weight = ', lbs_to_N(p.PowerplantWeight_Total()), " [N]")
+        print('\n Total Powerplant Weight = ', lbs_to_N(p.PowerplantWeight_Total()['Average']), " [N]")
         print('\n\n ========== Fixed Equipment Weight ==========')
         print('\n Flight Control Systems Weight = ', lbs_to_N(p.FlightControlSystem()["Average"]), " [N]")
         print("Hydraulics and/or Pneumatics Weight = ", lbs_to_N(p.HydraulicsPneumatics()["Average"]), " [N]")
@@ -329,7 +330,7 @@ def RunClassII(aircraft_data, check):
         print("Electrical System Weight = ", lbs_to_N(p.ElectricalSystemWeight()["Average"]), " [N]")
         print("Airconditioning, Pressurization and Anti or Deicing Weight = ", lbs_to_N(p.AirconPressurizationAntiDeicingWeight()["Average"]), " [N]")
         print("Oxygen System Weight = ", lbs_to_N(p.OxygenSystem()["Average"]), " [N]")
-        print("APU Weight = ", lbs_to_N(p.APU()["Average"]), " [N]")
+        print("APU Weight = ", lbs_to_N(p.APU_Weight()["Average"]), " [N]")
         print("Furnishings Weight = ", lbs_to_N(p.Furnishings()["Average"]), " [N]")
         print("Auxiliary Gear Weight = ", lbs_to_N(p.AuxiliaryGear()["Average"]), " [N]")
         print("Paint Weight = ", lbs_to_N(p.Paint()["Average"]), " [N]")

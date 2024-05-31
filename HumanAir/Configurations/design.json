@@ -54,7 +54,7 @@
         "fuselage_max_perimeter": 6.8
     },
     "Aero": {
-        "CLmax_clean": 1.6,
+        "CLmax_clean": 2.0,
         "CLmax_land": 2.5,
         "CLmax_TO": 2.6000000000000005,
         "CLalpha": 6.24,
@@ -92,7 +92,7 @@
         "VH_m/s": 50,
         "M_D": 0.2,
         "range_nm": 600,
-        "endurance": 5.2,
+        "endurance": 4.74871794871795,
         "climb_rate": 4.5,
         "CO2": 33.09,
         "CO2_emissions_kg/kg": 3.16,
@@ -134,6 +134,7 @@
         "N_pax": 7,
         "N_row": 3,
         "PoweredFlightControls": false,
-        "DuplicatedFlightControls": false
+        "DuplicatedFlightControls": false,
+        "APU": true
     }
 }
