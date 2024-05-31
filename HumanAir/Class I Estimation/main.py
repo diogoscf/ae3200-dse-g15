@@ -68,14 +68,14 @@ logging.info(" Opening design.json successful")
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(9.5, 9.51, 0.5)
+    A_lst = np.arange(13.0, 17.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
     Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
     Clmax_TO_lst = np.arange(2, 2.61, 0.2)
     Clmax_Land_lst = np.arange(2, 2.61, 0.2)
-    Cd0_lst = np.arange(0.026, 0.0281, 0.002)
-    V_cruise_lst = np.arange(60, 63.1, 1)
-    climbrate_lst = np.arange(2.5, 4.51, 0.5)
+    Cd0_lst = np.arange(0.026, 0.0301, 0.002)
+    V_cruise_lst = np.arange(60, 65.1, 1)
+    climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
     # calculate the total numbers of iterations
     total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
@@ -143,14 +143,14 @@ def Generate(p, dict, run=False):
                                             # calculate the co2 ratio for the specific combination of parameters
                                             co2_ratio = co2(ac_data=dict)
 
-                                            if co2_ratio * 100 > 30 and ok == 0:
+                                            if co2_ratio * 100 > 25 and ok == 0:
 
                                                 idx += 1
                                                 ok = 1
 
 
 
-                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >30 and dict['Power_prop']['E_bat_Wh']<250000: # the <250000 condition is for the battery to be able to be charged
+                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >25 and dict['Power_prop']['E_bat_Wh']<300000 and  dict['Power_prop']['P_req_cruise_W']/0.8<250000: # the <250000 condition is for the battery to be able to be charged
                                                 CO2 = co2_ratio
 
                                                 # save the combination of parameters
@@ -187,8 +187,8 @@ def calculate_weighted_score(point_data, weights):
                     'Cd0': 0.026,
                     'V_cruise': 60,
                     'climbrate': 3.5,
-                    'bat': 0.12,
-                    'CO2': 50}
+                    'bat': 0.01,
+                    'CO2': 30}
 
     # initialing the score
     score = 0
@@ -210,7 +210,9 @@ def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_thres
     value = np.inf
     minimum = np.inf
 
-    while value > maximum_weight_battery:
+    while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]['Cd0']<0.027:
+        step+=1
+        print(design_points[sorted_design_points[step][0]]['Cd0'])
 
         optimum_design_option = design_points[sorted_design_points[step][0]]
 
@@ -229,11 +231,15 @@ def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_thres
         dict['Performance']['CO2'] = optimum_design_option['CO2']
 
         value = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[4]
+        MTOW = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[1]
+        dict['Power_prop']['P_req_TO_W'] = 9.81*MTOW/dict['Performance']['W/P_N/W']
+        dict['Power_prop']['P_req_cruise_W'] = 9.81*0.8*MTOW/dict['Performance']['W/P_N/W']
+        dict['Power_prop']['E_bat_Wh']=dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * dict['Power_prop']['bat']
 
         if value < minimum:
             minimum = value
 
-        step += 1
+        
 
     # printing option
     if printing:
@@ -278,15 +284,15 @@ if __name__ == '__main__':
     # no influence: weight = 0
 
     weights = {
-        'A': +0.05,
+        'A': +0.,
         'eta_p': +0.1,
-        'Clmax_clean': +0.15,
+        'Clmax_clean': +0.05,
         'Clmax_TO': +0,
         'Clmax_Land': +0,
-        'Cd0': -0.35,
-        'V_cruise': -0.1,
-        'climbrate': -0.15,
-        'bat': +0,
+        'Cd0': -0.45,
+        'V_cruise': -0.05,
+        'climbrate': -0.1,
+        'bat': -0.15,
         'CO2': -0.1
     }
 
@@ -337,9 +343,9 @@ if __name__ == '__main__':
 
     # initialise the checking paramaters
     check_flow_parameter = False
-    check_stability = False
-    check_wing_planform = False
-    check_horizontal_stabilizer_planform = False
+    check_stability = True
+    check_wing_planform = True
+    check_horizontal_stabilizer_planform = True
 
     # updating the xcg aft and xcg front
     dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
@@ -362,10 +368,15 @@ if __name__ == '__main__':
     # Construct the absolute path to the design.json file
     design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
 
+   
+
     # save the modified design.json file and hope it doesnt break
     with open(design_json_path, 'w') as f:
         json.dump(dict, f, indent=4)
     logging.info(" Program finished successfully")
+
+    dict["Power_prop"]["E_bat_Wh"]=685/350*dict["Power_prop"]["E_bat_Wh"]
+    print(co2(ac_data=dict))
 
 
 
