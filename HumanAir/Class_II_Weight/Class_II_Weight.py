@@ -10,6 +10,7 @@ from aircraft_data import aircraft_data
 from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 class Class_II_Weight:
     def __init__(self, aircraft_data):
+        self.dict=aircraft_data
         self.W_TO=N_to_lbs(aircraft_data["Weights"]["MTOW_N"])
         self.W_L=N_to_lbs(aircraft_data["Weights"]["W_L_N"])
         self.W_F=N_to_lbs(aircraft_data["Weights"]["WF_N"])
@@ -242,8 +243,14 @@ class Class_II_Weight:
         else:
             results={"Average": 0}
         return results
+    
+    def NewBatteryWeight(self, bat):
+        return self.dict["Weights"]["MTOW_N"] / self.dict["Performance"]["W/P_N/W"] * self.dict["Performance"]["endurance"] * bat / self.dict["Power_prop"][
+            "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / self.dict["Power_prop"]["eta_electricmotor"]
 
-
+    def NewFuelWeight(self, bat):
+        return 1.15 * self.dict["Weights"]["MTOW_N"] / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
+            "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
 
     def FixedEquipmentWeight_Total(self):
         return self.FlightControlSystem()["Average"]+self.HydraulicsPneumatics()["Average"]+self.InstrumentsAvionicsElectronics()["Average"]+self.ElectricalSystemWeight()["Average"]+self.AirconPressurizationAntiDeicingWeight()["Average"]+self.OxygenSystem()["Average"]+self.APU()["Average"]+self.Furnishings()["Average"]+self.AuxiliaryGear()["Average"]+self.Paint()["Average"]
@@ -253,6 +260,54 @@ class Class_II_Weight:
 
     def NewOEW(self):
         return self.NewEmptyWeight()+aircraft_data["Weights"]["W_Pilot_N"]
+    
+    def Iterarions_C2W(self,bat):
+        MTOW_new = 0
+        MTOW_old = self.dict["Weights"]["MTOW_N"]
+        ok = False
+
+        while np.abs((MTOW_new - self.dict["Weights"]["MTOW_N"]) / self.dict["Weights"]["MTOW_N"]) > 0.02:
+            if ok:
+                self.dict["Weights"]["MTOW_N"] = MTOW_new
+
+            OEW = lbs_to_N(self.NewOEW())
+            BatteryWeight = self.NewBatteryWeight(bat)
+            FuelWeight = self.NewFuelWeight(bat)
+
+            MTOW_new = OEW + BatteryWeight + FuelWeight + self.dict["Iterations Class I"]["Wpl_des_kg"]
+
+            if MTOW_new > 8000:
+                break
+
+            ok = True
+
+        if MTOW_new < 4000:
+            self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
+            # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency
+            return (
+                MTOW_new,
+                self.dict["Contingency_C2W"] * MTOW_new,
+                self.dict["Contingency_C2W"] * OEW,
+                self.dict["Contingency_C2W"] * BatteryWeight,
+                self.dict["Contingency_C2W"] * FuelWeight,
+                self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
+            )
+        else:
+            self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
+            # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency  
+            return (
+                0,
+                self.dict["Contingency_C2W"] * MTOW_new,
+                self.dict["Contingency_C2W"] * OEW,
+                self.dict["Contingency_C2W"] * BatteryWeight,
+                self.dict["Contingency_C2W"] * FuelWeight,
+                self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
+                self.dict["Contingency_C2W"] * lbs_to_N(self.StructureWeight_Total()),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.FuelSystemWeight()["Average"]),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.PowerplantWeight_Total()),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total()),
+            )
+
 def RunClassII(aircraft_data, check):
     p=Class_II_Weight(aircraft_data)
 
@@ -285,7 +340,6 @@ def RunClassII(aircraft_data, check):
 
 
     return p.NewOEW()
-
 
 if __name__=="__main__":
     RunClassII(aircraft_data, check=True)
