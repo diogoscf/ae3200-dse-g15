@@ -23,7 +23,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 209445.55986030292,
+        "E_bat_Wh": 350970.65851630986,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -34,13 +34,13 @@
         "eta_powertrain": 0.9216,
         "eta_p": 0.8500000000000001,
         "bat": 0.163,
-        "P_req_cruise_W": 197683.3976973128,
+        "P_req_cruise_W": 185342.19014652717,
         "P_TO": 230000,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 247104.24712164098
+        "P_req_TO_W": 231677.73768315895
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -53,7 +53,7 @@
         "fuselage_max_perimeter": 6.8
     },
     "Aero": {
-        "CLmax_clean": 1.6,
+        "CLmax_clean": 2.0,
         "CLmax_land": 2.5,
         "CLmax_TO": 2.6000000000000005,
         "CLalpha": 6.24,
@@ -82,7 +82,7 @@
         "t_root_max_Wing": 0.46,
         "t_root_max_h": 0.3,
         "t_root_max_v": 0.3,
-        "CLmax_Land": 2.0
+        "CLmax_Land": 2.2
     },
     "Performance": {
         "W/S_N/m2": 836.4001000000001,
@@ -91,7 +91,7 @@
         "VH_m/s": 50,
         "M_D": 0.2,
         "range_nm": 600,
-        "endurance": 5.2,
+        "endurance": 4.74871794871795,
         "climb_rate": 4.5,
         "CO2": 46.89,
         "CO2_emissions_kg/kg": 3.16,
