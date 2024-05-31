@@ -129,6 +129,7 @@
         "N_pax": 7,
         "N_row": 3,
         "PoweredFlightControls": false,
-        "DuplicatedFlightControls": false
+        "DuplicatedFlightControls": false,
+        "APU": true
     }
 }
