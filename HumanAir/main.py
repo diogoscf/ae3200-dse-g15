@@ -5,7 +5,7 @@ import numpy as np
 import logging
 import colorlog
 
-# integration v2 dont touch this please
+# integration v2 don't touch this please
 "Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
 
 handler = colorlog.StreamHandler()
