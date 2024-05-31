@@ -199,24 +199,22 @@ def calculate_weighted_score(point_data, weights):
     return score
 
 "Finding the optimal design point with the highest score and the lowest battery weight"
-def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_threshold = 50, design_points = None, printing = False):
-
+def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold=50, design_points=None, printing=False, step=0):
     optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold}
     scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
 
-    step = 0
     value = np.inf
     minimum = np.inf
 
-    while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]['Cd0']<0.027:
-        step+=1
+    while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]['Cd0'] < 0.027:
+        step += 1
         print(design_points[sorted_design_points[step][0]]['Cd0'])
 
         optimum_design_option = design_points[sorted_design_points[step][0]]
 
-        # updating the design.json file with the optimum design option
+        # Updating the design.json file with the optimum design option
         dict['Aero']['AR'] = optimum_design_option['A']
         dict['Power_prop']['eta_p'] = optimum_design_option['eta_p']
         dict['Aero']['CLmax_clean'] = optimum_design_option['Clmax_clean']
@@ -230,29 +228,26 @@ def find_optimal_design(maximum_weight_battery = 1000, weights = None, CO2_thres
         dict['Performance']['W/P_N/W'] = optimum_design_option['W/P']
         dict['Performance']['CO2'] = optimum_design_option['CO2']
 
-        value = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[4]
-        MTOW = WeightEstimation(dict).Iterations(dict['Power_prop']['bat'])[1]
-        dict['Power_prop']['P_req_TO_W'] = 9.81*MTOW/dict['Performance']['W/P_N/W']
-        dict['Power_prop']['P_req_cruise_W'] = 9.81*0.8*MTOW/dict['Performance']['W/P_N/W']
-        dict['Power_prop']['E_bat_Wh']=dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * dict['Power_prop']['bat']
+        weight_estimation = WeightEstimation(dict)  # Correct instantiation of the WeightEstimation class
+        iteration_results = weight_estimation.Iterations(dict['Power_prop']['bat'])
+        value = iteration_results[4]
+        MTOW = iteration_results[1]
+        dict['Power_prop']['P_req_TO_W'] = 9.81 * MTOW / dict['Performance']['W/P_N/W']
+        dict['Power_prop']['P_req_cruise_W'] = 9.81 * 0.8 * MTOW / dict['Performance']['W/P_N/W']
+        dict['Power_prop']['E_bat_Wh'] = dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * dict['Power_prop']['bat']
 
         if value < minimum:
             minimum = value
 
-        
-
-    # printing option
+    # Printing option
     if printing:
         print(sorted_design_points[step])
         print(design_points[str(sorted_design_points[step][0])])
-        print(WeightEstimation(dict).Iterations(dict['Power_prop']['bat']))
+        print(weight_estimation.Iterations(dict['Power_prop']['bat']))
+
 
 "Main Function to run the program"
 if __name__ == '__main__':
-
-
-    "Getting the data_iterations.json file"
-    # change this to run the iterations generator
     run = False
     if run:
         logging.info(" Starting generating the new possible design points. This may take a while.")
@@ -260,28 +255,12 @@ if __name__ == '__main__':
 
     logging.info(" Getting the data from the design point options")
 
-    # Get the directory of the current script
-    #script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the absolute path to the data_iterations.json file
-    #design_json_path = os.path.join(script_dir, 'Configurations', 'data_iterations.json')
-
-    # Print the absolute path for debugging
-    #logging.info(f" Looking for data_iterations.json at: {os.path.abspath(design_json_path)}")
-
-    # Construct the absolute path to the data_iteration.json file
-    data_iterations_json_path = os.path.join(script_dir,'..', 'Configurations', 'data_iterations-V5.json')
+    data_iterations_json_path = os.path.join(script_dir, '..', 'Configurations', 'data_iterations.json')
 
     with open(data_iterations_json_path, 'r') as f:
         design_points = json.load(f)
 
     logging.info(" Opening data_iterations.json successful")
-
-    "Setting up the weights to get the optimal design point"
-    # Weights for each key
-    # increasing score: positive weight
-    # decreasing score: negative weight
-    # no influence: weight = 0
 
     weights = {
         'A': +0.,
@@ -300,83 +279,84 @@ if __name__ == '__main__':
     CO2_threshold = 30
     printing = False
 
-    find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing)
-    logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
-    logging.info(" Calculating the weight components")
+    ok = False
+    step = 0
+    while not ok:
+        find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing, step=step)
+        logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
+        logging.info(" Calculating the weight components")
 
-    "Calculate the component weights"
-    # getting the weight components
-    WeightEstimation = WeightEstimation(dict)
-    component_weights = WeightEstimation.Iterations(dict['Power_prop']['bat'])
+        weight_estimation = WeightEstimation(dict)
+        component_weights = weight_estimation.Iterations(dict['Power_prop']['bat'])
 
-    # print the component weights
-    print(f"Component weights: MTOW {round(component_weights[1],2)}[kg],"
-          f" OEW {round(component_weights[2],2)}[kg],"
-          f" Powertrain {round(component_weights[3],2)}[kg],"
-          f" Battery {round(component_weights[4],2)}[kg],"
-          f" Fuel {round(component_weights[5],2)}[kg],"
-          f" Wing {round(component_weights[6],2)}[kg],"
-          f" Wpl_des {round(component_weights[7],2)}[kg]")
+        print(f"Component weights: MTOW {round(component_weights[1], 2)}[kg],"
+              f" OEW {round(component_weights[2], 2)}[kg],"
+              f" Powertrain {round(component_weights[3], 2)}[kg],"
+              f" Battery {round(component_weights[4], 2)}[kg],"
+              f" Fuel {round(component_weights[5], 2)}[kg],"
+              f" Wing {round(component_weights[6], 2)}[kg],"
+              f" Wpl_des {round(component_weights[7], 2)}[kg]")
 
-    print('Total weight:', round(component_weights[1],2), '[kg] including contingency')
-    print('Contingency:', (round((dict['Contingency']-1)*100,0)),"%")
+        print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
+        print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
 
-    logging.info(" Calculating the weight components successful")
+        PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
 
-    logging.info(" Calculating the Xcg excursion")
+        for pct in PERCENTAGE:
+            logging.info(" Calculating the weight components successful")
+            logging.info(" Calculating the Xcg excursion")
 
-    "Calculate the Xcg excursion"
-    #return wcg, CGlist, xlemac
-    wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile = dict)
+            wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile=dict, PERCENTAGE=pct)
 
-    print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
-
-    logging.info(" Calculating the Xcg excursion successful")
-    logging.info(" Calculating the MAC")
-
-    "Finding the aerodynamic characteristics"
-    # this line is to comply with nicholas's mood, please dont remove it as it calculates the mac
-    mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
-    print(f'MAC: {round(mac,2)} [m]')
-    logging.info(" Calculating the MAC successful")
-    logging.info(" Calculating the aerodynamic design")
-
-    # initialise the checking paramaters
-    check_flow_parameter = False
-    check_stability = True
-    check_wing_planform = True
-    check_horizontal_stabilizer_planform = True
-
-    # updating the xcg aft and xcg front
-    dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
-    dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
-
-    # run the aerodynamic design
-    aerodynamic_design(dict, checkwingplanform=check_wing_planform, checkflowparameters=check_flow_parameter, checkstability=check_stability, checkhsplanform=check_horizontal_stabilizer_planform)
-
-    logging.info(" Calculating the aerodynamic design successful")
-    logging.info(" Calculating the hourly price")
-
-    cost = hourly_operating_cost("maf_mission_graph.csv")
-    print(f"Cost: {round(cost,2)} [US$]")
-
-    logging.info(" Calculating the hourly price successful")
-    logging.info(" Saving the modified design.json file")
-    print("Finally, I am free")
+            dict['Stability']['XLEMAC_m']=xlemac
 
 
-    # Construct the absolute path to the design.json file
-    design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
+            print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
 
-   
+            logging.info(" Calculating the Xcg excursion successful")
+            logging.info(" Calculating the MAC")
 
-    # save the modified design.json file and hope it doesnt break
-    with open(design_json_path, 'w') as f:
-        json.dump(dict, f, indent=4)
-    logging.info(" Program finished successfully")
+            mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
+            print(f'MAC: {round(mac, 2)} [m]')
+            logging.info(" Calculating the MAC successful")
+            logging.info(" Calculating the aerodynamic design")
 
-    dict["Power_prop"]["E_bat_Wh"]=685/350*dict["Power_prop"]["E_bat_Wh"]
-    print(co2(ac_data=dict))
+            dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
+            dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
+
+            aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=True, checkhsplanform=False)
+
+            print("Is stability satisfied at XLEMAC_m "+ str(dict['Stability']['XLEMAC_m']) + " [Yes/No]: ")
+            answer = input()
+
+            if answer.lower() == "yes":
+                break
+
+        if answer.lower() == "yes":
+            ok = True
+
+            aerodynamic_design(dict, checkwingplanform=True, checkflowparameters=False, checkstability=False, checkhsplanform=True)
+
+            logging.info(" Calculating the aerodynamic design successful")
+            logging.info(" Calculating the hourly price")
+
+            cost = hourly_operating_cost("maf_mission_graph.csv")
+            print(f"Cost: {round(cost, 2)} [US$]")
+
+            logging.info(" Calculating the hourly price successful")
+            logging.info(" Saving the modified design.json file")
+            print("Finally, I am free")
+
+            design_json_path = os.path.join(script_dir, '..', 'Configurations', 'design.json')
+
+            with open(design_json_path, 'w') as f:
+                json.dump(dict, f, indent=4)
+
+            dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
+            print("Reduction with future expected battery technology: " + str(co2(ac_data=dict)))
+
+            logging.info(" Program finished successfully")
+
 
 
 
