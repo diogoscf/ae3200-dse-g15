@@ -37,7 +37,7 @@ project_root = os.path.abspath(os.path.join(script_dir,'..', '..'))
 sys.path.append(project_root)
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
-from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
+from HumanAir.Class1Estimation.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
@@ -49,14 +49,10 @@ from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_oper
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Construct the absolute path to the design.json file
-design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
+design_json_path = os.path.join(script_dir,'..',"HumanAir", 'Configurations', 'design.json')
 
 # Print the absolute path for debugging
 logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
-
-
-#"c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json" # use this for vs code
-#'../Configurations/design.json', 'r' # use this for pycharm
 
 # Attempt to open the file
 with open(design_json_path, 'r') as f:
@@ -68,14 +64,14 @@ logging.info(" Opening design.json successful")
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(13.0, 17.51, 0.5)
+    A_lst = np.arange(17.0, 17.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
-    Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
-    Clmax_TO_lst = np.arange(2, 2.61, 0.2)
-    Clmax_Land_lst = np.arange(2, 2.61, 0.2)
+    Clmax_clean_lst = np.arange(2, 2.21, 0.2)
+    Clmax_TO_lst = np.arange(2.2, 2.61, 0.2)
+    Clmax_Land_lst = np.arange(2.2, 2.61, 0.2)
     Cd0_lst = np.arange(0.026, 0.0301, 0.002)
     V_cruise_lst = np.arange(60, 65.1, 1)
-    climbrate_lst = np.arange(2.5, 5.01, 0.5)
+    climbrate_lst = np.arange(4, 5.01, 0.5)
 
     # calculate the total numbers of iterations
     total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
@@ -171,8 +167,8 @@ def Generate(p, dict, run=False):
                                                 co2_ratio_max=co2_ratio
 
         # save the json file with all possible design options
-        file_name = 'data_iterations.json'
-        with open(file_name, 'w') as file:
+        data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
+        with open(data_iterations_json_path, 'w') as file:
             json.dump(dict_iterations, file, indent=4)
 
 "Calculating the weighted score to find the best design point"
@@ -254,7 +250,7 @@ if __name__ == '__main__':
 
     logging.info(" Getting the data from the design point options")
 
-    data_iterations_json_path = os.path.join(script_dir, '..', 'Configurations', 'data_iterations.json')
+    data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
 
     with open(data_iterations_json_path, 'r') as f:
         design_points = json.load(f)
@@ -372,7 +368,7 @@ if __name__ == '__main__':
 
             print("Finally, I am free")
 
-            design_json_path = os.path.join(script_dir, '..', 'Configurations', 'design.json')
+            design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
             logging.info(" Design.json saved at: " + design_json_path)
 
             with open(design_json_path, 'w') as f:
