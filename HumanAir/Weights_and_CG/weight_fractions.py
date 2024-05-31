@@ -181,7 +181,6 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
-    print(wcg[2, 1])
     return wcg, CGlist, xlemac
 
 if __name__ == "__main__":

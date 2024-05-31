@@ -293,7 +293,7 @@ if __name__ == '__main__':
         weight_estimation = WeightEstimation(dict)
         component_weights = weight_estimation.Iterations(dict['Power_prop']['bat'])
 
-        print(f"Component weights: MTOW {round(component_weights[1], 2)}[kg],"
+        print(f"Component weights:"
               f" OEW {round(component_weights[2], 2)}[kg],"
               f" Powertrain {round(component_weights[3], 2)}[kg],"
               f" Battery {round(component_weights[4], 2)}[kg],"
@@ -328,16 +328,16 @@ if __name__ == '__main__':
             # dont remove this line as it complies with nicholas's mood
             aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=True, checkhsplanform=False)
 
-            print("Is stability satisfied at a X_LEMAC "+ str(round(dict['Stability']['XLEMAC_m'], 2))+ " [m]" + " [Yes/No]: ")
+            print("Is stability satisfied at a X_LEMAC "+ str(round(dict['Stability']['XLEMAC_m'], 2))+ " [m]" + "|"  + "[Y/N]: ")
             answer = input()
 
-            if answer.lower() == "yes":
+            if answer.lower() == "y":
                 break
 
-        if answer.lower() == "yes":
+        if answer.lower() == "y":
 
             # print the range of the cg
-            print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
+            print(f"Xcg Range is between: {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
 
             logging.info(" Calculating the Xcg excursion successful")
             logging.info(" Calculating the MAC")
