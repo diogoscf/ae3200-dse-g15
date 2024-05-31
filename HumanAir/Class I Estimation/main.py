@@ -261,16 +261,16 @@ if __name__ == '__main__':
     logging.info(" Getting the data from the design point options")
 
     # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    #script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Construct the absolute path to the data_iterations.json file
-    design_json_path = os.path.join(script_dir, 'Configurations', 'data_iterations.json')
+    #design_json_path = os.path.join(script_dir, 'Configurations', 'data_iterations.json')
 
     # Print the absolute path for debugging
-    logging.info(f" Looking for data_iterations.json at: {os.path.abspath(design_json_path)}")
+    #logging.info(f" Looking for data_iterations.json at: {os.path.abspath(design_json_path)}")
 
-    # Construct the absolute path to the design.json file
-    data_iterations_json_path = os.path.join(script_dir,'..', 'Configurations', 'data_iterations.json')
+    # Construct the absolute path to the data_iteration.json file
+    data_iterations_json_path = os.path.join(script_dir,'..', 'Configurations', 'data_iterations-V5.json')
 
     with open(data_iterations_json_path, 'r') as f:
         design_points = json.load(f)
