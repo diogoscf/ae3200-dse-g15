@@ -107,7 +107,7 @@ def component_mass(ac_datafile = aircraft_data):
     # Return fractions and masses of each component: Wing, MLG, pwtr, NLG, fus, emp, FE, bat, EW
     return wcg
 
-def iterate_cg_lg(ac_datafile = aircraft_data):
+def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     # Set distance of nosewheel from nose [m]
     nose_distance = 0.2
 
@@ -174,7 +174,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data):
         # Update X LEMAC
         wcg[2, -1] = Xcg_OEW
         cgwg = np.average(wcg[2, 0:2] - xlemac, weights=wcg[1, 0:2])
-        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8])+ac_datafile["Geometry"]["MGC_m"]*((cgwg/ac_datafile["Geometry"]["MGC_m"])*np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])-0.2*(1+np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])))
+        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8])+ac_datafile["Geometry"]["MGC_m"]*((cgwg/ac_datafile["Geometry"]["MGC_m"])*np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])-PERCENTAGE*(1+np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])))
         wcg[2, 0] = CGw_MAC + xlemac
         iter = abs(xlemacold/xlemac - 1)
 
@@ -186,6 +186,6 @@ def iterate_cg_lg(ac_datafile = aircraft_data):
 
 if __name__ == "__main__":
     init = time.process_time()
-    print(iterate_cg_lg(aircraft_data))
+    print(iterate_cg_lg(aircraft_data,PERCENTAGE=0.5))
     total = time.process_time() - init
     print(total)

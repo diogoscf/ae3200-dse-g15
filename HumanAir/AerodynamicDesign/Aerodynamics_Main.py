@@ -37,8 +37,11 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     deda=aircraft_data["Aero"]["deda"]
     VhV=aircraft_data["Aero"]["VhV"]
     FuselageLength=aircraft_data["Geometry"]["fus_length_m"]
+    tc_wing=aircraft_data["Aero"]["tc_m_Wing"]
+    tc_HP=aircraft_data["Aero"]["tc_m_HP"]
 
-    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW=MTOW, WS=WS)
+    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
+   
 
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
@@ -72,7 +75,7 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     if checkstability:
         Stab.Plotting()
 
-    HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+    HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, tc_HP,S=WingPlanform.WingSurfaceArea()*Stab.ShS())
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 
