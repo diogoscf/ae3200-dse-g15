@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Planform:
-    def __init__(self, AR, Taper, QuarterChordSweep,MTOW=None, WS=None, S=None):
+    def __init__(self, AR, Taper, QuarterChordSweep, tc, MTOW=None, WS=None, S=None):
         self.MTOW = MTOW
         self.WS = WS
         self.AR = AR
@@ -10,6 +10,7 @@ class Planform:
         self.QuarterChordSweep = QuarterChordSweep
         self.g = 9.81
         self.S=S
+        self.tc=tc
         if MTOW == None and WS == None and S == None:
             raise ValueError("Please provide a value for either MTOW and WS or S!")
 
@@ -35,6 +36,20 @@ class Planform:
     def MAC_y(self):
         return (self.WingSpan()/6)*(1+2*self.Taper)/(1+self.Taper)
 
+    def HalfChordSweep(self):
+        x_c4_root = self.RootChord()*3/4
+        x_c4_tip = x_c4_root-self.WingSpan()/2*np.tan(np.deg2rad(self.QuarterChordSweep))
+
+        x_c2_root = self.RootChord()*1/2
+        x_c2_tip = x_c4_tip-self.TipChord()*1/4
+        print(x_c2_tip)
+        print(x_c2_root)
+        angle =  np.rad2deg(np.arctan((np.abs(x_c2_root-x_c2_tip))/(self.WingSpan()/2)))
+        return angle
+
+    def t_root_max(self):
+        return self.tc*self.RootChord()
+
 
     def PlotWingPlanform(self):
         plt.figure()
@@ -48,7 +63,12 @@ class Planform:
         plt.show()
 
 if __name__ == "__main__":
-    WingConventional=Planform(1946.34, 618, 9.35, 0.4, 5)
-    print(WingConventional.AC_LE())
+    WingConventional=Planform(7.44, 0.4, 0, 0.1367, 25753, 618)
+    print("S = ", WingConventional.WingSurfaceArea())
+    print("b = ", WingConventional.WingSpan())
+    print('Root Chord Length = ', WingConventional.RootChord())
+    print('Tip Chord Length = ', WingConventional.TipChord())
+    print("Max root thickness = ", WingConventional.t_root_max())
+
     WingConventional.PlotWingPlanform()
 
