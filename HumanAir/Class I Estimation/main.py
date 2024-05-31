@@ -210,7 +210,6 @@ def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold
 
     while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]['Cd0'] < 0.027:
         step += 1
-        print(design_points[sorted_design_points[step][0]]['Cd0'])
 
         optimum_design_option = design_points[sorted_design_points[step][0]]
 
@@ -279,9 +278,14 @@ if __name__ == '__main__':
     CO2_threshold = 30
     printing = False
 
-    ok = False
+    # set up that the optimal stability range is not yet set
+    find_optimal_stability = False
+    # initialise from which step to start to search from the desing_iterations.json
     step = 0
-    while not ok:
+
+    logging.info(" Starting the search for optimal stability range")
+
+    while not find_optimal_stability:
         find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing, step=step)
         logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
         logging.info(" Calculating the weight components")
@@ -299,61 +303,80 @@ if __name__ == '__main__':
 
         print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
         print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
+        logging.info(" Calculating the weight components successful")
 
+        # set up the condition to set up the range where the cg of the wing is with report of the mac
         PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
+        logging.info(" Starting the search for the optimal stability range in terms of where to position the cg of the wing")
 
+        # iterate over the percentage to find the optimal stability range
         for pct in PERCENTAGE:
-            logging.info(" Calculating the weight components successful")
+
             logging.info(" Calculating the Xcg excursion")
 
             wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile=dict, PERCENTAGE=pct)
 
+            # dont remove this line as it complies with nicholas's mood
             dict['Stability']['XLEMAC_m']=xlemac
-
-
-            print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
-
-            logging.info(" Calculating the Xcg excursion successful")
-            logging.info(" Calculating the MAC")
-
             mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
-            print(f'MAC: {round(mac, 2)} [m]')
-            logging.info(" Calculating the MAC successful")
-            logging.info(" Calculating the aerodynamic design")
 
             dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
             dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
 
+            logging.info(" Prepare to check the stability")
+
+            # dont remove this line as it complies with nicholas's mood
             aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=True, checkhsplanform=False)
 
-            print("Is stability satisfied at XLEMAC_m "+ str(dict['Stability']['XLEMAC_m']) + " [Yes/No]: ")
+            print("Is stability satisfied at a X_LEMAC "+ str(round(dict['Stability']['XLEMAC_m'], 2))+ " [m]" + " [Yes/No]: ")
             answer = input()
 
             if answer.lower() == "yes":
                 break
 
         if answer.lower() == "yes":
-            ok = True
+
+            # print the range of the cg
+            print(f"Xcg Range is between': {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
+
+            logging.info(" Calculating the Xcg excursion successful")
+            logging.info(" Calculating the MAC")
+
+            # dont remove this line as it complies with nicholas's mood
+            mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False,
+                                     checkhsplanform=False)
+            print(f'MAC: {round(mac, 2)} [m]')
+
+            logging.info(" Calculating the MAC successful")
+            logging.info(" Calculating the aerodynamic design")
+
+            find_optimal_stability = True
 
             aerodynamic_design(dict, checkwingplanform=True, checkflowparameters=False, checkstability=False, checkhsplanform=True)
 
             logging.info(" Calculating the aerodynamic design successful")
             logging.info(" Calculating the hourly price")
 
+            # calculating the hourly cost
             cost = hourly_operating_cost("maf_mission_graph.csv")
+
             print(f"Cost: {round(cost, 2)} [US$]")
 
             logging.info(" Calculating the hourly price successful")
             logging.info(" Saving the modified design.json file")
+
+            # calculating if we get the copium batteries how much co2 reduction would increase
+            dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
+            print("Reduction with future expected battery technology: " + str(round(co2(ac_data=dict) * 100, 2)) + "[%]")
+
+
             print("Finally, I am free")
 
             design_json_path = os.path.join(script_dir, '..', 'Configurations', 'design.json')
+            logging.info(" Design.json saved at: " + design_json_path)
 
             with open(design_json_path, 'w') as f:
                 json.dump(dict, f, indent=4)
-
-            dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
-            print("Reduction with future expected battery technology: " + str(co2(ac_data=dict)))
 
             logging.info(" Program finished successfully")
 
