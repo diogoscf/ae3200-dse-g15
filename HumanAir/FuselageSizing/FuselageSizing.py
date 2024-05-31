@@ -160,7 +160,18 @@ class FuselageSizing:
         a_lat = l_p*l_fus
         
         return 2*A_trap + a_lat
-        
+    
+    def maximum_perimeter(self, s_gear):
+        # assuming trapezoidal shape 
+        h_fus = self.height()
+        wb_fus = self.bottom_width(s_gear)
+        wu_fus = self.top_width()
+                
+        # length of the side of trapezium
+        side_c = (((wb_fus - wu_fus)/2)**2 + h_fus**2)**0.5
+        l_p = wb_fus + wu_fus + 2*side_c        
+        return l_p
+    
     def plot_side_drawing(self,s_gear):
         fig, ax = plt.subplots()
         
@@ -300,7 +311,11 @@ fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D
 print(fuselage_size.top_width())
 print(fuselage_size.bottom_width(s_gear=0.2))
 print(fuselage_size.height())
-print('start_of tailcone', fuselage_size.length_fus()-l_tailcone)
+print('fuselage_length without engine', fuselage_size.length_fus()-l_engine-fuselage_size.l_enbu)
+print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.2))
 print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
+print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.2))
+print('nose_strut_length',h_nose_strut)
+
 fuselage_size.plot_side_drawing(s_gear=0.2)
 fuselage_size.plot_front_view(s_gear=0.2)
