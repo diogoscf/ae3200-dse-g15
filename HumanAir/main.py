@@ -33,7 +33,7 @@ logging.info(' Starting the program')
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Add the project root directory to the Python path
-project_root = os.path.abspath(os.path.join(script_dir,'..', '..'))
+project_root = os.path.abspath(os.path.join(script_dir,'..'))
 sys.path.append(project_root)
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
