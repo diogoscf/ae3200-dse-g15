@@ -1,6 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import json
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from aircraft_data import aircraft_data
 
 
 class WeightEstm:
@@ -108,10 +114,8 @@ class WeightEstm:
 
 
 if __name__ == "__main__":
-    with open("c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json",'r') as f:
-        dict = json.load(f)
 
-    data=WeightEstm(dict)
+    data=WeightEstm(aircraft_data)
 
     bat=0.11
     row=data.Iterations(bat)
