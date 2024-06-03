@@ -64,10 +64,10 @@ def load_json_file(file_name):
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(7.0, 18.51, 0.5)
+    A_lst = np.arange(18, 18.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
-    Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
-    Clmax_TO_lst = np.arange(2, 2.61, 0.2)
+    Clmax_clean_lst = np.arange(1.8, 2.21, 0.2)
+    Clmax_TO_lst = np.arange(2.2, 2.61, 0.2)
     Clmax_Land_lst = np.arange(2, 2.61, 0.2)
     Cd0_lst = np.arange(0.028, 0.0321, 0.002)
     V_cruise_lst = np.arange(60, 65.1, 1)
@@ -259,9 +259,9 @@ if __name__ == '__main__':
     dict['Performance']['n_ult_l'] = n_ult_land
 
     # set up the conditions to run the program
-    run_generate = False
-    run_classI = True
-    run_classII = True
+    run_generate = True
+    run_classI = False
+    run_classII = False
 
 
     if run_generate:
@@ -333,11 +333,11 @@ if __name__ == '__main__':
             logging.info(" Calculating the weight components successful")
 
             # set up the condition to set up the range where the cg of the wing is with report of the mac
-            PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
+            xcg_location_percentage = np.arange(-0.1, 0.51, 0.1)
             logging.info(" Starting the search for the optimal stability range in terms of where to position the cg of the wing")
 
             # iterate over the percentage to find the optimal stability range
-            for pct in PERCENTAGE:
+            for pct in xcg_location_percentage:
 
                 logging.info(" Calculating the Xcg excursion")
 

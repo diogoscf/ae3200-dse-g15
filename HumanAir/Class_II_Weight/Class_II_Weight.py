@@ -55,7 +55,7 @@ class Class_II_Weight:
         self.w_f = m_to_ft(aircraft_data["Geometry"]["fus_width_m"])
         self.h_f = m_to_ft(aircraft_data["Geometry"]["fus_height_m"])
 
-        self.P_TO = W_to_hp(aircraft_data["Power_prop"]["P_TO"])
+        self.P_TO = W_to_hp(aircraft_data["Power_prop"]["P_req_TO_W"])
         self.K_n = aircraft_data["Power_prop"]["K_n"] #0.37 for radial, 0.24 for horizontally opposed
         self.K_p = 1.1 #TODO: check if supercharging is used (pg.84)
         self.K_pg = 1.16
