@@ -202,7 +202,7 @@ def calculate_co2_reduction_flightdist(
     new_co2, mo_co2 = calculate_new_co2_flightdist(
         flightdist,
         mission_freqs_global,
-        ac_data=aircraft_data,
+        ac_data=ac_data,
         maintenance_standard_co2=c206_maintenance_co2,
         V_standard_kts=m_s_to_kt(standard_ac_data["Vc_m/s"]),
         standard_ac_data=c206_data,
