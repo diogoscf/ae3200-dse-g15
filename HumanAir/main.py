@@ -18,13 +18,12 @@ sys.path.append(project_root)
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 from HumanAir.Class_I_Weight.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
-from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
-
+from HumanAir.CO2_Calculator.co2v2 import calculate_co2_reduction_flightdist as co2
 def setup_logging():
     handler = colorlog.StreamHandler()
     handler.setFormatter(colorlog.ColoredFormatter(
@@ -261,7 +260,7 @@ if __name__ == '__main__':
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = False
+    run_classI = True
     run_classII = True
 
 
