@@ -37,8 +37,8 @@ def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=Fal
     deda=ac_data["Aero"]["deda"]
     VhV=ac_data["Aero"]["VhV"]
     FuselageLength=ac_data["Geometry"]["fus_length_m"]
-    tc_wing=ac_data["Aero"]["tc_m_Wing"]
-    tc_HP=ac_data["Aero"]["tc_m_HP"]
+    tc_wing = ac_data["Aero"]["tc_m_Wing"]
+    tc_HP = ac_data["Aero"]["tc_m_HP"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
 
