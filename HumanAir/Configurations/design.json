@@ -93,8 +93,9 @@
         "CO2": 50.1,
         "CO2_emissions_kg/kg": 3.16,
         "Altitude_Cruise_m": 3000,
-        "Altitude_TO_m": 1800,
-        "Altitude_Land_m": 1800,
+        "Altitude_TO_m": 750,
+        "Altitude_Land_m": 750,
+        "Temp_offset_TO_Land_cruise": 18,
         "n_ult": 6.0,
         "n_ult_l": 5.7
     },
