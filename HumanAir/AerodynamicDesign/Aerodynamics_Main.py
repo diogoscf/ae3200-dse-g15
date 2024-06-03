@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
 
-def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
+def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
     MTOW=ac_data["Weights"]['MTOW_N']
     WS=ac_data["Performance"]["W/S_N/m2"]
     AR_Wing = ac_data["Aero"]["AR"]
@@ -37,8 +37,10 @@ def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=Fal
     deda=ac_data["Aero"]["deda"]
     VhV=ac_data["Aero"]["VhV"]
     FuselageLength=ac_data["Geometry"]["fus_length_m"]
+    tc_wing = ac_data["Aero"]["tc_m_Wing"]
+    tc_HP = ac_data["Aero"]["tc_m_HP"]
 
-    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,MTOW=MTOW, WS=WS)
+    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
 
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
@@ -56,14 +58,24 @@ def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=Fal
     """========== Stability Analysis =========="""
     # replace with 'FX_63-137.json' and for pycharm 'NACA0012.json'
     # replace with 'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\FX_63-137.json' and same for the other airfoil for vscode (change nicho to your username)
-    Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, 
-                               '../AerodynamicDesign/Airfoils/FX_63-137.json',
-                               '../AerodynamicDesign/Airfoils/NACA0012.json')
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path to the design.json file
+    airfoil_wing_json_path = os.path.join(script_dir, 'Airfoils','FX_63-137.json')
+    airfoil_elevator_json_path = os.path.join(script_dir, 'Airfoils','NACA0012.json')
+
+    #Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, '../AerodynamicDesign/Airfoils/FX_63-137.json','../AerodynamicDesign/Airfoils/NACA0012.json')
+
+    Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform,
+                               airfoil_wing_json_path,
+                               airfoil_elevator_json_path)
 
     if checkstability:
         Stab.Plotting()
 
-    HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+    HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, tc_HP,S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 
