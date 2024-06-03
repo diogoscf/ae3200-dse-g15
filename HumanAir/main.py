@@ -305,17 +305,17 @@ if __name__ == '__main__':
                 f" Wing {round(component_weights[6], 2)}[kg],"
                 f" Wpl_des {round(component_weights[7], 2)}[kg]")
 
-            print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
-            print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
-            dict["Weights"]["MTOW_N"]=9.81*round(component_weights[1], 2)
-            dict["Weights"]["OEW_N"]=9.81*round(component_weights[2], 2)
-            dict["Weights"]["Wptr_N"]=9.81*round(component_weights[3], 2)
-            dict["Weights"]["Wbat_N"]=9.81*round(component_weights[4], 2)
-            dict["Weights"]["Wfuel_N"]=9.81*round(component_weights[5], 2)
-            dict["Weights"]["Ww_N"]=9.81*round(component_weights[6], 2)
-            dict["Weights"]["W_L_N"]=9.81*(round(component_weights[1], 2)-round(component_weights[5], 2))
-            
-            logging.info(" Calculating the weight components successful")
+        print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
+        print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
+        dict["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
+        dict["Weights"]["OEW_N"] = 9.81 * round(component_weights[2], 2)
+        dict["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
+        dict["Weights"]["Wbat_N"] = 9.81 * round(component_weights[4], 2)
+        dict["Weights"]["Wfuel_N"] = 9.81 * round(component_weights[5], 2)
+        dict["Weights"]["Ww_N"] = 9.81 * round(component_weights[6], 2)
+        dict["Weights"]["W_L_N"] = 9.81 * (round(component_weights[1], 2)-round(component_weights[5], 2))
+        
+        logging.info(" Calculating the weight components successful")
 
             # set up the condition to set up the range where the cg of the wing is with report of the mac
             PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
@@ -381,11 +381,8 @@ if __name__ == '__main__':
                 dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
                 print("Reduction with future expected battery technology: " + str(round(co2(ac_data=dict) * 100, 2)) + "[%]")
 
-
-                print("Finally, I am free")
-
-                design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
-                logging.info(" Design.json saved at: " + design_json_path)
+            design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
+            logging.info(" Design.json saved at: " + design_json_path)
 
                 with open(design_json_path, 'w') as f:
                     json.dump(dict, f, indent=4)

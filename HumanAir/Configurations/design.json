@@ -132,11 +132,11 @@
         "QCW_to_QCh": 6.9
     },
     "General": {
-        "Paint": false,
+        "Paint": true,
         "N_pax": 7,
         "N_row": 3,
         "PoweredFlightControls": false,
         "DuplicatedFlightControls": false,
-        "APU": true
+        "APU": false
     }
 }
