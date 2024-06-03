@@ -13,7 +13,7 @@ class LongitudinalStability:
         self.QuarterChordSweep=Wing.QuarterChordSweep
         self.Xac=0.25
         self.dxcg=0.01
-        self.Xcg=np.arange(0,1+self.dxcg,self.dxcg)
+        self.Xcg=np.arange(0,2+self.dxcg,self.dxcg)
         self.SM=SM
         self.deda=deda
         self.CgFwd=CgFwd

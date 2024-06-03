@@ -114,7 +114,7 @@ def calculate_manoeuvre_velocities(
     # print(f"V_D: {Vd_ms:.2f} m/s")
 
     CLmax_clean = CLmax_clean if CLmax_clean is not None else aircraft_data["Aero"]["CLmax_clean"]
-    CLmax_land = CLmax_land if CLmax_land is not None else aircraft_data["Aero"]["CLmax_land"]
+    CLmax_land = CLmax_land if CLmax_land is not None else aircraft_data["Aero"]["CLmax_Land"]
 
     V_A = np.sqrt(2 * nmax * WS_Nm2 / (rho * CLmax_clean))
     V_S1 = np.sqrt(2 * WS_Nm2 / (rho * CLmax_clean))
