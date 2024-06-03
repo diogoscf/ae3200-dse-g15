@@ -84,8 +84,9 @@ class Class_II_Weight:
         results["Cessna"] = 0.002933*self.S_Wing**1.018*self.AR_Wing**2.473*self.n_ult**0.611
         results["USAF"] = 96.948*((self.W_TO*self.n_ult*10**(-5))**0.65*(self.AR_Wing/np.cos(self.QuarterChordSweep_Wing))**0.57*(self.S_Wing/100)**0.61*((1+self.Taper_Wing)/2*self.tc_m_Wing)**0.36*(1+self.V_H/500)**0.5)**0.993
         results["Torenbeek"] = 0.00125*self.W_TO*(self.b_Wing/np.cos(self.HalfChordSweep_Wing))**0.75*(1+(6.3*np.cos(self.HalfChordSweep_Wing)/self.b_Wing)**0.5)*self.n_ult**0.55*(self.b_Wing*self.S_Wing/(self.t_root_max_Wing*self.W_TO*np.cos(self.HalfChordSweep_Wing)))**0.30
-
+        
         results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
+
         return results
 
     def EmpennageWeight(self):
@@ -138,7 +139,8 @@ class Class_II_Weight:
 
         results["USAF"] = 0.054*self.l_s_m**0.501*(self.W_L*self.n_ult_l)**0.684
 
-        results["Average"] = np.average([results["Cessna"], results["USAF"]])
+        results["Average"] = np.average([results["Cessna"],results["USAF"]])
+        
         return results
 
 
@@ -267,11 +269,10 @@ class Class_II_Weight:
     def Iterarions_C2W(self,bat):
         MTOW_new = 0
         MTOW_old = self.dict["Weights"]["MTOW_N"]
-        print(MTOW_old)
         ok = False
 
         while np.abs((MTOW_new - self.dict["Weights"]["MTOW_N"]) / self.dict["Weights"]["MTOW_N"]) > 0.02:
-            print("DA")
+
             if ok:
                 self.dict["Weights"]["MTOW_N"] = MTOW_new
 
@@ -280,7 +281,6 @@ class Class_II_Weight:
             FuelWeight = self.NewFuelWeight(bat)
 
             MTOW_new = OEW + 9.81*BatteryWeight + 9.81*FuelWeight + 9.81*self.dict["Iterations Class I"]["Wpl_des_kg"]
-            print(MTOW_new)
 
             if MTOW_new > 80000:
                 break
@@ -321,7 +321,6 @@ class Class_II_Weight:
 def RunClassII(aircraft_data, check):
     p=Class_II_Weight(aircraft_data)
     values=p.Iterarions_C2W(0.144)
-    print(values)
 
     if check:
         print("========== Structures Weight ==========")

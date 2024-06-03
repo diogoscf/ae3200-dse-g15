@@ -38,6 +38,7 @@ from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_avera
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
+from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 
 def load_json_file(file_name):
 
@@ -308,6 +309,7 @@ if __name__ == '__main__':
         dict["Weights"]["Wbat_N"]=9.81*round(component_weights[4], 2)
         dict["Weights"]["Wfuel_N"]=9.81*round(component_weights[5], 2)
         dict["Weights"]["Ww_N"]=9.81*round(component_weights[6], 2)
+        dict["Weights"]["W_L_N"]=9.81*(round(component_weights[1], 2)-round(component_weights[5], 2))
         
         logging.info(" Calculating the weight components successful")
 
@@ -383,8 +385,11 @@ if __name__ == '__main__':
 
             with open(design_json_path, 'w') as f:
                 json.dump(dict, f, indent=4)
+    
+    logging.info(" Calculate Class II Weight Groups")
+    RunClassII(dict,check=True)
 
-            logging.info(" Program finished successfully")
+    logging.info(" Program finished successfully")
 
 
 
