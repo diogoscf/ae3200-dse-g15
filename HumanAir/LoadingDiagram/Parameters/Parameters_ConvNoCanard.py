@@ -12,11 +12,11 @@ Clmax_Land = 2.5
 Cdo=0.028 #Cessna :0.028 B2: 0.0065, 0.0165
 
 """========== Mission Parameters =========="""
-TOP = 60
+TOP = 60 # ftion of airstrip surface characteristics and length
 h_TO = 750
-h_Cruise = 3700
+h_Cruise = 3700 # lowest is most efficient for propeller, and we have min req, hence this parameter does not vary and is = min allowed
 h_Land = 750
-s_land = 424
+s_land = 424 #500 corrected for grass landing
 f = 1 # W_to/W_land - changed to 1 since if aircraft flies on batteries W_to = W_land - used to be 0.95 
 temp_offset = 18
 

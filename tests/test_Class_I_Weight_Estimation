@@ -290,145 +290,158 @@ def test_Class_I_Weight_init():
         "DuplicatedFlightControls": True,
         "APU": True
     }
-}
+    }
+
     
-    def test_OEW_prime():
-        class_I = WeightEstm(aircraft_data)
-        A = 0.3632
-        MTOW_kg = 2650.285
-        B = -81.896
-        assert math.isclose(class_I.OEW_prime(), A*MTOW_kg+B, rel_tol=1e-3)
+def test_OEW_prime():
+    class_I = WeightEstm(aircraft_data)
+    A = 0.3632
+    MTOW_kg = 2650.285
+    B = -81.896
+    assert math.isclose(class_I.OEW_prime(), A*MTOW_kg+B, rel_tol=1e-3)
 
 
-    def test_PowertrainWeight():
-        class_I = WeightEstm(aircraft_data)
-        MTOW = 2650.285 * 9.81
-        WP =  0.1345174630075089
-        p_bat = 0.163
-        eta_powertrain = 0.9216 # = eta_EM * eta
-        p_ptr = 1.5*1000 #kW /kg
+def test_PowertrainWeight():
+    class_I = WeightEstm(aircraft_data)
+    MTOW = 2650.285 * 9.81
+    WP =  0.1345174630075089
+    p_bat = 0.163
+    eta_powertrain = 0.9216 # = eta_EM * eta
+    p_ptr = 1.5*1000 #kW /kg
 
-        assert math.isclose(class_I.PowertrainWeight(p_bat), (1-p_bat)*(MTOW/WP)/(eta_powertrain*p_ptr), rel_tol=1e-3)
-
-
-    def test_BatteryWeight():
-        class_I = WeightEstm(aircraft_data)
-        p_bat = 0.163 # percentage of total aircraft energy provided by battery 
-        WP = 0.1345174630075089
-        MTOW = 2650.285 * 9.81
-        E = 5.2
-        e_bat = 350
-        eta_bat = 0.97
-        eta_electricmotor = 0.925
-        DOD_bat = 0.8
-
-        assert math.isclose(class_I.BatteryWeight(p_bat), MTOW * WP * E * p_bat/(e_bat * eta_bat * eta_electricmotor * DOD_bat), rel_tol=1e-3)
+    assert math.isclose(class_I.PowertrainWeight(p_bat), (1-p_bat)*(MTOW/WP)/(eta_powertrain*p_ptr), rel_tol=1e-3)
 
 
-    def test_FuelWeight():
-        class_I = WeightEstm(aircraft_data)
+def test_BatteryWeight():
+    class_I = WeightEstm(aircraft_data)
+    p_bat = 0.163 # percentage of total aircraft energy provided by battery 
+    WP = 0.1345174630075089
+    MTOW = 2650.285 * 9.81
+    E = 5.2
+    e_bat = 350
+    eta_bat = 0.97
+    eta_electricmotor = 0.925
+    DOD_bat = 0.8
 
-        assert math.isclose(class_I.FuelWeight(class_I["Power_prop"]["bat"]), 
-                            1.15*(1-class_I["Power_prop"]["bat"]) * 9.81 * class_I["Iterations Class I"]["MTOW_kg"] / class_I["Performance"]["W/P_N/W"] *\
-                             class_I["Performance"]["endurance"] / (class_I["Power_prop"]["eta_generator"] * class_I["Power_prop"]["E_fuel_Wh/kg"]), rel_tol=1e-3)
-    # 1.15 since MAF requires 15% reserve fuel. 
-
-
-    def test_FuelWeight():
-        class_I = WeightEstm(aircraft_data)
-
-        assert math.isclose(class_I.WingWeight(), 
-                            class_I["Iterations Class I"]["Aw"] * class_I["Iterations Class I"]["MTOW_kg"] + class_I["Iterations Class I"]["Bw"],
-                            rel_tol=1e-3)
+    assert math.isclose(class_I.BatteryWeight(p_bat), MTOW / WP * E * p_bat/(e_bat * eta_bat * eta_electricmotor * DOD_bat), rel_tol=1e-3)
 
 
-    def test_Iterations():
-        class_I = WeightEstm(aircraft_data)
+def test_FuelWeight():
+    class_I = WeightEstm(aircraft_data)
 
-        MTOW_new = 0
-        MTOW_old = class_I["Iterations Class I"]["MTOW_kg"]
-        ok = False
+    assert math.isclose(class_I.FuelWeight(class_I.dict["Power_prop"]["bat"]), 
+                        1.15*(1-class_I.dict["Power_prop"]["bat"]) * 9.81 * class_I.dict["Iterations Class I"]["MTOW_kg"] / class_I.dict["Performance"]["W/P_N/W"] *\
+                            class_I.dict["Performance"]["endurance"] / (class_I.dict["Power_prop"]["eta_generator"] * class_I.dict["Power_prop"]["E_fuel_Wh/kg"]), rel_tol=1e-3)
+# 1.15 since MAF requires 15% reserve fuel. 
 
-        while np.abs((MTOW_new - class_I["Iterations Class I"]["MTOW_kg"]) / class_I["Iterations Class I"]["MTOW_kg"]) > 0.02:
-            if ok: 
-                class_I["Iterations Class I"]["MTOW_kg"] = MTOW_new
-            
-            OEW_prime = WeightEstm.OEW_prime()
-            PowertrainWeight = WeightEstm.PowertrainWeight(class_I["Power_prop"]["bat"])
-            BatteryWeight = WeightEstm.BatteryWeight(class_I["Power_prop"]["bat"])
-            FuelWeight = WeightEstm.FuelWeight(class_I["Power_prop"]["bat"])
-            WingWeight = WeightEstm.WingWeight()
+
+def test_WingWeight():
+    class_I = WeightEstm(aircraft_data)
+
+    assert math.isclose(class_I.WingWeight(), 
+                        class_I.dict["Iterations Class I"]["Aw"] * class_I.dict["Iterations Class I"]["MTOW_kg"] + class_I.dict["Iterations Class I"]["Bw"],
+                        rel_tol=1e-3)
+
+
+def test_Iterations():
+    class_I = WeightEstm(aircraft_data)
+
+    MTOW_new = 0
+    MTOW_old = class_I.dict["Iterations Class I"]["MTOW_kg"]
+    ok = False
+
+    while np.abs((MTOW_new - class_I.dict["Iterations Class I"]["MTOW_kg"]) / class_I.dict["Iterations Class I"]["MTOW_kg"]) > 0.02:
+        if ok: 
+            class_I.dict["Iterations Class I"]["MTOW_kg"] = MTOW_new
         
-            MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + class_I["Iterations Class I"]["Wpl_des_kg"]
+        OEW_prime = class_I.OEW_prime()
+        PowertrainWeight = class_I.PowertrainWeight(class_I.dict["Power_prop"]["bat"])
+        BatteryWeight = class_I.BatteryWeight(class_I.dict["Power_prop"]["bat"])
+        FuelWeight = class_I.FuelWeight(class_I.dict["Power_prop"]["bat"])
+        WingWeight = class_I.WingWeight()
+    
+        MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + class_I.dict["Iterations Class I"]["Wpl_des_kg"]
 
-            if MTOW_new > 8000:
-                break
+        if MTOW_new > 8000:
+            break
 
-            ok = True
+        ok = True
 
-        if MTOW_new < 4000:
-            assert np.allclose(class_I.Iterations(class_I["Power_prop"]["bat"]), 
-                                              (MTOW_new,
-                                            class_I["Contingency"] * MTOW_new,
-                                            class_I["Contingency"] * OEW_prime,
-                                            class_I["Contingency"] * PowertrainWeight,
-                                            class_I["Contingency"] * BatteryWeight,
-                                            class_I["Contingency"] * FuelWeight,
-                                            class_I["Contingency"] * WingWeight,
-                                            class_I["Contingency"] * class_I["Iterations Class I"]["Wpl_des_kg"]), rtol=1e-3)
-            class_I_iterated = class_I.Iterations(class_I["Power_prop"]["bat"])
-            assert math.isclose(class_I_iterated["Iterations Class I"]["MTOW_kg"], MTOW_old,rel_tol=1e-3)
+    if MTOW_new < 4000:
+        class_I.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
+        assert np.allclose(class_I.Iterations(class_I.dict["Power_prop"]["bat"]), 
+                                            (MTOW_new,
+                                        class_I.dict["Contingency"] * MTOW_new,
+                                        class_I.dict["Contingency"] * OEW_prime,
+                                        class_I.dict["Contingency"] * PowertrainWeight,
+                                        class_I.dict["Contingency"] * BatteryWeight,
+                                        class_I.dict["Contingency"] * FuelWeight,
+                                        class_I.dict["Contingency"] * WingWeight,
+                                        class_I.dict["Contingency"] * class_I.dict["Iterations Class I"]["Wpl_des_kg"]), rtol=1e-3)
+        assert math.isclose(class_I.dict["Iterations Class I"]["MTOW_kg"], MTOW_old,rel_tol=1e-3)
 
 
-        else:
-            assert np.allclose(class_I.Iterations(class_I["Power_prop"]["bat"]), 
-                                              (0,
-                                            class_I["Contingency"] * MTOW_new,
-                                            class_I["Contingency"] * OEW_prime,
-                                            class_I["Contingency"] * PowertrainWeight,
-                                            class_I["Contingency"] * BatteryWeight,
-                                            class_I["Contingency"] * FuelWeight,
-                                            class_I["Contingency"] * WingWeight,
-                                            class_I["Contingency"] * class_I["Iterations Class I"]["Wpl_des_kg"]), rtol=1e-3)
-            class_I_iterated = class_I.Iterations(class_I["Power_prop"]["bat"])
-            assert math.isclose(class_I_iterated["Iterations Class I"]["MTOW_kg"], MTOW_old,rel_tol=1e-3) 
-        # The reason for the if statement, is that if the design weighs less than 4000, 
-        # you actually care about the effect of the contingency, and how much the aircaft could 
-        # have weighed if the contingency was not applied.
-        # If the weight is too large, it does not matter that much. 
+    else:
+        class_I.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
+        assert np.allclose(class_I.Iterations(class_I.dict["Power_prop"]["bat"]), 
+                                            (0,
+                                        class_I.dict["Contingency"] * MTOW_new,
+                                        class_I.dict["Contingency"] * OEW_prime,
+                                        class_I.dict["Contingency"] * PowertrainWeight,
+                                        class_I.dict["Contingency"] * BatteryWeight,
+                                        class_I.dict["Contingency"] * FuelWeight,
+                                        class_I.dict["Contingency"] * WingWeight,
+                                        class_I.dict["Contingency"] * class_I.dict["Iterations Class I"]["Wpl_des_kg"]), rtol=1e-3)
+        assert math.isclose(class_I.dict["Iterations Class I"]["MTOW_kg"], MTOW_old,rel_tol=1e-3) 
+    # The reason for the if statement, is that if the design weighs less than 4000, 
+    # you actually care about the effect of the contingency, and how much the aircaft could 
+    # have weighed if the contingency was not applied.
+    # If the weight is too large, it does not matter that much. 
 
-        def test_PolynomialRegression():
-            class_I = WeightEstm(aircraft_data)
-            bat = np.arange(0, 0.18, 0.001)
+def test_PolynomialRegression():
+    class_I = WeightEstm(aircraft_data)
+    bat = np.arange(0, 0.18, 0.001)
 
-            lst_P = []
-            lst_bat = []
+    lst_P = []
+    lst_bat = []
 
-            for pbat in bat:
-                row = class_I.Iterations(pbat) # this is a tuple, not a row
-                if row[0] != 0:
-                    lst_P.append(9.81 * row[1] / class_I["Performance"]["W/P_N/W"])
-                    lst_bat.append(pbat)
-            
-            lst_bat = np.array(lst_bat)
-            lst_P = np.array(lst_P)
+    for pbat in bat:
+        row = class_I.Iterations(pbat) # this is a tuple, not a row
+        if row[0] != 0:
+            lst_P.append(9.81 * row[1] / class_I.dict["Performance"]["W/P_N/W"])
+            lst_bat.append(pbat)
+    
+    lst_bat = np.array(lst_bat)
+    lst_P = np.array(lst_P)
 
-            # Filter out non-positive values in lst_P
-            valid_indices = lst_P > 0
-            lst_bat = lst_bat[valid_indices]
-            lst_P = lst_P[valid_indices]
+    # Filter out non-positive values in lst_P
+    valid_indices = lst_P > 0
+    lst_bat = lst_bat[valid_indices]
+    lst_P = lst_P[valid_indices]
 
-            if len(lst_P) == 0:
-                assert np.allclose((class_I.PolynomialRegression(bat)), (np.array([20,20]), np.array([20,20])), rtol = 1e-3)
-                
-            coeff_exp = np.polyfit(lst_bat, np.log(lst_P), 1) # assuming log of exponential is linear
-            coeff_pol = np.polyfit(lst_bat, lst_P, 2) #assuming second degree poly fit. 
+    if len(lst_P) == 0:
+        print([class_I.PolynomialRegression(bat)][0])
+        assert np.allclose([class_I.PolynomialRegression(bat)][0][0], np.array([20,20]), rtol = 1e-3)
+        assert np.allclose([class_I.PolynomialRegression(bat)][0][1], np.array([20,20]), rtol = 1e-3)
 
-            y_pol = coeff_pol[0] * lst_bat ** 2 + coeff_pol[1] * lst_bat + coeff_pol[2]
-            y_exp = np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * lst_bat)
+    coeff_exp = np.polyfit(lst_bat, np.log(lst_P), 1) # assuming log of exponential is linear
+    coeff_pol = np.polyfit(lst_bat, lst_P, 2) #assuming second degree poly fit. 
 
-            assert np.allclose((class_I.PolynomialRegression(bat)), (coeff_exp, coeff_pol), rtol = 1e-3)
+    y_pol = coeff_pol[0] * lst_bat ** 2 + coeff_pol[1] * lst_bat + coeff_pol[2]
+    y_exp = np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * lst_bat)
 
+    assert np.allclose([class_I.PolynomialRegression(bat)][0][0], coeff_exp, rtol = 1e-3)
+    assert np.allclose([class_I.PolynomialRegression(bat)][0][1], coeff_pol, rtol = 1e-3)
+
+if __name__ == "__main__":
+    test_Class_I_Weight_init()
+    test_OEW_prime()
+    test_BatteryWeight()
+    test_FuelWeight()
+    test_WingWeight()
+    test_Iterations()
+    test_PolynomialRegression()
+    test_PowertrainWeight()
 
 
 
