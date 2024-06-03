@@ -110,6 +110,7 @@ def component_mass(ac_datafile = aircraft_data):
 def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     # Set distance of nosewheel from nose [m]
     nose_distance = 0.2
+    nose_loading = 0.08
 
     # Get fractions, weights, cg
     wcg = component_mass(ac_datafile)
@@ -133,7 +134,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     CGlist = [Xcg_OEW, (Xcg_OEW*wcg[1, -1] + Xcg_pld*WPL_cont)/(wcg[1, -1]+WPL_cont), (Xcg_OEW*wcg[1, -1] + Xcg_f*WF_cont)/(wcg[1, -1]+WF_cont), (Xcg_OEW*wcg[1, -1] + Xcg_pld*WPL_cont + Xcg_f*WF_cont)/(wcg[1, -1]+WPL_cont+WF_cont)]
     aftcg = np.max(CGlist)
 
-    l_m, l_n, Pmg, Pnw, H_s = find_lg(0.08, aftcg, ac_datafile)[0:5] # Nose loading of 8% initially
+    l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5] # Nose loading of 8% initially
     wcg[2, 1] = aftcg + l_m
     wcg[2, 3] = aftcg - l_n
     wcg[2, -1] = Xcg_OEW
@@ -160,6 +161,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
                 con = input("Continue? (y/n): ")
                 if con == "n":
                     sys.exit("Nose wheel could not be placed")
+        else: print("DA")
 
         # Place nosewheel
         l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]
@@ -181,6 +183,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
+    print(Xcg_OEW)
     return wcg, CGlist, xlemac
 
 if __name__ == "__main__":
