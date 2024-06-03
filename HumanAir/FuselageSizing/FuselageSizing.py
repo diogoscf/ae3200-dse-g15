@@ -110,7 +110,7 @@ class FuselageSizing:
                 print('Landing gear cannot be folded backward or forward')
                 
         else:
-            print('Landing gear folds forward')
+            #print('Landing gear folds forward')
             w_battery = (self.top_width()-2*FuselageSizing.s)* 2
             l_battery = self.l_battery(w_battery)
 
@@ -308,13 +308,13 @@ V_battery = 0.3
 
 fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery)
 
-print(fuselage_size.top_width())
-print(fuselage_size.bottom_width(s_gear=0.2))
-print(fuselage_size.height())
+print('top_width', fuselage_size.top_width())
+print('bottom_width',fuselage_size.bottom_width(s_gear=0.2))
+print('fuselage height', fuselage_size.height())
 print('fuselage_length without engine', fuselage_size.length_fus()-l_engine-fuselage_size.l_enbu)
 print('fuselage length', fuselage_size.length_fus())
 print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.2))
-print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
+#print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
 print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.2))
 print('nose_strut_length',h_nose_strut)
 
