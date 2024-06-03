@@ -7,7 +7,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
-from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
+from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N, ft_to_m
 class Class_II_Weight:
     def __init__(self, aircraft_data):
         self.dict=aircraft_data
@@ -63,6 +63,8 @@ class Class_II_Weight:
 
         self.int = aircraft_data["Power_prop"]["int_fueltanks_fraction"]
 
+        aircraft_data["Landing_gear"]["l_s_m"] = m_to_ft(aircraft_data["Landing_gear"]["Hs_m"])
+        aircraft_data['Landing_gear']["l_s_n"] = m_to_ft(aircraft_data["Landing_gear"]["Hs_m"])
         self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"])
         self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"])
         self.retractable = aircraft_data["Landing_gear"]["Retractable"]
@@ -140,7 +142,9 @@ class Class_II_Weight:
         results["USAF"] = 0.054*self.l_s_m**0.501*(self.W_L*self.n_ult_l)**0.684
 
         results["Average"] = np.average([results["Cessna"],results["USAF"]])
-        
+
+        self.l_s_n = ft_to_m(self.l_s_n)
+        self.l_s_m = ft_to_m(self.l_s_m)
         return results
 
 
@@ -266,7 +270,7 @@ class Class_II_Weight:
         return self.NewEmptyWeight()+aircraft_data["Weights"]["W_Pilot_N"]
 
     # iteration function between class I and class II
-    def Iterarions_C2W(self,bat):
+    def Iterarions_C2W(self, bat):
 
         # set up the old MTOW and the new one for the iteration loop
         MTOW_new = 0
@@ -333,12 +337,13 @@ class Class_II_Weight:
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total())
             )
 
-def RunClassII(aircraft_data, check):
-    p=Class_II_Weight(aircraft_data)
-    values=p.Iterarions_C2W(0.144)
+def RunClassII(aircraft_data, check, pbat):
+    # initialise the class II weight object
+    p = Class_II_Weight(aircraft_data)
+    p.Iterarions_C2W(pbat)
 
-    dict=aircraft_data
-    #dict["CL2Weight"]={}
+    dict = aircraft_data
+
 
     # Strucutres Weight
     dict["CL2Weight"]["Total Structures Weight"]=dict["Contingency_C2W"]*lbs_to_N(p.StructureWeight_Total())
