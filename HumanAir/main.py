@@ -8,22 +8,6 @@ import colorlog
 # integration v2 dont touch this please
 "Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
 
-def setup_logging():
-    handler = colorlog.StreamHandler()
-    handler.setFormatter(colorlog.ColoredFormatter(
-        "%(log_color)s%(levelname)s:%(message)s",
-        log_colors={
-            'DEBUG': 'cyan',
-            'INFO': 'green',
-            'WARNING': 'yellow',
-            'ERROR': 'red',
-            'CRITICAL': 'bold_red'
-        }
-    ))
-    logger = colorlog.getLogger()
-    logger.addHandler(handler)
-    logger.setLevel(logging.INFO)
-
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -39,6 +23,23 @@ from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
+from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
+
+def setup_logging():
+    handler = colorlog.StreamHandler()
+    handler.setFormatter(colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(message)s",
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'bold_red'
+        }
+    ))
+    logger = colorlog.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 def load_json_file(file_name):
 
@@ -252,10 +253,16 @@ if __name__ == '__main__':
     # initialise the design.json file
     dict = load_json_file('design.json')
 
+    M_D, V_H, n_ult_cruise, n_ult_land = calculate_load_design_values(dict)
+    dict['Performance']['n_ult'] = max(n_ult_land, n_ult_cruise)
+    dict['Performance']['M_D'] = M_D
+    dict['Performance']['Vh_m/s'] = V_H
+    dict['Performance']['n_ult_l'] = n_ult_land
+
     # set up the conditions to run the program
     run_generate = False
-    run_classI = True
-    run_classII = False
+    run_classI = False
+    run_classII = True
 
 
     if run_generate:
