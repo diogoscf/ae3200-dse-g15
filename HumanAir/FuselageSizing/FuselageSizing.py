@@ -289,22 +289,22 @@ class FuselageSizing:
 
 # Example usage:
 n_seat = 8
-w_engine = 0.776
-h_engine = 0.498
-l_engine = 0.972
+w_engine = 0.85
+h_engine = 0.75
+l_engine = 1.1
 s_engine = 0.1
-D_nose = 0.33 
-h_nose = 0.13
-D_main = 0.6
-h_main = 0.23
-h_nose_strut = 0.89
-h_main_strut = 0.89
-l_main_lateral = 1.93
-l_long_nose = 0.2
-l_long_main = 4
+D_nose = 0.329565
+h_nose = 0.127
+D_main = 0.55626
+h_main =  0.2286
+h_nose_strut = 0.2473
+h_main_strut = 0.2473
+l_main_lateral = 1
+l_long_nose = 0.40874
+l_long_main = 4.21989077
 l_tailcone = 5.02 
 h_tail = 2.52 
-V_battery = 0.2
+V_battery = 0.3
 
 fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery)
 
@@ -312,6 +312,7 @@ print(fuselage_size.top_width())
 print(fuselage_size.bottom_width(s_gear=0.2))
 print(fuselage_size.height())
 print('fuselage_length without engine', fuselage_size.length_fus()-l_engine-fuselage_size.l_enbu)
+print('fuselage length', fuselage_size.length_fus())
 print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.2))
 print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
 print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.2))
