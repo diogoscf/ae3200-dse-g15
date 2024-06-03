@@ -261,7 +261,8 @@ class Class_II_Weight:
 
     def NewOEW(self):
         return self.NewEmptyWeight()+aircraft_data["Weights"]["W_Pilot_N"]
-    
+
+    # iteration function between class I and class II
     def Iterarions_C2W(self,bat):
         MTOW_new = 0
         MTOW_old = self.dict["Weights"]["MTOW_N"]

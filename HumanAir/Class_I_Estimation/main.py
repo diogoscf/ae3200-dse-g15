@@ -7,69 +7,76 @@ import colorlog
 
 # integration v2 dont touch this please
 "Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
+def setup_logging(): 
+    handler = colorlog.StreamHandler()
+    handler.setFormatter(colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(message)s",
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'bold_red'
+        }
+    ))
+    logger = colorlog.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
-handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter(
-    "%(log_color)s%(levelname)s:%(message)s",
-    log_colors={
-        'DEBUG': 'cyan',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red'
-    }
-))
-logger = colorlog.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
-# initialise the logging
+    # initialise the logging
 
 
-# Integration in progress v2
-logging.info(' Starting the program')
+    # Integration in progress v2
+    logging.info(' Starting the program')
 
-# Get the directory of the current script
-script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Add the project root directory to the Python path
-project_root = os.path.abspath(os.path.join(script_dir,'..'))
-sys.path.append(project_root)
+    # Add the project root directory to the Python path
+    project_root = os.path.abspath(os.path.join(script_dir,'..', '..'))
+    sys.path.append(project_root)
+    return None
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
-from HumanAir.Class1Estimation.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
+from Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 
-"Getting the design.json file"
-# Get the directory of the current script
-script_dir = os.path.dirname(os.path.abspath(__file__))
+def load_design_json():
+    "Getting the design.json file"
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Construct the absolute path to the design.json file
-design_json_path = os.path.join(script_dir,'..',"HumanAir", 'Configurations', 'design.json')
+    # Construct the absolute path to the design.json file
+    design_json_path = os.path.join(script_dir,'..', 'Configurations', 'design.json')
 
-# Print the absolute path for debugging
-logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
+    # Print the absolute path for debugging
+    logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
 
-# Attempt to open the file
-with open(design_json_path, 'r') as f:
-    dict = json.load(f)
 
-logging.info(" Opening design.json successful")
+    #"c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json" # use this for vs code
+    #'../Configurations/design.json', 'r' # use this for pycharm
 
-"Generating the design points"
+    # Attempt to open the file
+    with open(design_json_path, 'r') as f:
+        dict = json.load(f)
+
+    logging.info(" Opening design.json successful")
+
+    return dict
+
 def Generate(p, dict, run=False):
-
+    "Generating the design points"
     # tune the parameters with a reasonable range
-    A_lst = np.arange(7.0, 18.51, 0.5)
+    A_lst = np.arange(13.0, 17.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
     Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
     Clmax_TO_lst = np.arange(2, 2.61, 0.2)
     Clmax_Land_lst = np.arange(2, 2.61, 0.2)
-    Cd0_lst = np.arange(0.028, 0.0321, 0.002)
+    Cd0_lst = np.arange(0.026, 0.0301, 0.002)
     V_cruise_lst = np.arange(60, 65.1, 1)
     climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
@@ -124,15 +131,14 @@ def Generate(p, dict, run=False):
                                         # initialise the bat percentage
                                         bat = np.arange(0, 0.18, 0.001)
                                         coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
-
-                                        # run the regression to find power required cruise
+                                        
                                         co2_ratio_max = 0
 
                                         # set the condition to find the first point with co2 ratio > 50
                                         ok = 0
                                         for step in range(len(bat)):
 
-                                            # calculate the power required cruise
+                                            # run the regression to find power required cruise
                                             dict['Power_prop']['P_req_cruise_W'] = dict['Performance']['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
                                             dict['Power_prop']['E_bat_Wh'] = dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * bat[step]
 
@@ -142,7 +148,9 @@ def Generate(p, dict, run=False):
                                             if co2_ratio * 100 > 25 and ok == 0:
 
                                                 idx += 1
-                                                ok = 1
+                                                ok = 1  #this condition ensures that if, for the current combination of AR, CL,..., there is a battery percentage 
+                                                # for which you get >25% emission savings, you continuously overwrite the index entry if there is a higher emission saving
+                                                # with a different battery percentage for the same AR, CL,..., very smart piece of code. 
 
 
 
@@ -167,8 +175,8 @@ def Generate(p, dict, run=False):
                                                 co2_ratio_max=co2_ratio
 
         # save the json file with all possible design options
-        data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
-        with open(data_iterations_json_path, 'w') as file:
+        file_name = 'data_iterations.json'
+        with open(file_name, 'w') as file:
             json.dump(dict_iterations, file, indent=4)
 
 "Calculating the weighted score to find the best design point"
@@ -186,7 +194,7 @@ def calculate_weighted_score(point_data, weights):
                     'bat': 0.01,
                     'CO2': 30}
 
-    # initialing the score
+    # initializing the score
     score = 0
 
     # calculate the score
@@ -196,7 +204,7 @@ def calculate_weighted_score(point_data, weights):
 
 "Finding the optimal design point with the highest score and the lowest battery weight"
 def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold=50, design_points=None, printing=False, step=0):
-    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold}
+    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold} #select all design points that meet the threshold
     scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
@@ -228,7 +236,7 @@ def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold
         value = iteration_results[4]
         MTOW = iteration_results[1]
         dict['Power_prop']['P_req_TO_W'] = 9.81 * MTOW / dict['Performance']['W/P_N/W']
-        dict['Power_prop']['P_req_cruise_W'] = 9.81 * 0.8 * MTOW / dict['Performance']['W/P_N/W']
+        dict['Power_prop']['P_req_cruise_W'] = 9.81 * dict['Performance']['P_cruise/P_TO'] * MTOW / dict['Performance']['W/P_N/W']
         dict['Power_prop']['E_bat_Wh'] = dict['Power_prop']['P_req_cruise_W'] * dict['Performance']['endurance'] / dict['Performance']['P_cruise/P_TO'] * dict['Power_prop']['bat']
 
         if value < minimum:
@@ -244,13 +252,15 @@ def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold
 "Main Function to run the program"
 if __name__ == '__main__':
     run = False
+    setup_logging()
+    dict = load_design_json()
     if run:
         logging.info(" Starting generating the new possible design points. This may take a while.")
         Generate(p, dict, run)
 
     logging.info(" Getting the data from the design point options")
 
-    data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
+    data_iterations_json_path = os.path.join(script_dir, '..', 'Configurations', 'data_iterations.json')
 
     with open(data_iterations_json_path, 'r') as f:
         design_points = json.load(f)
@@ -263,7 +273,7 @@ if __name__ == '__main__':
         'Clmax_clean': +0.05,
         'Clmax_TO': +0,
         'Clmax_Land': +0,
-        'Cd0': -0.45,
+        'Cd0': -0.45,   #neg weight as larger is better, and if you look at the way we compute the score, larger yields neg value. 
         'V_cruise': -0.05,
         'climbrate': -0.1,
         'bat': -0.15,
@@ -271,12 +281,12 @@ if __name__ == '__main__':
     }
 
     maximum_weight_battery = 1000
-    CO2_threshold = 25
+    CO2_threshold = 30
     printing = False
 
     # set up that the optimal stability range is not yet set
     find_optimal_stability = False
-    # initialise from which step to start to search from the design_iterations.json
+    # initialise from which step to start to search from the desing_iterations.json
     step = 0
 
     logging.info(" Starting the search for optimal stability range")
@@ -299,13 +309,6 @@ if __name__ == '__main__':
 
         print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
         print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
-        dict["Weights"]["MTOW_N"]=9.81*round(component_weights[1], 2)
-        dict["Weights"]["OEW_N"]=9.81*round(component_weights[2], 2)
-        dict["Weights"]["Wptr_N"]=9.81*round(component_weights[3], 2)
-        dict["Weights"]["Wbat_N"]=9.81*round(component_weights[4], 2)
-        dict["Weights"]["Wfuel_N"]=9.81*round(component_weights[5], 2)
-        dict["Weights"]["Ww_N"]=9.81*round(component_weights[6], 2)
-        
         logging.info(" Calculating the weight components successful")
 
         # set up the condition to set up the range where the cg of the wing is with report of the mac
@@ -375,7 +378,7 @@ if __name__ == '__main__':
 
             print("Finally, I am free")
 
-            design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
+            design_json_path = os.path.join(script_dir, '..', 'Configurations', 'design.json')
             logging.info(" Design.json saved at: " + design_json_path)
 
             with open(design_json_path, 'w') as f:
