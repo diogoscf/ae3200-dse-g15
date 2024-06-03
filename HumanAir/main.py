@@ -303,13 +303,13 @@ if __name__ == '__main__':
 
         print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
         print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
-        dict["Weights"]["MTOW_N"]=9.81*round(component_weights[1], 2)
-        dict["Weights"]["OEW_N"]=9.81*round(component_weights[2], 2)
-        dict["Weights"]["Wptr_N"]=9.81*round(component_weights[3], 2)
-        dict["Weights"]["Wbat_N"]=9.81*round(component_weights[4], 2)
-        dict["Weights"]["Wfuel_N"]=9.81*round(component_weights[5], 2)
-        dict["Weights"]["Ww_N"]=9.81*round(component_weights[6], 2)
-        dict["Weights"]["W_L_N"]=9.81*(round(component_weights[1], 2)-round(component_weights[5], 2))
+        dict["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
+        dict["Weights"]["OEW_N"] = 9.81 * round(component_weights[2], 2)
+        dict["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
+        dict["Weights"]["Wbat_N"] = 9.81 * round(component_weights[4], 2)
+        dict["Weights"]["Wfuel_N"] = 9.81 * round(component_weights[5], 2)
+        dict["Weights"]["Ww_N"] = 9.81 * round(component_weights[6], 2)
+        dict["Weights"]["W_L_N"] = 9.81 * (round(component_weights[1], 2)-round(component_weights[5], 2))
         
         logging.info(" Calculating the weight components successful")
 
@@ -377,9 +377,6 @@ if __name__ == '__main__':
             dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
             print("Reduction with future expected battery technology: " + str(round(co2(ac_data=dict) * 100, 2)) + "[%]")
 
-
-            print("Finally, I am free")
-
             design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
             logging.info(" Design.json saved at: " + design_json_path)
 
@@ -387,7 +384,13 @@ if __name__ == '__main__':
                 json.dump(dict, f, indent=4)
     
     logging.info(" Calculate Class II Weight Groups")
-    RunClassII(dict,check=True)
+
+
+    percentage_battery = dict['Power_prop']['bat']
+    RunClassII(dict, check = False, pbat = percentage_battery)
+
+    logging.info(" Class II Weight Succesfully Calculated")
+    print("Finally, I am free")
 
     logging.info(" Program finished successfully")
 

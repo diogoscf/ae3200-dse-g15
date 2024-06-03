@@ -267,27 +267,35 @@ class Class_II_Weight:
 
     # iteration function between class I and class II
     def Iterarions_C2W(self,bat):
+
+        # set up the old MTOW and the new one for the iteration loop
         MTOW_new = 0
         MTOW_old = self.dict["Weights"]["MTOW_N"]
         ok = False
 
+        # iterate until the difference between the old and new MTOW is less than 2%
         while np.abs((MTOW_new - self.dict["Weights"]["MTOW_N"]) / self.dict["Weights"]["MTOW_N"]) > 0.02:
 
+            # ok condition so that it doesnt update for the first step as it is needed to be saved later
             if ok:
                 self.dict["Weights"]["MTOW_N"] = MTOW_new
 
+            # calculate the OEW, Battery Weight, and Fuel Weight
             OEW = self.NewOEW()
             BatteryWeight = self.NewBatteryWeight(bat)
             FuelWeight = self.NewFuelWeight(bat)
 
-            MTOW_new = OEW + 9.81*BatteryWeight + 9.81*FuelWeight + 9.81*self.dict["Iterations Class I"]["Wpl_des_kg"]
+            # trasnform the new MTOW to N
+            MTOW_new = OEW + 9.81 * BatteryWeight + 9.81 * FuelWeight + 9.81 * self.dict["Iterations Class I"]["Wpl_des_kg"]
 
             if MTOW_new > 80000:
                 break
 
             ok = True
 
+        # if MTOW is less than 60000, return the values for each group weight
         if MTOW_new < 60000:
+
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency
             return (
@@ -303,6 +311,7 @@ class Class_II_Weight:
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total())
             )
         else:
+            # if MTOW is greater than 60000, the program shall return invalid values
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency  
             return (
@@ -318,39 +327,41 @@ class Class_II_Weight:
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total())
             )
 
-def RunClassII(aircraft_data, check):
-    p=Class_II_Weight(aircraft_data)
-    values=p.Iterarions_C2W(0.144)
+def RunClassII(aircraft_data, check, pbat):
+
+    # initialise the class 2 weight class
+    p = Class_II_Weight(aircraft_data)
+    component_weights = p.Iterarions_C2W(pbat)
 
     if check:
         print("========== Structures Weight ==========")
-        print('\nWing Weight = ', lbs_to_N(p.WingWeight()["Average"]), " [N]")
-        print('Empennage Weight =', lbs_to_N(p.EmpennageWeight()['Average']), " [N]")
-        print('Fuselage Weight = ', lbs_to_N(p.FuselageWeight()["Average"]), " [N]")
-        print('Nacelle Weight = ', lbs_to_N(p.NacelleWeight()["Average"]), " [N]")
-        print('Landing Gear Weight = ', lbs_to_N(p.LandingGearWeight()["Average"]), " [N]")
-        print('\nTotal Structures Weight = ', lbs_to_N(p.StructureWeight_Total()), " [N]")
+        print('\nWing Weight = ', round(lbs_to_N(p.WingWeight()["Average"]) / 9.81, 2), " [kg]")
+        print('Empennage Weight =', round(lbs_to_N(p.EmpennageWeight()['Average']) / 9.81, 2), " [kg]")
+        print('Fuselage Weight = ', round(lbs_to_N(p.FuselageWeight()["Average"]) / 9.81, 2), " [kg]")
+        print('Nacelle Weight = ', round(lbs_to_N(p.NacelleWeight()["Average"]) / 9.81, 2), " [kg]")
+        print('Landing Gear Weight = ', round(lbs_to_N(p.LandingGearWeight()["Average"]) / 9.81, 2), " [kg]")
+        print('\nTotal Structures Weight = ', round(lbs_to_N(p.StructureWeight_Total()) / 9.81, 2), " [kg]")
         print('\n\n ========== Powerplant Weight ==========')
-        print('\n Fuel System Weight = ', lbs_to_N(p.FuelSystemWeight()["Average"]), " [N]")
-        print('\n Total Powerplant Weight = ', lbs_to_N(p.PowerplantWeight_Total()['Average']), " [N]")
+        print('\n Fuel System Weight = ', round(lbs_to_N(p.FuelSystemWeight()["Average"]) / 9.81, 2), " [kg]")
+        print('\n Total Powerplant Weight = ', round(lbs_to_N(p.PowerplantWeight_Total()['Average']) / 9.81, 2), " [kg]")
         print('\n\n ========== Fixed Equipment Weight ==========')
-        print('\n Flight Control Systems Weight = ', lbs_to_N(p.FlightControlSystem()["Average"]), " [N]")
-        print("Hydraulics and/or Pneumatics Weight = ", lbs_to_N(p.HydraulicsPneumatics()["Average"]), " [N]")
-        print("Instruments, Avionics and Electronics Weight = ", lbs_to_N(p.InstrumentsAvionicsElectronics()["Average"]), " [N]")
-        print("Electrical System Weight = ", lbs_to_N(p.ElectricalSystemWeight()["Average"]), " [N]")
-        print("Airconditioning, Pressurization and Anti or Deicing Weight = ", lbs_to_N(p.AirconPressurizationAntiDeicingWeight()["Average"]), " [N]")
-        print("Oxygen System Weight = ", lbs_to_N(p.OxygenSystem()["Average"]), " [N]")
-        print("APU Weight = ", lbs_to_N(p.APU_Weight()["Average"]), " [N]")
-        print("Furnishings Weight = ", lbs_to_N(p.Furnishings()["Average"]), " [N]")
-        print("Auxiliary Gear Weight = ", lbs_to_N(p.AuxiliaryGear()["Average"]), " [N]")
-        print("Paint Weight = ", lbs_to_N(p.Paint()["Average"]), " [N]")
-        print("\nTotal Fixed Equipment Weight = ", lbs_to_N(p.FixedEquipmentWeight_Total()), " [N]")
+        print('\n Flight Control Systems Weight = ', round(lbs_to_N(p.FlightControlSystem()["Average"]) / 9.81, 2), " [kg]")
+        print("Hydraulics and/or Pneumatics Weight = ", round(lbs_to_N(p.HydraulicsPneumatics()["Average"]) / 9.81, 2), " [kg]")
+        print("Instruments, Avionics and Electronics Weight = ", round(lbs_to_N(p.InstrumentsAvionicsElectronics()["Average"]) / 9.81, 2), " [kg]")
+        print("Electrical System Weight = ", round(lbs_to_N(p.ElectricalSystemWeight()["Average"]) / 9.81, 2), " [kg]")
+        print("Airconditioning, Pressurization and Anti or Deicing Weight = ", round(lbs_to_N(p.AirconPressurizationAntiDeicingWeight()["Average"]) / 9.81, 2), " [kg]")
+        print("Oxygen System Weight = ", round(lbs_to_N(p.OxygenSystem()["Average"]) / 9.81, 2)," [kg]")
+        print("APU Weight = ", round(lbs_to_N(p.APU_Weight()["Average"]) / 9.81, 2), " [kg]")
+        print("Furnishings Weight = ", round(lbs_to_N(p.Furnishings()["Average"]) / 9.81, 2), " [kg]")
+        print("Auxiliary Gear Weight = ", round(lbs_to_N(p.AuxiliaryGear()["Average"]) / 9.81, 2), " [kg]")
+        print("Paint Weight = ", round(lbs_to_N(p.Paint()["Average"]) / 9.81, 2), " [kg]")
+        print("\nTotal Fixed Equipment Weight = ", round(lbs_to_N(p.FixedEquipmentWeight_Total()) / 9.81, 2), " [kg]")
         print('\n\n ========== Total Operating Weights ==========')
-        print("\nTotal Empty Weight = ", p.NewEmptyWeight(), " [N]")
-        print("Total Operating Empty Weight = ", p.NewOEW(), " [N]")
+        print("\nTotal Empty Weight = ", round(p.NewEmptyWeight() / 9.81, 2), " [kg]")
+        print("Total Operating Empty Weight = ", round(p.NewOEW() / 9.81, 2), " [kg]")
 
 
-    return p.NewOEW()
+    return p.NewOEW(), component_weights
 
 if __name__=="__main__":
-    RunClassII(aircraft_data, check=True)
+    RunClassII(aircraft_data, check=True, pbat = 0.144)
