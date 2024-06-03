@@ -25,6 +25,7 @@ def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflow
     QuarterChordSweep_Wing = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
     QuarterChordSweep_HS = ac_data["Aero"]["QuarterChordSweep_HS_deg"]
     CruiseHeight=ac_data["Performance"]["Altitude_Cruise_m"]
+    Temp_offset=ac_data["Performance"]["Temp_offset_TO_Land_cruise"]
     TemperatureGradient=-0.0065
     CruiseVelocity=ac_data["Performance"]["Vc_m/s"]
     CLh=ac_data["Stability"]["C_L_h"]
@@ -42,7 +43,7 @@ def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflow
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
 
-    ISACruise = ISA(CruiseHeight, TemperatureGradient)
+    ISACruise = ISA(CruiseHeight, Temp_offset, TemperatureGradient)
 
     if checkwingplanform:
         WingPlanform.PlotWingPlanform()

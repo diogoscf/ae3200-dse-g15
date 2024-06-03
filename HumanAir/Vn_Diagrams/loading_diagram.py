@@ -58,7 +58,7 @@ def calc_nmax_nmin_manoeuvre(MTOW_N):
 
 
 def calculate_manoeuvre_velocities(
-    aircraft_data, MTOW_N=None, WS_Nm2=None, CLmax_clean=None, CLmax_land=None, Vc_ms=None, rho=None, h=None
+    aircraft_data, MTOW_N=None, WS_Nm2=None, CLmax_clean=None, CLmax_land=None, Vc_ms=None, rho=None, h=None, temp_offset=None
 ):
     """
     Calculate the applicable velocities for the loading (manoeuvre) diagram.
@@ -93,7 +93,10 @@ def calculate_manoeuvre_velocities(
     nmax, nmin = calc_nmax_nmin_manoeuvre(MTOW_N)
 
     if rho is None:
-        _, _, rho = isa(h) if h is not None else isa(0)
+        if temp_offset is not None:
+            _, _, rho = isa(h, temp_offset) if h is not None else isa(0, temp_offset)
+        else:
+            _, _, rho = isa(h) if h is not None else isa(0)
 
     WS_Nm2 = WS_Nm2 if WS_Nm2 is not None else aircraft_data["Performance"]["W/S_N/m2"]
     WS_lbft2 = WS_Nm2 / G * kg_to_lbs / (m_to_ft**2)
@@ -147,6 +150,7 @@ def plot_manoeuvre_diagram(
     nmax,
     nmin,
     h,
+    temp_offset,
     WS_Nm2,
     CLmax_clean,
     ac_name="aircraft",
@@ -181,7 +185,7 @@ def plot_manoeuvre_diagram(
         The figure and axes objects.
     """
 
-    rho = isa(h)[2]
+    rho = isa(h, temp_offset)[2]
 
     V_ms = np.linspace(0, np.ceil(Vd_ms), 1000)
     q = 0.5 * rho * V_ms**2
@@ -358,9 +362,10 @@ def plot_manoeuvre_diagram(
 
 if __name__ == "__main__":
     h = 0  # [m]
+    temp_offset = 0 # [deg C]
 
     nmax, nmin = calc_nmax_nmin_manoeuvre(aircraft_data["Weights"]["MTOW_N"])
-    Vc_ms, Vd_ms, V_A, V_S1, V_HH, V_S0 = calculate_manoeuvre_velocities(aircraft_data, h = h)
+    Vc_ms, Vd_ms, V_A, V_S1, V_HH, V_S0 = calculate_manoeuvre_velocities(aircraft_data, h = h, temp_offset = temp_offset)
 
     plot_manoeuvre_diagram(
         Vc_ms,
@@ -372,6 +377,7 @@ if __name__ == "__main__":
         nmax,
         nmin,
         h,
+        temp_offset,
         aircraft_data["Performance"]["W/S_N/m2"],
         aircraft_data["Aero"]["CLmax_clean"],
         ac_name=aircraft_data["name"],

@@ -23,7 +23,7 @@ G = 9.80665  # [m/s^2]
 FONTSIZE = 40
 
 
-def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=False, h = 0):
+def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=False, h = 0, temp_offset = 0):
     """
     Calculate the applicable loads and velocities for the gust diagram
 
@@ -54,7 +54,7 @@ def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=
         The load factors at V_B.
     """
 
-    _, _, rho = isa(h)
+    _, _, rho = isa(h, temp_offset)
     _, _, rho_0 = isa(0)
 
     WS_Nm2 = aircraft_data["Performance"]["W/S_N/m2"]
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     Vc_ms, Vd_ms, _, V_S1, _, _ = calculate_manoeuvre_velocities(aircraft_data)
 
     n_max, n_min, V_B, n_cruise_pve, n_cruise_nve, n_dive_pve, n_dive_nve, n_B_pve, n_B_nve = (
-        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000)
+        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000, temp_offset=18)
     )
 
     plot_gust_diagram(
