@@ -19,7 +19,7 @@ a_factor = 68.37332366  # [$/h] at 1 flight hour
 exponent = -0.423
 
 maintenance_cost_per_hour = lambda FT: a_factor * (FT**exponent)
-maintenance_cost_per_hour = np.vectorize(maintenance_cost_per_hour)
+# maintenance_cost_per_hour = np.vectorize(maintenance_cost_per_hour)
 
 # Allows caching of relevant data for quick iteration
 relevant_c206_data = None
@@ -62,7 +62,7 @@ def calculate_average_prefuel(flight_data_file):
 
 
 # NOTE: Outdated
-def _calculate_mission_freqs(mission_file):
+def calculate_mission_freqs(mission_file):
     """Calculate the frequency of each mission in the mission file.
 
     Parameters
@@ -232,7 +232,7 @@ def _calculate_co2_reduction_flight_lengths(
     global relevant_c206_data, calculated_mission_frequencies
 
     if calculated_mission_frequencies is None or calculated_mission_frequencies[1] != mission_file:
-        mission_freqs = _calculate_mission_freqs(mission_file)
+        mission_freqs = calculate_mission_freqs(mission_file)
         calculated_mission_frequencies = mission_freqs, mission_file
     else:
         mission_freqs = calculated_mission_frequencies[0]
@@ -423,6 +423,6 @@ if __name__ == "__main__":
     # tot2 = time.process_time() - t2
     # print(f"Time 1: {tot1:.8f}s, Time 2: {tot2:.8f}s")
 
-    co2_ratio = _calculate_co2_reduction_flight_lengths("maf_mission_graph.csv")
-    # co2_ratio = calculate_co2_reduction_average_flight("maf_flights_before_refuelling.csv")
+    # co2_ratio = _calculate_co2_reduction_flight_lengths("maf_mission_graph.csv")
+    co2_ratio = calculate_co2_reduction_average_flight("maf_flights_before_refuelling.csv")
     print(f"CO2 reduction: {co2_ratio*100:.2f}%")
