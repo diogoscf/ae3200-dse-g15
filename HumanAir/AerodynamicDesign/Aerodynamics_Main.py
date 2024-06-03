@@ -15,36 +15,36 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
 
-def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
-    MTOW=aircraft_data["Weights"]['MTOW_N']
-    WS=aircraft_data["Performance"]["W/S_N/m2"]
-    AR_Wing = aircraft_data["Aero"]["AR"]
-    AR_HS = aircraft_data["Aero"]["AR_HS"]
-    Taper_Wing = aircraft_data["Aero"]["Taper_Wing"]
-    Taper_HS = aircraft_data["Aero"]["Taper_HS"]
-    QuarterChordSweep_Wing = aircraft_data["Aero"]["QuarterChordSweep_Wing_deg"]
-    QuarterChordSweep_HS = aircraft_data["Aero"]["QuarterChordSweep_HS_deg"]
-    CruiseHeight=aircraft_data["Performance"]["Altitude_Cruise_m"]
+def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
+    MTOW=ac_data["Weights"]['MTOW_N']
+    WS=ac_data["Performance"]["W/S_N/m2"]
+    AR_Wing = ac_data["Aero"]["AR"]
+    AR_HS = ac_data["Aero"]["AR_HS"]
+    Taper_Wing = ac_data["Aero"]["Taper_Wing"]
+    Taper_HS = ac_data["Aero"]["Taper_HS"]
+    QuarterChordSweep_Wing = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
+    QuarterChordSweep_HS = ac_data["Aero"]["QuarterChordSweep_HS_deg"]
+    CruiseHeight=ac_data["Performance"]["Altitude_Cruise_m"]
     TemperatureGradient=-0.0065
-    CruiseVelocity=aircraft_data["Performance"]["Vc_m/s"]
-    CLh=aircraft_data["Stability"]["C_L_h"]
-    CLah=aircraft_data["Stability"]["C_L_AH"]
-    Xcgh=aircraft_data["Stability"]["X_cg_HS"]
-    XLEMAC=aircraft_data["Stability"]["XLEMAC_m"]
-    CgAft=aircraft_data["Stability"]["Cg_Aft"]
-    CgFwd=aircraft_data["Stability"]["Cg_Front"]
-    SM=aircraft_data["Stability"]["Stability_Margin"]
-    deda=aircraft_data["Aero"]["deda"]
-    VhV=aircraft_data["Aero"]["VhV"]
-    FuselageLength=aircraft_data["Geometry"]["fus_length_m"]
-    tc_wing=aircraft_data["Aero"]["tc_m_Wing"]
-    tc_HP=aircraft_data["Aero"]["tc_m_HP"]
+    CruiseVelocity=ac_data["Performance"]["Vc_m/s"]
+    CLh=ac_data["Stability"]["C_L_h"]
+    CLah=ac_data["Stability"]["C_L_AH"]
+    Xcgh=ac_data["Stability"]["X_cg_HS"]
+    XLEMAC=ac_data["Stability"]["XLEMAC_m"]
+    CgAft=ac_data["Stability"]["Cg_Aft"]
+    CgFwd=ac_data["Stability"]["Cg_Front"]
+    SM=ac_data["Stability"]["Stability_Margin"]
+    deda=ac_data["Aero"]["deda"]
+    VhV=ac_data["Aero"]["VhV"]
+    FuselageLength=ac_data["Geometry"]["fus_length_m"]
+    tc_wing=ac_data["Aero"]["tc_m_Wing"]
+    tc_HP=ac_data["Aero"]["tc_m_HP"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
 
-    aircraft_data["Aero"]["c_root_wing"]=WingPlanform.RootChord()
-    aircraft_data["Aero"]["c_tip_wing"]=WingPlanform.TipChord()
-   
+    ac_data["Aero"]["c_root_wing"] = WingPlanform.RootChord()
+    ac_data["Aero"]["c_tip_wing"] = WingPlanform.TipChord()
+
 
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
@@ -70,8 +70,8 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     airfoil_elevator_json_path = os.path.join(script_dir, 'Airfoils','NACA0012.json')
 
     #Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, '../AerodynamicDesign/Airfoils/FX_63-137.json','../AerodynamicDesign/Airfoils/NACA0012.json')
-    
-    Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform, 
+
+    Stab=LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, WingPlanform,
                                airfoil_wing_json_path,
                                airfoil_elevator_json_path)
 
@@ -91,6 +91,6 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
 if __name__ == "__main__":
     # replace with 'design.json' for pycharm
     # replace with 'c:\\Users\\nicho\\Documents\\GitHub\\ae3200-dse-g15\\HumanAir\\Configurations\\design.json' for vscode (change nicho to your username)
-    with open("design.json",'r') as f:
-        dict = json.load(f)
-    aerodynamic_design(dict,checkwingplanform=True, checkflowparameters=True, checkstability=True, checkhsplanform=True)
+    # with open("design.json",'r') as f:
+    #     dict = json.load(f)
+    aerodynamic_design(aircraft_data,checkwingplanform=True, checkflowparameters=True, checkstability=True, checkhsplanform=True)

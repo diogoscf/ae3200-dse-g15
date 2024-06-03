@@ -21,7 +21,7 @@ class Class_II_Weight:
         self.S_v = m_squared_to_ft_squared(aircraft_data["Aero"]["S_v"])
 
         self.n_ult = aircraft_data["Performance"]["n_ult"]
-        self.n_ult_l = 5.7
+        self.n_ult_l = aircraft_data["Performance"]["n_ult_l"]
 
         self.AR_Wing = aircraft_data["Aero"]["AR"]
         self.AR_h = aircraft_data["Aero"]["AR_HS"]
