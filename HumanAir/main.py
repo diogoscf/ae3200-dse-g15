@@ -64,14 +64,14 @@ logging.info(" Opening design.json successful")
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(17.0, 17.51, 0.5)
+    A_lst = np.arange(7.0, 18.51, 0.5)
     eta_p_lst = np.arange(0.8, 0.851, 0.05)
-    Clmax_clean_lst = np.arange(2, 2.21, 0.2)
-    Clmax_TO_lst = np.arange(2.2, 2.61, 0.2)
-    Clmax_Land_lst = np.arange(2.2, 2.61, 0.2)
-    Cd0_lst = np.arange(0.026, 0.0301, 0.002)
+    Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
+    Clmax_TO_lst = np.arange(2, 2.61, 0.2)
+    Clmax_Land_lst = np.arange(2, 2.61, 0.2)
+    Cd0_lst = np.arange(0.028, 0.0321, 0.002)
     V_cruise_lst = np.arange(60, 65.1, 1)
-    climbrate_lst = np.arange(4, 5.01, 0.5)
+    climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
     # calculate the total numbers of iterations
     total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     }
 
     maximum_weight_battery = 1000
-    CO2_threshold = 30
+    CO2_threshold = 25
     printing = False
 
     # set up that the optimal stability range is not yet set
@@ -299,6 +299,13 @@ if __name__ == '__main__':
 
         print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
         print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
+        dict["Weights"]["MTOW_N"]=9.81*round(component_weights[1], 2)
+        dict["Weights"]["OEW_N"]=9.81*round(component_weights[2], 2)
+        dict["Weights"]["Wptr_N"]=9.81*round(component_weights[3], 2)
+        dict["Weights"]["Wbat_N"]=9.81*round(component_weights[4], 2)
+        dict["Weights"]["Wfuel_N"]=9.81*round(component_weights[5], 2)
+        dict["Weights"]["Ww_N"]=9.81*round(component_weights[6], 2)
+        
         logging.info(" Calculating the weight components successful")
 
         # set up the condition to set up the range where the cg of the wing is with report of the mac

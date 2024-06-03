@@ -265,24 +265,27 @@ class Class_II_Weight:
     def Iterarions_C2W(self,bat):
         MTOW_new = 0
         MTOW_old = self.dict["Weights"]["MTOW_N"]
+        print(MTOW_old)
         ok = False
 
         while np.abs((MTOW_new - self.dict["Weights"]["MTOW_N"]) / self.dict["Weights"]["MTOW_N"]) > 0.02:
+            print("DA")
             if ok:
                 self.dict["Weights"]["MTOW_N"] = MTOW_new
 
-            OEW = lbs_to_N(self.NewOEW())
+            OEW = self.NewOEW()
             BatteryWeight = self.NewBatteryWeight(bat)
             FuelWeight = self.NewFuelWeight(bat)
 
-            MTOW_new = OEW + BatteryWeight + FuelWeight + self.dict["Iterations Class I"]["Wpl_des_kg"]
+            MTOW_new = OEW + 9.81*BatteryWeight + 9.81*FuelWeight + 9.81*self.dict["Iterations Class I"]["Wpl_des_kg"]
+            print(MTOW_new)
 
-            if MTOW_new > 8000:
+            if MTOW_new > 80000:
                 break
 
             ok = True
 
-        if MTOW_new < 4000:
+        if MTOW_new < 60000:
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency
             return (
@@ -311,6 +314,8 @@ class Class_II_Weight:
 
 def RunClassII(aircraft_data, check):
     p=Class_II_Weight(aircraft_data)
+    values=p.Iterarions_C2W(0.144)
+    #print(values)
 
     if check:
         print("========== Structures Weight ==========")
@@ -343,4 +348,4 @@ def RunClassII(aircraft_data, check):
     return p.NewOEW()
 
 if __name__=="__main__":
-    RunClassII(aircraft_data, check=True)
+    RunClassII(aircraft_data, check=False)
