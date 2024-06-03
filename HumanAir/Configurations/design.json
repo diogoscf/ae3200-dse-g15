@@ -140,7 +140,10 @@
         "APU": false
     },
     "CL2Weight": {
-        "MTOW_N": 34381.07672050589,
+        "MTOW_N": 38506.8059269666,
+        "Wbat_N": 748.5416726672352,
+        "Wfuel_N": 268.45400970779644,
+        "Wpl": 705.6,
         "Total Structures Weight": 11183.94819603474,
         "Wing Weight": 5872.579741239052,
         "Empennage Weight": 560.5883918699249,

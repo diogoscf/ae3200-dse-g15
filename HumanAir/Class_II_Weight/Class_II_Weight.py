@@ -303,6 +303,10 @@ class Class_II_Weight:
         if MTOW_new < 60000:
 
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
+            self.dict["CL2Weight"]["MTOW_N"]=self.dict["Contingency_C2W"] * MTOW_new
+            self.dict["CL2Weight"]["Wbat_N"]=self.dict["Contingency_C2W"] * BatteryWeight
+            self.dict["CL2Weight"]["Wfuel_N"]=self.dict["Contingency_C2W"] * FuelWeight
+            self.dict["CL2Weight"]["Wpl"]=self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency
             return (
                 MTOW_new,
@@ -319,10 +323,6 @@ class Class_II_Weight:
         else:
             # if MTOW is greater than 60000, the program shall return invalid values
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
-            self.dict["CL2Weight"]["MTOW_N"]=self.dict["Contingency_C2W"] * FuelWeight
-            self.dict["CL2Weight"]["Wbat_N"]=self.dict["Contingency_C2W"] * BatteryWeight
-            self.dict["CL2Weight"]["Wfuel_N"]=self.dict["Contingency_C2W"] * FuelWeight
-            self.dict["CL2Weight"]["Wpl"]=self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont, Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency, Fixed equipment w contingency  
             return (
                 0,
