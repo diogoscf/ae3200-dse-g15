@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
 
-def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
+def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False):
     MTOW=ac_data["Weights"]['MTOW_N']
     WS=ac_data["Performance"]["W/S_N/m2"]
     AR_Wing = ac_data["Aero"]["AR"]
@@ -41,10 +41,6 @@ def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=Fal
     tc_HP = ac_data["Aero"]["tc_m_HP"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
-
-    ac_data["Aero"]["c_root_wing"] = WingPlanform.RootChord()
-    ac_data["Aero"]["c_tip_wing"] = WingPlanform.TipChord()
-
 
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
 
@@ -79,8 +75,7 @@ def aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=Fal
         Stab.Plotting()
 
     HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, tc_HP,S=WingPlanform.WingSurfaceArea()*Stab.ShS())
-    aircraft_data["Aero"]["c_root_HSP"]=WingPlanform.RootChord()
-    aircraft_data["Aero"]["c_tip_HSP"]=WingPlanform.TipChord()
+
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 

@@ -364,7 +364,7 @@ if __name__ == '__main__':
                 logging.info(" Calculating the MAC")
 
                 # dont remove this line as it complies with nicholas's mood
-                mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False,
+                mac= aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False,
                                         checkhsplanform=False)
                 print(f'MAC: {round(mac, 2)} [m]')
 
