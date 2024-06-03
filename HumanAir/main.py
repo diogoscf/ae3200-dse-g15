@@ -254,8 +254,8 @@ if __name__ == '__main__':
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = False
-    run_classII = True
+    run_classI = True
+    run_classII = False
 
 
     if run_generate:

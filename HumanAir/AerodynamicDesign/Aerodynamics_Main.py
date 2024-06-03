@@ -41,6 +41,9 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
     tc_HP=aircraft_data["Aero"]["tc_m_HP"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
+
+    aircraft_data["Aero"]["c_root_wing"]=WingPlanform.RootChord()
+    aircraft_data["Aero"]["c_tip_wing"]=WingPlanform.TipChord()
    
 
     ISACruise = ISA(CruiseHeight, TemperatureGradient)
@@ -76,6 +79,8 @@ def aerodynamic_design(aircraft_data, checkwingplanform=False, checkflowparamete
         Stab.Plotting()
 
     HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, tc_HP,S=WingPlanform.WingSurfaceArea()*Stab.ShS())
+    aircraft_data["Aero"]["c_root_HSP"]=WingPlanform.RootChord()
+    aircraft_data["Aero"]["c_tip_HSP"]=WingPlanform.TipChord()
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 
