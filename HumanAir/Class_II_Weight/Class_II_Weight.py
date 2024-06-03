@@ -162,14 +162,14 @@ class Class_II_Weight:
     def PowerplantWeight_Total(self):
         results = {}
 
-        results["USAF"]={}
+        results["USAF"] = {}
         results["USAF"]["WeWaiWpropWp"] = 2.575*(self.K_p*self.P_TO)**0.922*self.N_e
         results["USAF"]["Total"]=results["USAF"]["WeWaiWpropWp"]+self.FuelSystemWeight()["USAF"]-self.NacelleWeight()["Average"]
 
-        results["Torenbeek"]={}
+        results["Torenbeek"] = {}
         results["Torenbeek"]["Total"] = self.K_pg*(self.K_p*self.P_TO+0.24*self.P_TO)
         results["Average"] = np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
-        results["Average"]=800
+        results["Average"] = 800
         return results
 
     """========== Fixed Equipment Weight =========="""
@@ -276,7 +276,7 @@ class Class_II_Weight:
         ok = False
 
         # iterate until the difference between the old and new MTOW is less than 2%
-        while np.abs((MTOW_new - self.dict["Weights"]["MTOW_N"]) / self.dict["Weights"]["MTOW_N"]) > 0.02:
+        while np.abs((MTOW_new - self.dict["CL2Weight"]["MTOW_N"]) /self.dict["CL2Weight"]["MTOW_N"]) > 0.02:
 
             # ok condition so that it doesnt update for the first step as it is needed to be saved later
             if ok:

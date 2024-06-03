@@ -18,7 +18,7 @@
         "Wfuel_N": 2353.8114
     },
     "Iterations Class I": {
-        "MTOW_kg": 2650.285,
+        "MTOW_kg": 31166.860500000003,
         "A": 0.3632,
         "B": -81.896,
         "Aw": 0.09,
@@ -138,5 +138,27 @@
         "PoweredFlightControls": false,
         "DuplicatedFlightControls": false,
         "APU": false
+    },
+    "CL2Weight": {
+        "MTOW_N": 34381.07672050589,
+        "Total Structures Weight": 11183.94819603474,
+        "Wing Weight": 5872.579741239052,
+        "Empennage Weight": 560.5883918699249,
+        "Fuselage Weight": 3210.1098521152826,
+        "Nacelle Weight": 293.76465995179086,
+        "Landing Gear Weight": 1246.905550858692,
+        "Total Powerplant Weight": 3985.6065673088,
+        "Total Fixed Equipment Weight": 5449.739519523991,
+        "Flight Control Systems Weight": 848.3388363991432,
+        "Hydraulics and/or Pneumatics Weight": 314.1619537034482,
+        "Instruments, Avionics and Electronics Weight": 1150.843896310416,
+        "Electrical System Weight": 1013.735749587754,
+        "Airconditioning, Pressurization and Anti or Deicing Weight": 592.9397192971128,
+        "Oxygen System Weight": 117.07719291469601,
+        "APU Weight": 0.0,
+        "Furnishings Weight": 1149.3336487458675,
+        "Auxiliary Gear Weight": 106.22754571382775,
+        "Paint Weight": 157.08097685172407,
+        "OEW": 21608.14228286753
     }
 }

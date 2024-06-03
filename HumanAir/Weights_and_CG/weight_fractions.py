@@ -161,7 +161,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
                 con = input("Continue? (y/n): ")
                 if con == "n":
                     sys.exit("Nose wheel could not be placed")
-        else: print("DA")
+
 
         # Place nosewheel
         l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]
@@ -183,7 +183,6 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
-    print(Xcg_OEW)
     return wcg, CGlist, xlemac
 
 if __name__ == "__main__":

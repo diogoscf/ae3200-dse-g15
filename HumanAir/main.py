@@ -252,18 +252,27 @@ if __name__ == '__main__':
     # initialise the design.json file
     dict = load_json_file('design.json')
 
+    # set up the conditions to run the program
     run_generate = False
-    run_classI = True
-    run_classII = False
+    run_classI = False
+    run_classII = True
+
 
     if run_generate:
         logging.info(" Starting generating the new possible design points. This may take a while.")
         Generate(p, dict, run_generate)
 
+    # run class I estimation
     if run_classI:
         logging.info(" Getting the data from the design point options")
 
         design_points = load_json_file('data_iterations.json')
+
+        "Setting up the weights to get the optimal design point"
+        # Weights for each key
+        # increasing score: positive weight
+        # decreasing score: negative weight
+        # no influence: weight = 0
 
         weights = {
             'A': +0.,
@@ -305,17 +314,17 @@ if __name__ == '__main__':
                 f" Wing {round(component_weights[6], 2)}[kg],"
                 f" Wpl_des {round(component_weights[7], 2)}[kg]")
 
-        print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
-        print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
-        dict["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
-        dict["Weights"]["OEW_N"] = 9.81 * round(component_weights[2], 2)
-        dict["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
-        dict["Weights"]["Wbat_N"] = 9.81 * round(component_weights[4], 2)
-        dict["Weights"]["Wfuel_N"] = 9.81 * round(component_weights[5], 2)
-        dict["Weights"]["Ww_N"] = 9.81 * round(component_weights[6], 2)
-        dict["Weights"]["W_L_N"] = 9.81 * (round(component_weights[1], 2)-round(component_weights[5], 2))
-        
-        logging.info(" Calculating the weight components successful")
+            print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
+            print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
+            dict["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
+            dict["Weights"]["OEW_N"] = 9.81 * round(component_weights[2], 2)
+            dict["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
+            dict["Weights"]["Wbat_N"] = 9.81 * round(component_weights[4], 2)
+            dict["Weights"]["Wfuel_N"] = 9.81 * round(component_weights[5], 2)
+            dict["Weights"]["Ww_N"] = 9.81 * round(component_weights[6], 2)
+            dict["Weights"]["W_L_N"] = 9.81 * (round(component_weights[1], 2)-round(component_weights[5], 2))
+
+            logging.info(" Calculating the weight components successful")
 
             # set up the condition to set up the range where the cg of the wing is with report of the mac
             PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
@@ -381,21 +390,17 @@ if __name__ == '__main__':
                 dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
                 print("Reduction with future expected battery technology: " + str(round(co2(ac_data=dict) * 100, 2)) + "[%]")
 
-            design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
-            logging.info(" Design.json saved at: " + design_json_path)
-
-                with open(design_json_path, 'w') as f:
-                    json.dump(dict, f, indent=4)
-    
+    # run the class 2 estimation
     if run_classII:
+
         logging.info(" Calculate Class II Weight Groups")
-        dict=RunClassII(dict,check=True)
+        class_2_dictionary = RunClassII(dict, check=True)
 
         design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
         logging.info(" Design.json saved at: " + design_json_path)
 
         with open(design_json_path, 'w') as f:
-            json.dump(dict, f, indent=4)
+            json.dump(class_2_dictionary, f, indent=4)
 
         logging.info(" Program finished successfully")
 
