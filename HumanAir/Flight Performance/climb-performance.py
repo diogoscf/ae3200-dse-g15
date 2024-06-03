@@ -6,7 +6,7 @@ import helper
 import aircraft
 
 
-def plot_climb_performance(acf):
+def plot_climb_rate(acf):
     h_max = 7000
     
     W = acf.W_MTO
@@ -44,10 +44,43 @@ def plot_climb_performance(acf):
     plt.legend()
     #plt.subplots_adjust(right=0.75)
     #plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
-    plt.savefig("climb_performance.svg")
+    plt.savefig("climb_rate.svg")
+    plt.show()
+    
+def plot_climb_gradient(acf):
+    h_max = 7000
+    
+    W = acf.W_MTO
+    dT = 0    
+    
+    h_list = np.arange(0, h_max, 10)
+    max_gradient = np.zeros(len(h_list))
+    T = np.zeros(len(h_list))
+    D = np.zeros(len(h_list))
+    
+    for i, h in enumerate(h_list):
+        max_gradient[i] = acf.climb_angle_max(W, h, dT)
+        T[i] = acf.P_a(h, dT)/acf.V_Dmin(W, h, dT)
+        D[i] = acf.D_min(W)
+
+    print(f"Sea level MTOW max climb gradient: {max_gradient[0]:.3f} %")
+    
+    plt.figure(figsize=(10,7))
+    plt.plot(max_gradient, h_list, label="Maximum Climb Gradient")
+    plt.plot(T/1000, h_list, color="g", label="Thrust /1000")
+    plt.plot(D/1000, h_list, color="r", label="Drag /1000")
+    plt.xlabel(r"Climb Gradient (%)")
+    plt.ylabel("Altitude (m)")
+    plt.ylim(0,h_max)
+    plt.xlim(0,max_gradient[0]*1.05)
+    plt.legend()
+    #plt.subplots_adjust(right=0.75)
+    #plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
+    plt.savefig("climb_gradient.svg")
     plt.show()
 
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
-    plot_climb_performance(acf)
+    plot_climb_rate(acf)
+    plot_climb_gradient(acf)
     
