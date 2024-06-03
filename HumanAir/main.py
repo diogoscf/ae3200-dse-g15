@@ -394,7 +394,7 @@ if __name__ == '__main__':
     if run_classII:
 
         logging.info(" Calculate Class II Weight Groups")
-        class_2_dictionary = RunClassII(dict, check=True)
+        class_2_dictionary = RunClassII(dict, check = True, pbat = dict['Power_prop']['bat'])
 
         design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
         logging.info(" Design.json saved at: " + design_json_path)
