@@ -167,6 +167,7 @@ class Class_II_Weight:
         results["Torenbeek"]={}
         results["Torenbeek"]["Total"] = self.K_pg*(self.K_p*self.P_TO+0.24*self.P_TO)
         results["Average"] = np.average([results["USAF"]["Total"],results["Torenbeek"]["Total"]])
+        results["Average"]=800
         return results
 
     """========== Fixed Equipment Weight =========="""
@@ -295,7 +296,11 @@ class Class_II_Weight:
                 self.dict["Contingency_C2W"] * OEW,
                 self.dict["Contingency_C2W"] * BatteryWeight,
                 self.dict["Contingency_C2W"] * FuelWeight,
-                self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
+                self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
+                self.dict["Contingency_C2W"] * lbs_to_N(self.StructureWeight_Total()),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.FuelSystemWeight()["Average"]),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.PowerplantWeight_Total()["Average"]),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total())
             )
         else:
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
@@ -310,13 +315,13 @@ class Class_II_Weight:
                 self.dict["Contingency_C2W"] * lbs_to_N(self.StructureWeight_Total()),
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FuelSystemWeight()["Average"]),
                 self.dict["Contingency_C2W"] * lbs_to_N(self.PowerplantWeight_Total()),
-                self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total()),
+                self.dict["Contingency_C2W"] * lbs_to_N(self.FixedEquipmentWeight_Total())
             )
 
 def RunClassII(aircraft_data, check):
     p=Class_II_Weight(aircraft_data)
     values=p.Iterarions_C2W(0.144)
-    #print(values)
+    print(values)
 
     if check:
         print("========== Structures Weight ==========")
@@ -349,4 +354,4 @@ def RunClassII(aircraft_data, check):
     return p.NewOEW()
 
 if __name__=="__main__":
-    RunClassII(aircraft_data, check=False)
+    RunClassII(aircraft_data, check=True)
