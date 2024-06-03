@@ -276,7 +276,7 @@ if __name__ == '__main__':
 
     # set up that the optimal stability range is not yet set
     find_optimal_stability = False
-    # initialise from which step to start to search from the desing_iterations.json
+    # initialise from which step to start to search from the design_iterations.json
     step = 0
 
     logging.info(" Starting the search for optimal stability range")
