@@ -8,26 +8,21 @@ import colorlog
 # integration v2 dont touch this please
 "Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
 
-handler = colorlog.StreamHandler()
-handler.setFormatter(colorlog.ColoredFormatter(
-    "%(log_color)s%(levelname)s:%(message)s",
-    log_colors={
-        'DEBUG': 'cyan',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'bold_red'
-    }
-))
-logger = colorlog.getLogger()
-logger.addHandler(handler)
-logger.setLevel(logging.INFO)
-
-# initialise the logging
-
-
-# Integration in progress v2
-logging.info(' Starting the program')
+def setup_logging():
+    handler = colorlog.StreamHandler()
+    handler.setFormatter(colorlog.ColoredFormatter(
+        "%(log_color)s%(levelname)s:%(message)s",
+        log_colors={
+            'DEBUG': 'cyan',
+            'INFO': 'green',
+            'WARNING': 'yellow',
+            'ERROR': 'red',
+            'CRITICAL': 'bold_red'
+        }
+    ))
+    logger = colorlog.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -37,28 +32,32 @@ project_root = os.path.abspath(os.path.join(script_dir,'..'))
 sys.path.append(project_root)
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
-from HumanAir.Class1Estimation.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
+from HumanAir.Class_I_Weight.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
 from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 
-"Getting the design.json file"
-# Get the directory of the current script
-script_dir = os.path.dirname(os.path.abspath(__file__))
+def load_json_file(file_name):
 
-# Construct the absolute path to the design.json file
-design_json_path = os.path.join(script_dir,'..',"HumanAir", 'Configurations', 'design.json')
+    "Getting the design.json file"
+    # Get the directory of the current script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Print the absolute path for debugging
-logging.info(f" Looking for design.json at: {os.path.abspath(design_json_path)}")
+    # Construct the absolute path to the design.json file
+    design_json_path = os.path.join(script_dir,'..', 'HumanAir','Configurations', file_name)
 
-# Attempt to open the file
-with open(design_json_path, 'r') as f:
-    dict = json.load(f)
+    # Print the absolute path for debugging
+    logging.info(f" Looking for {file_name} at: {os.path.abspath(design_json_path)}")
 
-logging.info(" Opening design.json successful")
+    # Attempt to open the file
+    with open(design_json_path, 'r') as f:
+        dict = json.load(f)
+
+    logging.info(f" Opening {file_name} successful")
+
+    return dict
 
 "Generating the design points"
 def Generate(p, dict, run=False):
@@ -243,6 +242,15 @@ def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold
 
 "Main Function to run the program"
 if __name__ == '__main__':
+    # initialise the logging
+    setup_logging()
+
+    # Integration in progress v2
+    logging.info(' Starting the program')
+
+    # initialise the design.json file
+    dict = load_json_file('design.json')
+
     run = False
     if run:
         logging.info(" Starting generating the new possible design points. This may take a while.")
@@ -250,12 +258,7 @@ if __name__ == '__main__':
 
     logging.info(" Getting the data from the design point options")
 
-    data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
-
-    with open(data_iterations_json_path, 'r') as f:
-        design_points = json.load(f)
-
-    logging.info(" Opening data_iterations.json successful")
+    design_points = load_json_file('data_iterations.json')
 
     weights = {
         'A': +0.,

@@ -1,22 +1,12 @@
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from HumanAir.Class_I_Estimation.Class_I_Weight_Estimation import WeightEstm
 import numpy as np
-import math
 import logging
-import colorlog
-import json
 import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from unittest.mock import patch, mock_open, MagicMock
-from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
-from HumanAir.Class_I_Estimation.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
-from HumanAir.LoadingDiagram.Main import WP_WS
-from HumanAir.CO2_Calculator.conceptual_co2 import calculate_co2_reduction_average_flight as co2
-from HumanAir.Weights_and_CG.weight_fractions import find_lg, iterate_cg_lg
-from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
-from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
-from HumanAir.Class_I_Estimation.main import load_design_json, setup_logging, Generate, calculate_weighted_score, find_optimal_design
+from HumanAir.main import load_design_json, setup_logging, Generate, calculate_weighted_score, find_optimal_design
 
 aircraft_data = {
     "name": "final_design",
