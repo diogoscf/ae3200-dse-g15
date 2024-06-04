@@ -22,6 +22,7 @@ from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
+from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight as ClassIIWeight
 from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
 from HumanAir.Vn_Diagrams.loading_diagram import calc_nmax_nmin_manoeuvre
 from HumanAir.CO2_Calculator.co2v2 import calculate_co2_reduction_flightdist as co2
@@ -442,27 +443,24 @@ if __name__ == '__main__':
 
 
                 print("Reduction with future expected battery technology: " + str(round(co2(ac_data=ac_data) * 100, 2)) + "[%]")
-                ac_data["Power_prop"]["E_bat_Wh"] = 685 / 700 * ac_data["Power_prop"]["E_bat_Wh"]
+                ac_data["Power_prop"]["E_bat_Wh"] = 350 / 685 * ac_data["Power_prop"]["E_bat_Wh"]
 
     # run the class 2 estimation
     if run_classII:
 
         # calculate the class 2 weights components and print them
         logging.info(" Calculate Class II Weight Groups")
-        class_2_dictionary = RunClassII(ac_data, check = True, pbat = ac_data['Power_prop']['bat'])
+        class_2_dictionary = RunClassII(ac_data=ac_data, check = True, pbat = ac_data['Power_prop']['bat'])
 
         class_2_dictionary['Power_prop']['P_req_TO_W'] = class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
         class_2_dictionary['Power_prop']['P_req_cruise_W'] = class_2_dictionary['Performance']["P_cruise/P_TO"] * class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
 
-        print("Reduction: " + str(
-            round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
-
+        print("Reduction with current battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
 
         print("Reduction with future expected battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         logging.info(" Class II Weight Groups calculated successfully")
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * ac_data["Power_prop"]["E_bat_Wh"]
-
 
         # calculate the loading distribution diagrams
         ac_data['Performance']['n_max'], ac_data['Performance']['n_min'] = calc_nmax_nmin_manoeuvre(
@@ -476,7 +474,7 @@ if __name__ == '__main__':
 
 
         # save the updated dictionary
-        design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
+        design_json_path = os.path.join(script_dir, 'Configurations', 'design.json')
         logging.info(" Design.json saved at: " + design_json_path)
 
         with open(design_json_path, 'w') as f:
