@@ -204,7 +204,7 @@ class TorsionalStiffness:
         return I_stringer + I_spar + I_skin
 
 ########## input ###########
-Sw = 41.67 # [m2]
+Sw = 34.56  # [m2]
 taper_ratio = 0.4
 AoA = -6 # [deg]
 n = 3
@@ -215,7 +215,7 @@ file_path = 'HumanAir/WingBox/airfoil.txt'
 file_path_y = 'HumanAir\WingBox\Cl_DATA.txt'
 A_str = 0.02
 Cr = 2.5 # [m] root chord length
-b = 17.6
+b = 19.93
 
 ######## Execution ########
 
@@ -223,13 +223,13 @@ torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio
 
 df = torisonal_stiffness.import_data()
 chord1, y = torisonal_stiffness.chord()
-print(chord1)
+print('chord', chord1)
 plt.plot(df['x']*chord1[1], df['y']*chord1[1])
 plt.axis('equal')
 plt.show()
 #print(torisonal_stiffness.spars())
 h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
-#print(h_s1s2)
+print(h_s1s2)
 
 '''
 plt.plot(df_down[:,0], df_down[:,1])
