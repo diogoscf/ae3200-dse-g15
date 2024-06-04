@@ -253,7 +253,7 @@ if __name__ == '__main__':
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = False
+    run_classI = True
     run_classII = True
     run_fuselage_sizing = False
 
@@ -452,19 +452,30 @@ if __name__ == '__main__':
         logging.info(" Calculate Class II Weight Groups")
         class_2_dictionary = RunClassII(ac_data=ac_data, check = True, pbat = ac_data['Power_prop']['bat'])
 
-        class_2_dictionary['Power_prop']['P_req_TO_W'] = class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
-        class_2_dictionary['Power_prop']['P_req_cruise_W'] = class_2_dictionary['Performance']["P_cruise/P_TO"] * class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
+        # print the new MTOW with a 12% contingency
+        print(f"Total Weight: {round(class_2_dictionary['CL2Weight']['MTOW_N'] / 9.81, 2)} [kg]")
+        print(f"Contingency: {round((class_2_dictionary['Contingency_C2W'] - 1) * 100, 0)} %")
 
-        print("Reduction with current battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
-        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
-
-        print("Reduction with future expected battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         logging.info(" Class II Weight Groups calculated successfully")
+
+        # update the power required
+        class_2_dictionary['Power_prop']['P_req_TO_W'] = class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
+        class_2_dictionary['Power_prop']['P_req_cruise_W'] = class_2_dictionary['Performance']["P_cruise/P_TO"] *  class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
+
+        # get the current technology batteries co2 reduction
+        print("Reduction with current battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
+
+        # get the expected technology batteries co2 reduction
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
+        print("Reduction with future expected battery technology: " + str(
+            round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
+
+        # set the battery back to the original value to save the right power required
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * ac_data["Power_prop"]["E_bat_Wh"]
 
         # calculate the loading distribution diagrams
-        ac_data['Performance']['n_max'], ac_data['Performance']['n_min'] = calc_nmax_nmin_manoeuvre(
-            ac_data['Weights']['MTOW_N'])
+        class_2_dictionary['Performance']['n_max'], class_2_dictionary['Performance']['n_min'] = calc_nmax_nmin_manoeuvre(
+            class_2_dictionary['CL2Weight']['MTOW_N'])
 
         logging.info(" Calculating the loading distribution diagram")
 
