@@ -26,14 +26,14 @@ def m_s_to_kt(a):
     return a / nautical_mile * 60 * 60
 
 def N_to_lbs(a):
-    return 0.224808943*a
+    return 0.224808943 * a
 
 def lbs_to_N(a):
-    return a*4.4482216153
+    return a * 4.4482216153
 
 def m_squared_to_ft_squared(a):
-    return 10.7639104*a
+    return 10.7639104 * a
 
 def W_to_hp(a):
-    return 0.00134102209*a
+    return 0.00134102209 * a
 

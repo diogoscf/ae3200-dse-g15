@@ -63,8 +63,8 @@ class Class_II_Weight:
 
         self.int = aircraft_data["Power_prop"]["int_fueltanks_fraction"]
 
-        aircraft_data["Landing_gear"]["l_s_m"] = m_to_ft(aircraft_data["Landing_gear"]["Hs_m"])
-        aircraft_data['Landing_gear']["l_s_n"] = m_to_ft(aircraft_data["Landing_gear"]["Hs_m"])
+        aircraft_data["Landing_gear"]["l_s_m"] = aircraft_data["Landing_gear"]["Hs_m"]
+        aircraft_data['Landing_gear']["l_s_n"] = aircraft_data["Landing_gear"]["Hs_m"]
         self.l_s_m = m_to_ft(aircraft_data["Landing_gear"]["l_s_m"])
         self.l_s_n = m_to_ft(aircraft_data["Landing_gear"]["l_s_n"])
         self.retractable = aircraft_data["Landing_gear"]["Retractable"]

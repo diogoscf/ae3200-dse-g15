@@ -253,8 +253,8 @@ if __name__ == '__main__':
     # set up the conditions to run the program
     run_generate = False
     run_classI = False
-    run_classII = False
-    run_fuselage_sizing = True
+    run_classII = True
+    run_fuselage_sizing = False
 
     # initialise the logging
     setup_logging()
@@ -280,6 +280,7 @@ if __name__ == '__main__':
     ac_data['Performance']['Vh_m/s'] = V_H
     ac_data['Performance']['n_ult_l'] = n_ult_land
 
+    # run the generation code for the data iteration points
     if run_generate:
         logging.info(" Starting generating the new possible design points. This may take a while.")
         Generate(p, ac_data, run_generate)
@@ -449,7 +450,19 @@ if __name__ == '__main__':
         # calculate the class 2 weights components and print them
         logging.info(" Calculate Class II Weight Groups")
         class_2_dictionary = RunClassII(ac_data, check = True, pbat = ac_data['Power_prop']['bat'])
+
+        class_2_dictionary['Power_prop']['P_req_TO_W'] = class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
+        class_2_dictionary['Power_prop']['P_req_cruise_W'] = class_2_dictionary['Performance']["P_cruise/P_TO"] * class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
+
+        print("Reduction: " + str(
+            round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
+
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
+
+        print("Reduction with future expected battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         logging.info(" Class II Weight Groups calculated successfully")
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * ac_data["Power_prop"]["E_bat_Wh"]
+
 
         # calculate the loading distribution diagrams
         ac_data['Performance']['n_max'], ac_data['Performance']['n_min'] = calc_nmax_nmin_manoeuvre(
@@ -485,8 +498,8 @@ if __name__ == '__main__':
         h_nose = 0.127
         D_main = 0.55626
         h_main = 0.2286
-        h_nose_strut = 0.65
-        h_main_strut = 0.65
+        h_nose_strut = ac_data['Landing_gear']['Hs_m']
+        h_main_strut = ac_data['Landing_gear']['Hs_m']
         l_main_lateral = 1
         l_long_nose = 0.40874
         l_long_main = 4.21989077
