@@ -99,6 +99,7 @@ Cm_DATA = import_data2('HumanAir/Structural Analysis/Cm_DATA.txt')
 Cdi_DATA = import_data2('HumanAir/Structural Analysis/Cdi_DATA.txt')
 
 n = len(Cl_DATA[AoA]['coefficient'])
+print("number of elements: ",n)
 
 c, y_points = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
 L_cruise, D_cruise = force_distribution(Cl_DATA, Cdi_DATA, AoA, c ,Vcruise, rho)
