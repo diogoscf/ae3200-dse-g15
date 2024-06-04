@@ -6,7 +6,7 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from unittest.mock import patch, mock_open, MagicMock
-from HumanAir.main import load_design_json, setup_logging, Generate, calculate_weighted_score, find_optimal_design
+from HumanAir.main import load_json_file, setup_logging, Generate, calculate_weighted_score, find_optimal_design
 
 aircraft_data = {
     "name": "final_design",
