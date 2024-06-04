@@ -38,8 +38,12 @@ def import_data(file_path):
 def import_data2(file_name):
 
     data = {}
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    with open(file_name, 'r') as file:
+    # Construct the absolute path to the design.json file
+    file_path = os.path.join(script_dir,   file_name)
+
+    with open(file_path, 'r') as file:
         lines = file.readlines()
         angle_file = lines[0]
         angles = re.findall(r'VLM1 -\s*-?\d+\.?\d*', angle_file)

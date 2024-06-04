@@ -26,7 +26,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 333094.713123666,
+        "E_bat_Wh": 166547.356561833,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -110,8 +110,8 @@
         "Temp_offset_TO_Land_cruise": 18,
         "n_ult": 5.445743422251001,
         "n_ult_l": 5.265978724142152,
-        "n_max": 6.9,
-        "n_min": -6.9,
+        "n_max": 3.5106524827614347,
+        "n_min": -1.404260993104574,
         "P_cruise/P_TO": 0.8,
         "Vh_m/s": 66.66666666666667,
         "rho_kg/m3": 0.9
@@ -152,15 +152,15 @@
         "APU": false
     },
     "CL2Weight": {
-        "MTOW_N": 37403.46153194146,
+        "MTOW_N": 37424.682010407836,
         "Wbat_N": 742.4799306873507,
         "Wfuel_N": 275.16790282046594,
         "Wpl": 705.6,
-        "Total Structures Weight": 9577.64380153677,
+        "Total Structures Weight": 9598.864280003154,
         "Wing Weight": 4851.786243622939,
         "Empennage Weight": 534.2132605648318,
         "Fuselage Weight": 3161.1119018044033,
-        "Nacelle Weight": 293.76465995179086,
+        "Nacelle Weight": 314.98513841817305,
         "Landing Gear Weight": 664.2402634209994,
         "Total Powerplant Weight": 3985.6065673088,
         "Total Fixed Equipment Weight": 5586.01031614347,
@@ -174,6 +174,6 @@
         "Furnishings Weight": 1149.6776001356916,
         "Auxiliary Gear Weight": 229.46327702026284,
         "Paint Weight": 157.23375386765764,
-        "OEW": 20021.189377150564
+        "OEW": 20042.409855616945
     }
 }

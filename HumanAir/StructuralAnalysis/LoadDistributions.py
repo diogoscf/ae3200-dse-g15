@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import integrate
-from Functions import import_data2
+
 import os
 import sys
 
@@ -12,8 +12,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir,'..'))
 sys.path.append(project_root)
 
+from HumanAir.StructuralAnalysis.Functions import import_data2
 from aircraft_data import aircraft_data
-from HumanAir.Vn_Diagrams.loading_diagram import calc_nmax_nmin_manoeuvre
 
 # Define the forces along half span
 def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
@@ -102,7 +102,8 @@ def load_distribution_diagram(ac_data = aircraft_data):
     structuralmass = ac_data['CL2Weight']['Wing Weight'] / 9.81
     batterymass_w = 0
     T = 0
-    nmax, nmin = calc_nmax_nmin_manoeuvre(ac_data['Weights']['MTOW_N'])
+    nmax = ac_data['Performance']['n_max']
+    nmin = ac_data['Performance']['n_min']
     nl = nmax # Maximum Load Factor
     nl2 = nmin # Minimum Load Factor
     sweep = np.deg2rad(ac_data['Aero']['HalfChordSweep_Wing_deg']) # half chord sweep angle of the wing
