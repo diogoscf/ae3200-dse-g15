@@ -24,7 +24,7 @@ def interp(x, x_given, y_given):
 
 
 class TorsionalStiffness:
-    def __init__(self, file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos):
+    def __init__(self, file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr, b):
         self.file_path = file_path # file_path to airfoil
         self.file_path_y = file_path_y # file path to span
         self.Sw = Sw # [m2]
@@ -35,6 +35,9 @@ class TorsionalStiffness:
         self.t2_spar = t2_spar # [m] thickness at the root
         self.t_skin = t_skin # [m] thickness of skin
         self.x_pos = x_pos # position of spars
+        self.A_str = A_str # [m2] area of stringers
+        self.Cr = Cr
+        self.b = b
     
     def import_data(self):
         df = pd.read_csv(self.file_path, sep='\s+', header=None, names=['x', 'y'], skiprows=1)
@@ -73,15 +76,22 @@ class TorsionalStiffness:
         df_1 = np.array(df.iloc[:idx,:].values.tolist())
         df_2 = np.array(df.iloc[idx:,:].values.tolist())
         return df_1, df_2
+
+    def chord(self):
+        # Cl_DATA = import_data2(self.file_path_y)
+        # b = Cl_DATA[self.AoA]['y_span'][-1] * 2  
+        # Generate spanwise coordinate points
+        y = np.linspace(-self.b/2, self.b/2, self.n) 
+        # Calculate the chord distribution
+        chord_length = 2 * self.Sw / (1 + self.taper_ratio) / self.b * (1 - ((1 - self.taper_ratio)/self.b * np.abs(2 * y)))
+        return chord_length.reshape(len(chord_length), 1), y
     
+    '''
     def chord(self):
         Cl_DATA = import_data2(self.file_path_y)
-        b = Cl_DATA[self.AoA]['y_span'][-1] * 2  
-        # Generate spanwise coordinate points
-        y = np.linspace(Cl_DATA[AoA]['y_span'][0], Cl_DATA[AoA]['y_span'][-1], self.n)  # n is the number of nodes
-        # Calculate the chord distribution
-        chord_length = 2 * self.Sw / (1 + self.taper_ratio) / b * (1 - (1 - self.taper_ratio) * np.abs(2 * y / b))
-        return chord_length.reshape(len(chord_length), 1), y
+        b = Cl_DATA[self.AoA]['y_span'][-1] * 2 
+        y = np.linspace(Cl_DATA[AoA]['y_span'][0], Cl_DATA[AoA]['y_span'][-1], self.n)
+    '''
     
     def spars(self):
         chord, y = self.chord()
@@ -179,23 +189,47 @@ class TorsionalStiffness:
         y_rspar = h_mid[:, 1].reshape((len(h_mid), 1))
                 
         return (A_uskin*y_uskin + A_lskin*y_lskin + A_lspar*y_lspar + A_rspar*y_rspar)/(A_uskin + A_lskin + A_lspar + A_rspar)
-        
+
+    def Ixx(self, no_str):
+        h_mid, h_s1s2 = self.h_s1s2()
+        l_box_up, l_box_down = self.d_s1s2()
+        t_spar = self.t_spar()
+        h_15c = h_s1s2[:,0].reshape((len(h_s1s2), 1))
+        h_50c = h_s1s2[:,1].reshape((len(h_s1s2), 1))
+        htot = h_15c + h_50c
+        h_avemax = htot/4
+        I_stringer = self.A_str * no_str * h_avemax**2
+        I_spar = 1/12*t_spar*(h_15c*3 + h_50c*3)
+        I_skin = self.t_skin*(l_box_down + l_box_up)*h_avemax**2
+        return I_stringer + I_spar + I_skin
 
 ########## input ###########
-Sw = 39  # [m2]
+Sw = 41.67 # [m2]
 taper_ratio = 0.4
 AoA = -6 # [deg]
-n = 5
+n = 3
 t1_spar = 0.010 # [m] thickness at the tip
 t2_spar = 0.025 # [m] thickness at the root
 t_skin = 0.007 # [m] thickness of skin
 file_path = 'HumanAir/WingBox/airfoil.txt'
 file_path_y = 'HumanAir\WingBox\Cl_DATA.txt'
+A_str = 0.02
+Cr = 2.5 # [m] root chord length
+b = 17.6
 
 ######## Execution ########
 
-torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos)
-y = torisonal_stiffness.centroid()
+torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr,b)
+
+df = torisonal_stiffness.import_data()
+chord1, y = torisonal_stiffness.chord()
+print(chord1)
+plt.plot(df['x']*chord1[1], df['y']*chord1[1])
+plt.axis('equal')
+plt.show()
+#print(torisonal_stiffness.spars())
+h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
+#print(h_s1s2)
 
 '''
 plt.plot(df_down[:,0], df_down[:,1])
