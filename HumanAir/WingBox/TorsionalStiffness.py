@@ -59,7 +59,7 @@ n = 3
 ######## Execution ########
 # Assuming chord function takes the arguments as described and returns a chord length
 chord_length, y = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
-print(chord_length)
+
 # Calculate the spars positions based on the chord length
 x_spar = spars(chord_length, x_pos)
 
@@ -69,17 +69,13 @@ df_up, df_down = airfoil_division(df)
 y_spar_up = y_spar(df_up, x_spar, chord_length)
 y_spar_down = y_spar(df_down, x_spar, chord_length)
 
-print(y_spar_down)
-print(y_spar_up)
-
 interp(0.15, df_up[:,0], df_up[:,1])
-#print(y_spar_up)
 x_pos_flat = np.array(x_spar.flatten())
 
-'''
+
 plt.plot(df_down[:,0], df_down[:,1])
 plt.plot(df_up[:,0], df_up[:,1])
 plt.plot(x_spar[0]/chord_length[0], y_spar_down[0]/chord_length[0])
 plt.plot(x_spar[0]/chord_length[0], y_spar_up[0]/chord_length[0])
 plt.show()
-'''
+
