@@ -7,18 +7,19 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from aircraft_data import aircraft_data
 from unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N, ft_to_m
 
 
 class Class_II_Weight:
     def __init__(self, ac_data):
-        self.dict = ac_data
-        self.W_TO = N_to_lbs(ac_data["Weights"]["MTOW_N"])
-        self.W_L = N_to_lbs(ac_data["Weights"]["W_L_N"])
-        self.W_F = N_to_lbs(ac_data["Weights"]["WF_N"])
-        self.W_E = N_to_lbs(ac_data["Weights"]["OEW_N"] - ac_data['Weights']['W_Pilot_N'])
-        self.W_bat = N_to_lbs(ac_data["Weights"]["Wbat_N"])
+        self.dict=ac_data
+        self.W_TO=N_to_lbs(ac_data["Weights"]["MTOW_N"])
+        self.W_L=N_to_lbs(ac_data["Weights"]["W_L_N"])
+        self.W_F=N_to_lbs(ac_data["Weights"]["Wfuel_N"])
+        self.W_E=N_to_lbs(ac_data["Weights"]["OEW_N"]-ac_data['Weights']['W_Pilot_N'])
+        self.W_bat=N_to_lbs(ac_data["Weights"]["Wbat_N"])
 
         self.S_Wing = m_squared_to_ft_squared(ac_data["Aero"]["S_Wing"])
         self.S_h = m_squared_to_ft_squared(ac_data["Aero"]["S_h"])
@@ -60,10 +61,10 @@ class Class_II_Weight:
         self.h_f = m_to_ft(ac_data["Geometry"]["fus_height_m"])
 
         self.P_TO = W_to_hp(ac_data["Power_prop"]["P_req_TO_W"])
-        self.K_n = ac_data["Power_prop"]["K_n"]  #0.37 for radial, 0.24 for horizontally opposed
-        self.K_p = 1.1  #TODO: check if supercharging is used (pg.84)
+        self.K_n = ac_data["Power_prop"]["K_n"] #0.37 for radial, 0.24 for horizontally opposed
+        self.K_p = 1.1 #TODO: check if supercharging is used (pg.84)
         self.K_pg = 1.16
-        self.K_fsp = 6.65  #TODO: check if this is the correct fuel in lbs/gal (pg.91)
+        self.K_fsp = 6.65 #TODO: check if this is the correct fuel in lbs/gal (pg.91)
 
         self.int = ac_data["Power_prop"]["int_fueltanks_fraction"]
 
@@ -140,6 +141,7 @@ class Class_II_Weight:
                     (self.w_f + self.h_f) / 10) * (self.V_c / 100) ** 0.338) ** 1.1
 
         results["Average"] = np.average([results["Cessna"], results["USAF"]])
+
         return results
 
     def NacelleWeight(self):
@@ -169,6 +171,7 @@ class Class_II_Weight:
         self.l_s_n = ft_to_m(self.l_s_n)
         self.l_s_m = ft_to_m(self.l_s_m)
         return results
+
 
     def StructureWeight_Total(self):
         return self.WingWeight()["Average"] + self.EmpennageWeight()["Average"] + self.FuselageWeight()["Average"] + \
@@ -230,7 +233,8 @@ class Class_II_Weight:
             return {"Average": 0.0}
 
     def InstrumentsAvionicsElectronics(self):
-        return {"Average": 33 * self.N_pax}
+        return {"Average": 40 + 0.008 * (self.W_TO-self.W_bat)}
+
 
     def ElectricalSystemWeight(self):
         results = {}
@@ -283,19 +287,14 @@ class Class_II_Weight:
         else:
             results = {"Average": 0}
         return results
+    
+    def NewBatteryWeight(self, bat):
+        return lbs_to_N(self.W_TO) / self.dict["Performance"]["W/P_N/W"] * self.dict["Performance"]["endurance"] * bat / self.dict["Power_prop"][
+            "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / self.dict["Power_prop"]["eta_electricmotor"]
 
-    # W_TO is in lbs and has to be tranformed to N, returns in kg
-    def NewBatteryWeight(self, bat_percent):
-        return lbs_to_N(self.W_TO) / self.dict["Performance"]["W/P_N/W"] * self.dict["Performance"][
-            "endurance"] * bat_percent / self.dict["Power_prop"][
-            "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / \
-            self.dict["Power_prop"]["eta_electricmotor"]
-
-    # W_TO is in lbs and has to be tranformed to N, returns in kg
-    def NewFuelWeight(self, bat_percent):
-        return 1.15 * lbs_to_N(self.W_TO) / self.dict["Performance"]["W/P_N/W"] * (1 - bat_percent) * \
-            self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
-                "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
+    def NewFuelWeight(self, bat):
+        return 1.15 * lbs_to_N(self.W_TO) / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
+            "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
 
     def FixedEquipmentWeight_Total(self):
         return self.FlightControlSystem()["Average"] + self.HydraulicsPneumatics()["Average"] + \
@@ -336,6 +335,19 @@ class Class_II_Weight:
             BatteryWeight = self.NewBatteryWeight(bat_percent)
             FuelWeight = self.NewFuelWeight(bat_percent)
 
+            mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h = aerodynamic_design(ac_data=self.dict)
+            self.dict["Aero"]["S_Wing"]=S_Wing
+            self.dict["Aero"]["S_h"]=S_h
+            self.dict["Aero"]["MAC_wing"]=mac_wing
+            self.dict["Aero"]["MAC_HS"]=mac_HS
+            self.dict["Aero"]["c_root_wing"]=c_root_wing
+            self.dict["Aero"]["c_tip_wing"]=c_tip_wing
+            self.dict["Aero"]["c_root_HS"]=c_root_HS
+            self.dict["Aero"]["c_tip_HS"]=c_tip_HS
+            self.dict["Aero"]["b_Wing"]=b_Wing
+            self.dict["Aero"]["b_h"]=b_h
+
+
             # trasnform the new MTOW to N
             MTOW_new = OEW + 9.81 * BatteryWeight + 9.81 * FuelWeight + 9.81 * self.dict["Iterations Class I"][
                 "Wpl_des_kg"]
@@ -364,8 +376,8 @@ class Class_II_Weight:
                 MTOW_new,
                 self.dict["Contingency_C2W"] * MTOW_new,
                 self.dict["Contingency_C2W"] * OEW,
-                self.dict["Contingency_C2W"] * BatteryWeight,
-                self.dict["Contingency_C2W"] * FuelWeight,
+                self.dict["Contingency_C2W"] * BatteryWeight*9.81,
+                self.dict["Contingency_C2W"] * FuelWeight*9.81,
                 self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
                 self.dict["Contingency_C2W"] * lbs_to_N(self.StructureWeight_Total()),
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FuelSystemWeight()["Average"]),
@@ -380,8 +392,8 @@ class Class_II_Weight:
                 0,
                 self.dict["Contingency_C2W"] * MTOW_new,
                 self.dict["Contingency_C2W"] * OEW,
-                self.dict["Contingency_C2W"] * BatteryWeight,
-                self.dict["Contingency_C2W"] * FuelWeight,
+                self.dict["Contingency_C2W"] * BatteryWeight*9.81,
+                self.dict["Contingency_C2W"] * FuelWeight*9.81,
                 self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
                 self.dict["Contingency_C2W"] * lbs_to_N(self.StructureWeight_Total()),
                 self.dict["Contingency_C2W"] * lbs_to_N(self.FuelSystemWeight()["Average"]),
@@ -396,7 +408,7 @@ class Class_II_Weight:
         for pbat in bat:
             row = self.Iterarions_C2W(pbat)
             if row[0] != 0:
-                lst_P.append(9.81 * row[1] / self.dict["Performance"]["W/P_N/W"])
+                lst_P.append(row[1] / self.dict["Performance"]["W/P_N/W"])
                 lst_bat.append(pbat)
 
         lst_bat = np.array(lst_bat)
@@ -461,6 +473,7 @@ def RunClassII(ac_data=aircraft_data, check=None, pbat=0.0):
     # Total Operating Empty Weight
     dict["CL2Weight"]["OEW"] = dict["Contingency_C2W"] * p.NewOEW()
 
+
     if check:
         print("========== Structures Weight ==========")
         print('\nWing Weight = ', round(lbs_to_N(p.WingWeight()["Average"]) / 9.81, 2), " [kg]")
@@ -494,6 +507,7 @@ def RunClassII(ac_data=aircraft_data, check=None, pbat=0.0):
         print('\n\n ========== Total Operating Weights ==========')
         print("\nTotal Empty Weight = ", round(p.NewEmptyWeight() / 9.81, 2), " [kg]")
         print("Total Operating Empty Weight = ", round(p.NewOEW() / 9.81, 2), " [kg]")
+
 
     return dict
 
