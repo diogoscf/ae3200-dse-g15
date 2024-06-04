@@ -348,10 +348,10 @@ if __name__ == '__main__':
 
                 # dont remove this line as it complies with nicholas's mood
                 dict['Stability']['XLEMAC_m']=xlemac
-                mac = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)
+                mac_wing = aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False, checkhsplanform=False)[0]
 
-                dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
-                dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac
+                dict['Stability']['Cg_Aft'] = (round(max(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac_wing
+                dict['Stability']['Cg_Front'] = (round(min(CGlist), 2) - dict['Stability']['XLEMAC_m']) / mac_wing
 
                 logging.info(" Prepare to check the stability")
 
@@ -373,16 +373,23 @@ if __name__ == '__main__':
                 logging.info(" Calculating the MAC")
 
                 # dont remove this line as it complies with nicholas's mood
-                mac= aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False,
-                                        checkhsplanform=False)
-                print(f'MAC: {round(mac, 2)} [m]')
+                mac_wing= aerodynamic_design(dict, checkwingplanform=False, checkflowparameters=False, checkstability=False,
+                                        checkhsplanform=False)[0]
+                print(f'MAC: {round(mac_wing, 2)} [m]')
 
                 logging.info(" Calculating the MAC successful")
                 logging.info(" Calculating the aerodynamic design")
 
                 find_optimal_stability = True
 
-                aerodynamic_design(dict, checkwingplanform=True, checkflowparameters=False, checkstability=False, checkhsplanform=True)
+                mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS=aerodynamic_design(dict, checkwingplanform=True, checkflowparameters=False, checkstability=False, checkhsplanform=True)
+
+                dict["Aero"]["MAC_wing"]=mac_wing
+                dict["Aero"]["MAC_HS"]=mac_HS
+                dict["Aero"]["c_root_wing"]=c_root_wing
+                dict["Aero"]["c_tip_wing"]=c_tip_wing
+                dict["Aero"]["c_root_HS"]=c_root_HS
+                dict["Aero"]["c_tip_HS"]=c_tip_HS
 
                 logging.info(" Calculating the aerodynamic design successful")
                 logging.info(" Calculating the hourly price")
@@ -391,6 +398,8 @@ if __name__ == '__main__':
                 cost = hourly_operating_cost("maf_mission_graph.csv")
 
                 print(f"Cost: {round(cost, 2)} [US$]")
+
+                print(dict["Stability"]["Cg_Aft"])
 
                 logging.info(" Calculating the hourly price successful")
                 logging.info(" Saving the modified design.json file")
