@@ -64,12 +64,12 @@ def load_json_file(file_name):
 def Generate(p, dict, run=False):
 
     # tune the parameters with a reasonable range
-    A_lst = np.arange(18, 18.51, 0.5)
-    eta_p_lst = np.arange(0.8, 0.851, 0.05)
-    Clmax_clean_lst = np.arange(1.8, 2.21, 0.2)
-    Clmax_TO_lst = np.arange(2.2, 2.61, 0.2)
-    Clmax_Land_lst = np.arange(2, 2.61, 0.2)
-    Cd0_lst = np.arange(0.028, 0.0321, 0.002)
+    A_lst = np.arange(7.0, 18.51, 0.5)
+    eta_p_lst = np.arange(0.80, 0.851, 0.05)
+    Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
+    Clmax_TO_lst = np.arange(2, 2.61, 0.2)
+    Clmax_Land_lst = np.arange(2.2, 2.81, 0.2)
+    Cd0_lst = np.arange(0.028, 0.031, 0.002)
     V_cruise_lst = np.arange(60, 65.1, 1)
     climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
@@ -89,6 +89,7 @@ def Generate(p, dict, run=False):
             for eta_p in eta_p_lst:
                 for Clmax_clean in Clmax_clean_lst:
                     for Clmax_TO in Clmax_TO_lst:
+                        Clmax_Land_lst = np.arange(Clmax_TO+0.2, 2.81, 0.2)
                         for Clmax_Land in Clmax_Land_lst:
                             for Cd0 in Cd0_lst:
                                 for V_cruise in V_cruise_lst:
@@ -146,7 +147,7 @@ def Generate(p, dict, run=False):
 
 
 
-                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >25 and dict['Power_prop']['E_bat_Wh']<300000 and  dict['Power_prop']['P_req_cruise_W']/0.8<250000: # the <250000 condition is for the battery to be able to be charged
+                                            if co2_ratio * 100 > co2_ratio_max and co2_ratio * 100 >25 and dict['Power_prop']['E_bat_Wh']<200000 and  bat[step]>0.1 and dict['Power_prop']['P_req_cruise_W']/0.8<330000 and np.sqrt(dict['Power_prop']['P_req_cruise_W']/dict['Performance']['P_cruise/P_TO']*dict['Performance']['W/P_N/W']/dict['Performance']['W/S_N/m2']*A)<21.: # the <250000 condition is for the battery to be able to be charged
                                                 CO2 = co2_ratio
 
                                                 # save the combination of parameters
@@ -259,9 +260,9 @@ if __name__ == '__main__':
     dict['Performance']['n_ult_l'] = n_ult_land
 
     # set up the conditions to run the program
-    run_generate = True
-    run_classI = False
-    run_classII = False
+    run_generate = False
+    run_classI = True
+    run_classII = True
 
 
     if run_generate:
@@ -286,11 +287,11 @@ if __name__ == '__main__':
             'Clmax_clean': +0.05,
             'Clmax_TO': +0,
             'Clmax_Land': +0,
-            'Cd0': -0.45,
+            'Cd0': -0.25,
             'V_cruise': -0.05,
             'climbrate': -0.1,
-            'bat': -0.15,
-            'CO2': -0.1
+            'bat': -0.2,
+            'CO2': -0.25
         }
 
         maximum_weight_battery = 1000
@@ -323,7 +324,7 @@ if __name__ == '__main__':
             print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
             print('Contingency:', (round((dict['Contingency'] - 1) * 100, 0)), "%")
             dict["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
-            dict["Weights"]["OEW_N"] = 9.81 * round(component_weights[2], 2)
+            dict["Weights"]["OEW_N"] = 9.81 * ( round(component_weights[2], 2) + round(component_weights[3], 2) + round(component_weights[4], 2) + round(component_weights[6], 2) )
             dict["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
             dict["Weights"]["Wbat_N"] = 9.81 * round(component_weights[4], 2)
             dict["Weights"]["Wfuel_N"] = 9.81 * round(component_weights[5], 2)
@@ -392,8 +393,15 @@ if __name__ == '__main__':
                 logging.info(" Calculating the hourly price successful")
                 logging.info(" Saving the modified design.json file")
 
+                design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
+                logging.info(" Design.json saved at: " + design_json_path)
+
+                with open(design_json_path, 'w') as f:
+                    json.dump(dict, f, indent=4)
+
                 # calculating if we get the copium batteries how much co2 reduction would increase
-                dict["Power_prop"]["E_bat_Wh"] = 685 / 350 * dict["Power_prop"]["E_bat_Wh"]
+                print(dict["Power_prop"]["E_bat_Wh"],dict["Power_prop"]["P_req_TO_W"])
+                dict["Power_prop"]["E_bat_Wh"] = 700 / 350 * dict["Power_prop"]["E_bat_Wh"]
                 print("Reduction with future expected battery technology: " + str(round(co2(ac_data=dict) * 100, 2)) + "[%]")
 
     # run the class 2 estimation
