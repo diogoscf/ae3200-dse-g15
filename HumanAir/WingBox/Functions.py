@@ -32,19 +32,4 @@ def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
     y = np.linspace(Cl_DATA[AoA]['y_span'][0], Cl_DATA[AoA]['y_span'][-1], n)  # n is the number of nodes
     # Calculate the chord distribution
     chord_length = 2 * Sw / (1 + taper_ratio) / b * (1 - (1 - taper_ratio) * np.abs(2 * y / b))
-    return chord_length, y
-
-def import_data(file_path):
-    df = pd.read_csv(file_path, sep='\s+', header=None, names=['x', 'y'], skiprows=1)
-    return df
-
-def interp(x, x_given, y_given):
-    i = np.searchsorted(x_given, x)
-    if i == 0:
-        return y_given[0]
-    elif i == len(x_given):
-        return y_given[-1]
-    else:
-        x1, x2 = x_given[i - 1], x_given[i]
-        y1, y2 = y_given[i - 1], y_given[i]
-        return y1 + (y2 - y1) * (x - x1) / (x2 - x1)
+    return chord_length.reshape(len(chord_length), 1), y
