@@ -24,6 +24,7 @@ from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_oper
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
 from HumanAir.CO2_Calculator.co2v2 import calculate_co2_reduction_flightdist as co2
+from HumanAir.StructuralAnalysis.LoadDistributions import load_distribution_diagram
 def setup_logging():
     handler = colorlog.StreamHandler()
     handler.setFormatter(colorlog.ColoredFormatter(
@@ -59,6 +60,7 @@ def load_json_file(file_name):
     logging.info(f" Opening {file_name} successful")
 
     return dict
+    #
 
 "Generating the design points"
 def Generate(p, dict, run=False):

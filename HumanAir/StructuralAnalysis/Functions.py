@@ -1,6 +1,8 @@
 import numpy as np
 import re
 import pandas as pd
+import os
+import sys
 # Define the path to the text file
 # file_path = 'data.txt'
 
@@ -33,9 +35,11 @@ def import_data(file_path):
 
 '''WING_SPAN'''
 
-def import_data2(file_path):
+def import_data2(file_name):
+
     data = {}
-    with open(file_path, 'r') as file:
+
+    with open(file_name, 'r') as file:
         lines = file.readlines()
         angle_file = lines[0]
         angles = re.findall(r'VLM1 -\s*-?\d+\.?\d*', angle_file)

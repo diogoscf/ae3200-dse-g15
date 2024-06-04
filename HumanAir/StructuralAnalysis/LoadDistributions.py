@@ -5,8 +5,16 @@ from Functions import import_data2
 import os
 import sys
 
+# Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Add the project root directory to the Python path
+project_root = os.path.abspath(os.path.join(script_dir,'..'))
+sys.path.append(project_root)
+
 from aircraft_data import aircraft_data
+from HumanAir.Vn_Diagrams.loading_diagram import calc_nmax_nmin_manoeuvre
+
 # Define the forces along half span
 def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
     b = Cl_DATA[AoA]['y_span'][-1] * 2  
@@ -90,18 +98,19 @@ def load_distribution_diagram(ac_data = aircraft_data):
     Sw = ac_data['Aero']['S_Wing']
     taper_ratio = ac_data['Aero']['Taper_Wing']
     Vcruise = ac_data['Performance']['Vc_m/s']  # [m/s]
-    rho = 0.9  # [kg/m3]
+    rho = ac_data['Performance']['rho_kg/m3'] # [kg/m3]
     structuralmass = ac_data['CL2Weight']['Wing Weight'] / 9.81
     batterymass_w = 0
     T = 0
-    nl = 3.8 # Load Factor
-    nl2 = -1.52 #
-    sweep = np.deg2rad(ac_data['Aero']['HalfChordSweep_Wing_deg'])
+    nmax, nmin = calc_nmax_nmin_manoeuvre(ac_data['Weights']['MTOW_N'])
+    nl = nmax # Maximum Load Factor
+    nl2 = nmin # Minimum Load Factor
+    sweep = np.deg2rad(ac_data['Aero']['HalfChordSweep_Wing_deg']) # half chord sweep angle of the wing
 
     # import files
-    Cl_DATA = import_data2('HumanAir/Structural Analysis/Cl_DATA.txt')
-    Cm_DATA = import_data2('HumanAir/Structural Analysis/Cm_DATA.txt')
-    Cdi_DATA = import_data2('HumanAir/Structural Analysis/Cdi_DATA.txt')
+    Cl_DATA = import_data2('Cl_DATA.txt')
+    Cm_DATA = import_data2('Cm_DATA.txt')
+    Cdi_DATA = import_data2('Cdi_DATA.txt')
 
     n = len(Cl_DATA[AoA]['coefficient'])
 
@@ -110,7 +119,7 @@ def load_distribution_diagram(ac_data = aircraft_data):
     W_cruise = weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA)
     M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
 
-    print(c)
+    #print(c)
     # nl = 3.8
     Vx, Vz, Mx, My, Mz = InternalLoads(nl*L_cruise, T, W_cruise, abs(nl)*D_cruise, nl*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
@@ -148,9 +157,9 @@ def load_distribution_diagram(ac_data = aircraft_data):
     '''
 
     plt.subplot(2, 2, 2)
-    plt.plot(y_points, Vz, label='n=3.8')
+    plt.plot(y_points, Vz, label=f'n={round(nmax, 2)}')
     plt.plot(y_points, Vz1, label='cruise')
-    plt.plot(y_points, Vz2, label='n=-1')
+    plt.plot(y_points, Vz2, label=f'n={round(nmin, 2)}')
     plt.title('Shear Force Vz along Span')
     plt.xlabel('Spanwise Position [m]')
     plt.ylabel('Vz [N]')
@@ -159,9 +168,9 @@ def load_distribution_diagram(ac_data = aircraft_data):
     plt.grid()
 
     plt.subplot(2, 2, 3)
-    plt.plot(y_points, Mx, label='n=3.8')
+    plt.plot(y_points, Mx, label=f'n={round(nmax, 2)}')
     plt.plot(y_points, Mx1, label='cruise')
-    plt.plot(y_points, Mx2, label='n=-1')
+    plt.plot(y_points, Mx2, label=f'n={round(nmin, 2)}')
     plt.title('Bending Moment Mx along Span')
     plt.xlabel('Spanwise Position [m]')
     plt.ylabel('Mx [Nm]')
@@ -184,9 +193,9 @@ def load_distribution_diagram(ac_data = aircraft_data):
     '''
 
     plt.subplot(2,2,4)
-    plt.plot(y_points, My, label='n=3.8')
+    plt.plot(y_points, My, label=f'n={round(nmax,2)}')
     plt.plot(y_points, My1, label='cruise')
-    plt.plot(y_points, My2, label='n=-1')
+    plt.plot(y_points, My2, label=f'n={round(nmin,2)}')
     plt.title('Torque My along Span')
     plt.xlabel('Spanwise Position [m]')
     plt.ylabel('My [Nm]')
@@ -195,3 +204,6 @@ def load_distribution_diagram(ac_data = aircraft_data):
     plt.tight_layout()
 
     plt.show()
+
+if __name__ == '__main__':
+    load_distribution_diagram(ac_data=aircraft_data)
