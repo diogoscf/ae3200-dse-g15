@@ -42,6 +42,9 @@ def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflow
     tc_HP = ac_data["Aero"]["tc_m_HP"]
 
     WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
+    
+    c_root_wing=WingPlanform.RootChord()
+    c_tip_wing=WingPlanform.TipChord()
 
     ISACruise = ISA(CruiseHeight, Temp_offset, TemperatureGradient)
 
@@ -77,12 +80,16 @@ def aerodynamic_design(ac_data=aircraft_data, checkwingplanform=False, checkflow
 
     HSPlanform = Planform(AR_HS, Taper_HS, QuarterChordSweep_HS, tc_HP,S=WingPlanform.WingSurfaceArea()*Stab.ShS())
 
+    c_root_HS=HSPlanform.RootChord()
+    c_tip_HS=HSPlanform.TipChord()
+
     if checkhsplanform:
         HSPlanform.PlotWingPlanform()
 
-    mac = WingPlanform.MAC()
+    mac_wing = WingPlanform.MAC()
+    mac_HS = HSPlanform.MAC()
 
-    return mac
+    return mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS
 
 if __name__ == "__main__":
     # replace with 'design.json' for pycharm
