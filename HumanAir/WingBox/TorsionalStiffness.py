@@ -223,7 +223,6 @@ torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio
 
 df = torisonal_stiffness.import_data()
 chord1, y = torisonal_stiffness.chord()
-print('chord', chord1)
 plt.plot(df['x']*chord1[1], df['y']*chord1[1])
 plt.axis('equal')
 plt.show()
