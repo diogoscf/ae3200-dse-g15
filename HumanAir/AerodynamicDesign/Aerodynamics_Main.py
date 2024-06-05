@@ -38,7 +38,7 @@ def aerodynamic_design(
     CLh = ac_data["Stability"]["C_L_h"]
     CLah = ac_data["Stability"]["C_L_AH"]
     Xcgh = ac_data["Stability"]["X_cg_HS"]
-    XLEMAC = ac_data["Stability"]["XLEMAC_m"]
+    XLEMAC = ac_data["Geometry"]["XLEMAC_m"]
     CgAft = ac_data["Stability"]["Cg_Aft"]
     CgFwd = ac_data["Stability"]["Cg_Front"]
     SM = ac_data["Stability"]["Stability_Margin"]
