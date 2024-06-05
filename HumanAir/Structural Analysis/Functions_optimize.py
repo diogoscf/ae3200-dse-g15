@@ -5,28 +5,6 @@ from LoadDistributions import Mx
 from TorsionalStiffness import TorsionalStiffness
 from Functions import import_data2
 
-<<<<<<< HEAD
-"""
-    Minimize the weight of the wing while optimizing for these three variables:
-    - spar thickness (varying over the wing)
-    - no. of stringers (equally spaced) (varies three times along the span)
-    - skin thickness
-    """
-#Parameters
-rho= 2710 #density of aluminium (kg/m^3)
-n = 38 #number of segments, discretization
-L = 17.61/2 #length of the halfspan (m)
-h_15c = 0 #height of the spar at 15% of the chord, as a function of y -- NOTE: MAKE THEM ARRAYS like np.full of t_spar0
-h_50c = 0 #height of the spar at 50% of the chord, as a function of y 
-htot = h_15c + h_50c #total height, just for calculation ease, as a function of y
-h_avemax = (htot/4) #averaged "max" height from the central line, as a function of y
-w_top = 0 #width of top "straight" skin, as a function of y 
-w_bottom = 0 #width of bottom "straight" skin, as a function of y
-wtot = w_bottom+w_top #total width, just for calculation ease
-A_stringer = 0 #area of stringer for 20mm L stringer
-E = 68e9 #Youngs Modulus for aluminium (Pa)
-sigma_yield = 40e6 #Yield strength for aluminium (Pa)
-=======
 def calculate_sizes(percentage, total_size):
     sizes = np.array([int(total_size * p) for p in percentage])
     residual = total_size - np.sum(sizes)
@@ -38,7 +16,6 @@ def calculate_sizes(percentage, total_size):
         else:
             sizes[middle + 1] += residual // 2
     return sizes
->>>>>>> 634daee2d4b2f8dfcf011aeda80f25201da64f89
 
 def create_segments(sizes, no_string):
     segments = [np.full(size, value) for size, value in zip(sizes, no_string)]
@@ -78,17 +55,6 @@ def deflection_constraint(vars, y, Mx, A_stringer, max_deflect):
     deflection = get_deflection(I, y, Mx)
     return max_deflect - deflection
 
-<<<<<<< HEAD
-#def bending_stress_constraint(t_spar,t_skin, no_stringers):
-    stresses = []
-    for i in range(n):
-        h_avemax = h_avemax[i]
-        M = Mx[i]
-        I = get_I(t_spar,t_skin,no_stringers)[i]
-        stress = M*h_avemax/I
-        stresses.append(sigma_yield - stress)
-    return np.min(stresses)
-=======
 ########## Input ###########
 Sw = 34.56  # [m^2]
 taper_ratio = 0.4
@@ -105,7 +71,6 @@ x_pos = np.array([0.15, 0.5])
 Cl_DATA = import_data2('HumanAir/Structural Analysis/Cl_DATA.txt')
 n = len(Cl_DATA[AoA]['coefficient'])
 max_deflect = 2 # [m]
->>>>>>> 634daee2d4b2f8dfcf011aeda80f25201da64f89
 
 # Initialize Torsional Stiffness Class
 torsional_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr, b)
@@ -145,12 +110,7 @@ bounds_no_stringers = [(1, 100)] * n
 bounds = bounds_t_spar + bounds_t_skin + bounds_no_stringers
 
 # Constraints dictionary
-<<<<<<< HEAD
-con1 = {'type': 'ineq', 'fun':deflection_constraint}
-constraints = [con1]
-=======
 constraints = [{'type': 'ineq', 'fun': deflection_constraint, 'args': (y, Mx, A_str, max_deflect)}]
->>>>>>> 634daee2d4b2f8dfcf011aeda80f25201da64f89
 
 # Perform the optimization
 solution = minimize(objective, t0, args=(htot, wtot, rho, b, n, A_str), method='SLSQP', bounds=bounds, constraints=constraints)
