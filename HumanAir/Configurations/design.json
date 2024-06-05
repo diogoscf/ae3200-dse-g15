@@ -26,7 +26,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 252443.17632397357,
+        "E_bat_Wh": 246874.5768462389,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -36,14 +36,14 @@
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
         "eta_p": 0.8500000000000001,
-        "bat": 0.136,
-        "P_req_cruise_W": 226006.71992900813,
+        "bat": 0.133,
+        "P_req_cruise_W": 225411.86855469388,
         "P_TO": 230000,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 282508.3999112602
+        "P_req_TO_W": 281764.83569336735
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -161,28 +161,28 @@
         "HydrPne": false
     },
     "CL2Weight": {
-        "MTOW_N": 35181.37656549814,
-        "Wbat_N": 7075.621599251946,
-        "Wfuel_N": 2711.952460962887,
+        "MTOW_N": 35088.778919698816,
+        "Wbat_N": 6919.541711033153,
+        "Wfuel_N": 2721.368962563452,
         "Wpl": 705.6,
-        "Total Structures Weight": 8768.751198771239,
-        "Wing Weight": 4377.950820633252,
-        "Empennage Weight": 483.6472648916614,
-        "Fuselage Weight": 3166.1189703221444,
+        "Total Structures Weight": 9122.222679482184,
+        "Wing Weight": 4374.355543200556,
+        "Empennage Weight": 483.12692518946534,
+        "Fuselage Weight": 3164.1944801841546,
         "Nacelle Weight": 0.0,
-        "Landing Gear Weight": 668.1981979803578,
+        "Landing Gear Weight": 1100.545730908008,
         "Total Powerplant Weight": 4384.16722403968,
-        "Total Fixed Equipment Weight": 3972.699435005389,
-        "Flight Control Systems Weight": 725.8928548278742,
+        "Total Fixed Equipment Weight": 4026.785733732303,
+        "Flight Control Systems Weight": 727.0678000945571,
         "Hydraulics and/or Pneumatics Weight": 0.0,
-        "Instruments, Avionics and Electronics Weight": 424.12636799767927,
-        "Electrical System Weight": 851.801013164596,
-        "Airconditioning, Pressurization and Anti or Deicing Weight": 466.0083411815391,
+        "Instruments, Avionics and Electronics Weight": 424.63422593681423,
+        "Electrical System Weight": 850.8966059026611,
+        "Airconditioning, Pressurization and Anti or Deicing Weight": 517.7717014677565,
         "Oxygen System Weight": 117.07719291469601,
         "APU Weight": 0.0,
-        "Furnishings Weight": 1076.5991026533252,
-        "Auxiliary Gear Weight": 184.71866497254427,
-        "Paint Weight": 126.47589729313457,
-        "OEW": 17997.059607656593
+        "Furnishings Weight": 1077.3173176514213,
+        "Auxiliary Gear Weight": 185.25932238049836,
+        "Paint Weight": 126.76156738389801,
+        "OEW": 18522.023637254166
     }
 }
