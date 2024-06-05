@@ -4,22 +4,17 @@ import matplotlib.pyplot as plt
 # Define the trade off table
 criteria = ["Structure Weight", "Subsystem Integration", "Ease of Manufacturing", "Manufacturing Cost", "Aerodynamics"]
 initial_weights = np.array([0.3, 0.1, 0.2, 0.2, 0.2])
-concepts = ['Monocoque', 'Semi-monocoque', 'Truss', 'Geodesic']
+concepts = ["Monocoque", "Semi-monocoque", "Truss", "Geodesic"]
 
 # Define importance
-initial_importance = np.array([
-    [5, 3, 2, 3, 5],
-    [4, 5, 3, 3, 5],
-    [3, 1, 5, 5, 3],
-    [3, 3, 1, 1, 4]
-])
+initial_importance = np.array([[5, 3, 2, 3, 5], [4, 5, 3, 3, 5], [3, 1, 5, 5, 3], [3, 3, 1, 1, 4]])
 
 
 # Perform sensitivity analysis
 weight_ranges = np.linspace(0, 1, 22)  # From 0 to 1 in steps of 0.05
 
 # To store results for each criteria being varied
-sensitivity_results = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}
+sensitivity_results = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}  # type: ignore[var-annotated]  # noqa: E501
 
 
 # Iterate through each criteria weight
@@ -39,10 +34,10 @@ for i, criterion in enumerate(criteria):
     ax = axes[i]
     for concept in concepts:
         ax.plot(weight_ranges, sensitivity_results[concept][criterion], label=concept)
-    ax.set_xlabel('Weight Value')
-    ax.set_ylabel('Final Score')
-    ax.set_title(f'{criterion}')
-    ax.legend(loc = 'lower right')
+    ax.set_xlabel("Weight Value")
+    ax.set_ylabel("Final Score")
+    ax.set_title(f"{criterion}")
+    ax.legend(loc="lower right")
     ax.grid()
 
 plt.tight_layout()
@@ -50,10 +45,9 @@ plt.savefig("Sensitivity Analysis of Weight.pdf")
 plt.show()
 
 
-
 # Perform sensitivity analysis for importance
 importance_ranges = range(1, 6)  # From 1 to 5
-sensitivity_results_importance = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}
+sensitivity_results_importance = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}  # type: ignore[var-annotated]  # noqa: E501
 
 for i in range(initial_importance.shape[1]):
     for imp in importance_ranges:
@@ -70,10 +64,10 @@ for i, criterion in enumerate(criteria):
     ax = axes[i]
     for concept in concepts:
         ax.plot(importance_ranges, sensitivity_results_importance[concept][criterion], label=concept)
-    ax.set_ylabel('Final Score')
-    ax.set_xlabel('Importance Value')
-    ax.set_title(f'{criterion}')
-    ax.legend(loc = 'lower right')
+    ax.set_ylabel("Final Score")
+    ax.set_xlabel("Importance Value")
+    ax.set_title(f"{criterion}")
+    ax.legend(loc="lower right")
     ax.grid(True)
 
 plt.tight_layout()
