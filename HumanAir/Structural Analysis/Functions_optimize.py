@@ -27,7 +27,7 @@ def objective(vars, htot, wtot, rho, b, n, A_stringer):
     t_skin = vars[n:2*n].reshape((n, 1))
     no_stringers = vars[2*n:].reshape((n, 1))
     
-    L = np.empty((n, 1)) * b / n
+    L = b / n
     W_spar = np.sum(rho * t_spar * htot * L)
     W_skin = np.sum(rho * t_skin * wtot * L) 
     W_stringers = np.sum(rho * A_stringer * no_stringers * L)
@@ -47,15 +47,13 @@ def get_I(t_spar, t_skin, no_stringers, A_stringer):
     I = I_skin + I_spar + I_stringers
     return I
 
-def deflection_constraint(vars, y, Mx, A_stringer):
+def deflection_constraint(vars, y, Mx, A_stringer, max_deflect):
     t_spar = vars[:n].reshape((n, 1))
     t_skin = vars[n:2*n].reshape((n, 1))
     no_stringers = vars[2*n:].reshape((n, 1))
-    
-    max_deflection = 1.7  # [m] - estimate
     I = get_I(t_spar, t_skin, no_stringers, A_stringer)
     deflection = get_deflection(I, y, Mx)
-    return max_deflection - deflection
+    return max_deflect - deflection
 
 ########## Input ###########
 Sw = 34.56  # [m^2]
@@ -72,6 +70,7 @@ b = 19.93
 x_pos = np.array([0.15, 0.5])
 Cl_DATA = import_data2('HumanAir/Structural Analysis/Cl_DATA.txt')
 n = len(Cl_DATA[AoA]['coefficient'])
+max_deflect = 2 # [m]
 
 # Initialize Torsional Stiffness Class
 torsional_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr, b)
@@ -96,31 +95,31 @@ no_string = [20, 30, 50, 50, 30, 20]
 
 # Initial guess for thickness of spar
 t_spar0 = torsional_stiffness.t_spar()
-t_skin0 = t_skin * np.ones((n, 1)) 
-size = calculate_sizes(percentage, n)
+# Constant skin thickness [m]
+t_skin0 = t_skin * np.ones((len(t_spar0), 1)) 
+size = calculate_sizes(percentage, len(t_spar0))
 no_stringers0 = create_segments(size, no_string)
 
-# Combine initial guess into one array
-t0 = np.hstack((t_spar0, t_skin0, no_stringers0)).flatten()
+# Initial guess
+t0 = np.hstack((t_spar0, t_skin0, no_stringers0))
 
-# Objective function wrapper
-objective_func = lambda vars: objective(vars, htot, wtot, rho, b, n, A_str)
+# Define the bounds for each variable
+bounds_t_spar = [(0.005, 0.1)] * n
+bounds_t_skin = [(0.005, 0.1)] * n
+bounds_no_stringers = [(1, 100)] * n
+bounds = bounds_t_spar + bounds_t_skin + bounds_no_stringers
 
 # Constraints dictionary
-con1 = {'type': 'ineq', 'fun': lambda vars: deflection_constraint(vars, y, Mx, A_str)}
-constraints = [con1]
-
-# Bounds for thickness and number of stringers (all must be greater than zero)
-bounds = [(0.001, 0.1)] * 2 * n + [(1, 100)] * n
+constraints = [{'type': 'ineq', 'fun': deflection_constraint, 'args': (y, Mx, A_str, max_deflect)}]
 
 # Perform the optimization
-solution = minimize(objective_func, t0, method='SLSQP', bounds=bounds, constraints=constraints)
+solution = minimize(objective, t0, args=(htot, wtot, rho, b, n, A_str), method='SLSQP', bounds=bounds, constraints=constraints)
 
-# Optimized values
-optimized_vars = solution.x
-optimized_t_spar = optimized_vars[:n]
-optimized_t_skin = optimized_vars[n:2*n]
-optimized_no_stringers = optimized_vars[2*n:]
+# Optimized thickness values
+optimized_thickness = solution.x
+optimized_t_spar = optimized_thickness[:n]
+optimized_t_skin = optimized_thickness[n:2*n]
+optimized_no_stringers = optimized_thickness[2*n:]
 
 # Print the results
 print('Optimized thickness for spar:', optimized_t_spar)

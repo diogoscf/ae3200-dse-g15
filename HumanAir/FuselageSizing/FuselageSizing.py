@@ -291,9 +291,18 @@ class FuselageSizing:
         ax.axvline(x=0, color='gray', linestyle='--', linewidth=1)
         plt.axis('equal')
         plt.title('Fuselage front view')
-        plt.show()       
-             
-
+        plt.show()
+    
+    def position(self):
+        my_dict = {}
+        my_dict['wall'] = (0, FuselageSizing.t_fuse)
+        my_dict['motor'] = (FuselageSizing.t_fuse, self.l_motor + FuselageSizing.t_fuse)
+        my_dict['engine'] = (self.l_motor + FuselageSizing.t_fuse, self.l_motor + FuselageSizing.t_fuse+self.l_engine)
+        my_dict['cockpit'] = (self.l_motor + FuselageSizing.t_fuse+self.l_engine, self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock)
+        my_dict['row1'] = (self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock, self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock + FuselageSizing.l_pax)
+        my_dict['row2'] = (self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock + FuselageSizing.l_pax, self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock + FuselageSizing.l_pax*2)
+        my_dict['row3'] = (self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock + FuselageSizing.l_pax*2, self.l_motor + FuselageSizing.t_fuse+self.l_engine + self.l_cock + FuselageSizing.l_pax*3)
+        return my_dict
 
 # Example usage:
 n_seat = 8
@@ -309,7 +318,7 @@ h_nose_strut = 0.65
 h_main_strut = 0.65
 l_main_lateral = 1
 l_long_nose = 0.40874
-l_long_main = 4.21989077
+l_long_main = 5.3
 l_tailcone = 5.02 
 h_tail = 2.52 
 V_battery = 0.71
@@ -320,6 +329,8 @@ l_motor = 0.176
 
 fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery, w_aisle=w_aisle, h_aisle=h_aisle, w_motor=w_motor, l_motor=l_motor)
 
+print(fuselage_size.position())
+'''
 print('top_width', fuselage_size.top_width())
 print('bottom_width',fuselage_size.bottom_width(s_gear=0.1))
 print('fuselage height', fuselage_size.height())
@@ -332,3 +343,4 @@ print('nose_strut_length',h_nose_strut)
 
 fuselage_size.plot_side_drawing(s_gear=0.2)
 fuselage_size.plot_front_view(s_gear=0.2)
+'''
