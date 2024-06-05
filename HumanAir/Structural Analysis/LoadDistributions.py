@@ -164,7 +164,7 @@ plt.ylabel('Vx [N]')
 plt.xlim(left=0)
 plt.grid()
 plt.legend()
-'''
+
 
 plt.subplot(2, 2, 2)
 plt.plot(y_points, Vz, label='n=3.8')
@@ -189,7 +189,7 @@ plt.legend()
 plt.grid()
 
 
-'''
+
 plt.subplot(2, 2, 4)
 plt.plot(y_points, Mz, label='n=3.8')
 plt.plot(y_points, Mz1, label='cruise')
@@ -200,7 +200,7 @@ plt.ylabel('Mz [Nm]')
 plt.xlim(left=0)
 plt.legend()
 plt.grid()
-'''
+
 
 plt.subplot(2,2,4)
 plt.plot(y_points, My, label='n=3.8')
