@@ -255,7 +255,7 @@ if __name__ == '__main__':
     run_generate = False
     run_classI = False
     run_classII = True
-    run_fuselage_sizing = False
+    run_fuselage_sizing = True
 
     # initialise the logging
     setup_logging()
@@ -317,6 +317,7 @@ if __name__ == '__main__':
 
         # set up that the optimal stability range is not yet set
         find_optimal_stability = False
+
         # initialise from which step to start to search from the design_iterations.json
         step = 0
 
@@ -341,6 +342,7 @@ if __name__ == '__main__':
             print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
             print('Contingency:', (round((ac_data['Contingency'] - 1) * 100, 0)), "%")
 
+            # save the component weights to the dictionary in newtons
             ac_data["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
             ac_data["Weights"]["OEW_N"] = 9.81 * ( round(component_weights[2], 2) + round(component_weights[3], 2) + round(component_weights[4], 2) + round(component_weights[6], 2) )
             ac_data["Weights"]["Wptr_N"] = 9.81 * round(component_weights[3], 2)
@@ -357,7 +359,6 @@ if __name__ == '__main__':
 
             # iterate over the percentage to find the optimal stability range
             for pct in xcg_location_percentage:
-
                 logging.info(" Calculating the Xcg excursion")
 
                 wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=pct)
@@ -402,6 +403,7 @@ if __name__ == '__main__':
                 # get the aerodynamic specifications and save them to the dictionary
                 mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h=aerodynamic_design(ac_data, checkwingplanform=True, checkflowparameters=False, checkstability=False, checkhsplanform=True)
 
+                # updating the aerodynamic data in the dictionary
                 ac_data["Aero"]["S_Wing"]=S_Wing
                 ac_data["Aero"]["S_h"]=S_h
                 ac_data["Aero"]["MAC_wing"]=mac_wing
@@ -451,6 +453,7 @@ if __name__ == '__main__':
 
     # run the class 2 estimation
     if run_classII:
+
         # initialise the class I weight estimation
         WeightEstm = ClassIIWeight(ac_data=ac_data)
 
@@ -465,34 +468,43 @@ if __name__ == '__main__':
         ok = 0
         co2_ratio_max = 0
         pbat = ac_data['Power_prop']['bat']
+
+        # update the power required and the battery energy
         old_P_cruise = ac_data['Power_prop']['P_req_cruise_W']
         old_E_bat = ac_data['Power_prop']['E_bat_Wh']
+
+
+        # loop to find the best battery percentage after the class 2 weight estimation
         for step in range(len(bat)):
 
             # calculate the power required cruise
             ac_data['Power_prop']['P_req_cruise_W'] = ac_data['Performance']['P_cruise/P_TO'] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
             ac_data['Power_prop']['E_bat_Wh'] = ac_data['Power_prop']['P_req_cruise_W'] * ac_data['Performance']['endurance'] / ac_data['Performance']['P_cruise/P_TO'] * bat[step]
-            #print(ac_data['Power_prop']['P_req_cruise_W'],ac_data['Power_prop']['E_bat_Wh'])
+
+
             # calculate the co2 ratio for the specific combination of parameters
             co2_ratio = co2(ac_data=ac_data)
 
+            # set the condition to find the best battery percentage with the highest co2 reduction and a specific energy bellow
             if co2_ratio * 100 > co2_ratio_max  and ac_data['Power_prop']['E_bat_Wh']<182000:
                 co2_ratio_max=co2_ratio
-                pbat=bat[step]
+                pbat = bat[step]
                 old_P_cruise=ac_data['Power_prop']['P_req_cruise_W']
                 old_E_bat=ac_data['Power_prop']['E_bat_Wh']
                 old_P_TO=ac_data['Power_prop']['P_req_cruise_W']/ac_data['Performance']['P_cruise/P_TO']
 
-
+        # update the power required and the battery energy with the one found in the co2 loop
         ac_data['Power_prop']['bat'] = pbat
         ac_data['Power_prop']['P_req_cruise_W'] = old_P_cruise
         ac_data['Power_prop']['E_bat_Wh'] = old_E_bat
         ac_data['Power_prop']["P_req_TO_W"] = old_P_TO
+
         # calculate the class 2 weights components and print them
         logging.info(" Calculate Class II Weight Groups")
         class_2_dictionary = RunClassII(ac_data=ac_data, check = True, pbat = ac_data['Power_prop']['bat'])
 
-        # print the new MTOW with a 12% contingency
+        # print the new MTOW and the battery weight with a 12% contingency
+        print(f"Battery Weight: {round(class_2_dictionary['CL2Weight']['Wbat_N'] / 9.81, 2)} [kg]")
         print(f"Total Weight: {round(class_2_dictionary['CL2Weight']['MTOW_N'] / 9.81, 2)} [kg]")
         print(f"Contingency: {round((class_2_dictionary['Contingency_C2W'] - 1) * 100, 0)} %")
 
@@ -503,11 +515,15 @@ if __name__ == '__main__':
         class_2_dictionary['Power_prop']['P_req_cruise_W'] = class_2_dictionary['Performance']["P_cruise/P_TO"] * class_2_dictionary['CL2Weight']['MTOW_N'] / class_2_dictionary['Performance']['W/P_N/W']
         class_2_dictionary['Power_prop']['E_bat_Wh']=class_2_dictionary['CL2Weight']['Wbat_N']/9.81*class_2_dictionary['Power_prop']["E_bat_Wh/kg"]
 
+
+        # print the co2 reduction with the current battery technology and the future expected battery technology and
         print("Reduction with current battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
 
         print("Reduction with future expected battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
         logging.info(" Class II Weight Groups calculated successfully")
+
+        # save the correct energy for current battery technology
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
 
         # calculate the loading distribution diagrams
@@ -516,6 +532,7 @@ if __name__ == '__main__':
 
         logging.info(" Calculating the loading distribution diagram")
 
+        # plot the load distribution diagrams
         load_distribution_diagram(ac_data=class_2_dictionary)
 
         logging.info(" Calculating the loading distribution diagram successful")
@@ -532,41 +549,30 @@ if __name__ == '__main__':
 
     # run the fuselage sizing script
     if run_fuselage_sizing:
+
+        # initialise the gear clearance
+        s_gear = 0.2
+
+        # load the design.json file
+        fuselage_sizing_dict = load_json_file('design.json')
+
         logging.info(" Calculating the fuselage dimension")
 
-        # Example usage:
-        n_seat = 8
-        w_engine = 0.85
-        h_engine = 0.75
-        l_engine = 1.1
-        s_engine = 0.1
-        D_nose = 0.329565
-        h_nose = 0.127
-        D_main = 0.55626
-        h_main = 0.2286
-        h_nose_strut = ac_data['Landing_gear']['Hs_m']
-        h_main_strut = ac_data['Landing_gear']['Hs_m']
-        l_main_lateral = 1
-        l_long_nose = 0.40874
-        l_long_main = 4.21989077
-        l_tailcone = 5.02
-        h_tail = 2.52
-        V_battery = 0.3
+        # get the fuselage sizing class
+        fuselage_size = FuselageSizing(ac_data = fuselage_sizing_dict)
 
-        fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main,
-                                       h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone,
-                                       h_tail, V_battery)
-
+        # show all of the dimensions of the fuselage
         print('Top Width', round(fuselage_size.top_width(),2), "[m]")
-        print('Bottom Width', round(fuselage_size.bottom_width(s_gear=0.2),2), '[m]')
+        print('Bottom Width', round(fuselage_size.bottom_width(s_gear = s_gear),2), '[m]')
         print('Fuselage Height', round(fuselage_size.height(),2), "[m]")
-        print('Fuselage Length Without Engine', round(fuselage_size.length_fus() - l_engine - fuselage_size.l_enbu, 2), "[m]")
+        print('Fuselage Length Without Engine', round(fuselage_size.length_fus() - fuselage_size.l_engine - fuselage_size.l_enbu, 2), "[m]")
         print('Fuselage Length', round(fuselage_size.length_fus(), 2), "[m]")
-        print('Maximum Perimeter', round(fuselage_size.maximum_perimeter(s_gear=0.2), 2), "[m]")
-        print('Fuselage Wetted Area', round(fuselage_size.fuselage_wetted(s_gear=0.2), 2), "[m^2]")
-        print('Main Strut Length', round(fuselage_size.length_main_strut(s_gear=0.2), 2), "[m]")
-        print('Nose Strut Length', round(h_nose_strut, 2), "[m]")
+        print('Maximum Perimeter', round(fuselage_size.maximum_perimeter(s_gear = s_gear), 2), "[m]")
+        print('Fuselage Wetted Area', round(fuselage_size.fuselage_wetted(s_gear = s_gear), 2), "[m^2]")
+        print('Main Strut Length', round(fuselage_size.length_main_strut(s_gear = s_gear), 2), "[m]")
+        print('Nose Strut Length', round(fuselage_size.h_nose_strut, 2), "[m]")
 
+        # plot the side and front view
         fuselage_size.plot_side_drawing(s_gear=0.2)
         fuselage_size.plot_front_view(s_gear=0.2)
 

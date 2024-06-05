@@ -41,7 +41,7 @@ def import_data2(file_name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Construct the absolute path to the design.json file
-    file_path = os.path.join(script_dir,   file_name)
+    file_path = os.path.join(script_dir, file_name)
 
     with open(file_path, 'r') as file:
         lines = file.readlines()

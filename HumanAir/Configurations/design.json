@@ -26,7 +26,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 250832.03623455038,
+        "E_bat_Wh": 252443.17632397357,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -36,14 +36,14 @@
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
         "eta_p": 0.8500000000000001,
-        "bat": 0.131,
-        "P_req_cruise_W": 232997.9146370787,
+        "bat": 0.136,
+        "P_req_cruise_W": 226006.71992900813,
         "P_TO": 230000,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 291247.3932963484
+        "P_req_TO_W": 282508.3999112602
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -51,9 +51,16 @@
         "fus_width_m": 1.6,
         "MGC_m": 1.93,
         "XLEMAC_m": 3.450526018238223,
-        "tail_length_m": 5.0,
+        "tail_length_m": 5.2,
         "l_f_nonosecone": 9.5,
-        "fuselage_max_perimeter": 6.8
+        "fuselage_max_perimeter": 6.8,
+        "w_engine": 0.85,
+        "h_engine": 0.75,
+        "l_engine": 1.1,
+        "s_engine": 0.1,
+        "h_battery": 0.2286,
+        "h_tail": 2.52,
+        "volume_battery": 0.7
     },
     "Aero": {
         "CLmax_clean": 1.8,
@@ -154,28 +161,28 @@
         "HydrPne": false
     },
     "CL2Weight": {
-        "MTOW_N": 36269.66214277924,
-        "Wbat_N": 7030.463644174112,
-        "Wfuel_N": 2813.6824826121015,
+        "MTOW_N": 35181.37656549814,
+        "Wbat_N": 7075.621599251946,
+        "Wfuel_N": 2711.952460962887,
         "Wpl": 705.6,
-        "Total Structures Weight": 8784.15895425528,
-        "Wing Weight": 4419.985486904927,
-        "Empennage Weight": 489.7341184832637,
-        "Fuselage Weight": 3188.4619351120705,
+        "Total Structures Weight": 8768.751198771239,
+        "Wing Weight": 4377.950820633252,
+        "Empennage Weight": 483.6472648916614,
+        "Fuselage Weight": 3166.1189703221444,
         "Nacelle Weight": 0.0,
-        "Landing Gear Weight": 640.6398888903077,
-        "Total Powerplant Weight": 5490.173046467871,
-        "Total Fixed Equipment Weight": 4060.319716135668,
-        "Flight Control Systems Weight": 746.772227989843,
+        "Landing Gear Weight": 668.1981979803578,
+        "Total Powerplant Weight": 4384.16722403968,
+        "Total Fixed Equipment Weight": 3972.699435005389,
+        "Flight Control Systems Weight": 725.8928548278742,
         "Hydraulics and/or Pneumatics Weight": 0.0,
-        "Instruments, Avionics and Electronics Weight": 433.1939162526095,
-        "Electrical System Weight": 871.0279523802088,
-        "Airconditioning, Pressurization and Anti or Deicing Weight": 476.33595254360023,
+        "Instruments, Avionics and Electronics Weight": 424.12636799767927,
+        "Electrical System Weight": 851.801013164596,
+        "Airconditioning, Pressurization and Anti or Deicing Weight": 466.0083411815391,
         "Oxygen System Weight": 117.07719291469601,
         "APU Weight": 0.0,
-        "Furnishings Weight": 1089.3002807930206,
-        "Auxiliary Gear Weight": 195.03580007515714,
-        "Paint Weight": 131.5763931865328,
-        "OEW": 19248.763270128442
+        "Furnishings Weight": 1076.5991026533252,
+        "Auxiliary Gear Weight": 184.71866497254427,
+        "Paint Weight": 126.47589729313457,
+        "OEW": 17997.059607656593
     }
 }
