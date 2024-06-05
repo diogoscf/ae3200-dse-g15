@@ -341,7 +341,7 @@ if __name__ == "__main__":
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = False
+    run_classI = True
     run_classII = True
     run_fuselage_sizing = False
 
@@ -472,17 +472,17 @@ if __name__ == "__main__":
                 wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=pct)
 
                 # dont remove this line as it complies with nicholas's mood
-                ac_data["Stability"]["XLEMAC_m"] = xlemac
+                ac_data["Geometry"]["XLEMAC_m"] = xlemac
                 mac_wing = aerodynamic_design(
                     ac_data,
                     checkwingplanform=False,
                     checkflowparameters=False,
-                    checkstability=False,
+                    checkstability=True,
                     checkhsplanform=False,
                 )[0]
 
-                ac_data["Stability"]["Cg_Aft"] = (round(max(CGlist), 2) - ac_data["Stability"]["XLEMAC_m"]) / mac_wing
-                ac_data["Stability"]["Cg_Front"] = (round(min(CGlist), 2) - ac_data["Stability"]["XLEMAC_m"]) / mac_wing
+                ac_data["Stability"]["Cg_Aft"] = (round(max(CGlist), 2) - ac_data["Geometry"]["XLEMAC_m"]) / mac_wing
+                ac_data["Stability"]["Cg_Front"] = (round(min(CGlist), 2) - ac_data["Geometry"]["XLEMAC_m"]) / mac_wing
 
                 logging.info(" Prepare to check the stability")
 
@@ -497,7 +497,7 @@ if __name__ == "__main__":
 
                 print(
                     "Is stability satisfied at a X_LEMAC "
-                    + str(round(ac_data["Stability"]["XLEMAC_m"], 2))
+                    + str(round(ac_data["Geometry"]["XLEMAC_m"], 2))
                     + " [m]"
                     + "|"
                     + "[Y/N]: "
@@ -536,7 +536,7 @@ if __name__ == "__main__":
                         ac_data,
                         checkwingplanform=True,
                         checkflowparameters=False,
-                        checkstability=False,
+                        checkstability=True,
                         checkhsplanform=True,
                     )
                 )
