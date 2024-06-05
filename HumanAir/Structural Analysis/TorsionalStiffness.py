@@ -217,7 +217,6 @@ A_str = 0.02
 Cr = 2.5 # [m] root chord length
 b = 19.93
 
-
 ######## Execution ########
 
 torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr,b)

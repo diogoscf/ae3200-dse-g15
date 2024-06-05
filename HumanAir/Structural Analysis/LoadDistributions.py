@@ -116,7 +116,7 @@ Vx1, Vz1, Mx1, My1, Mz1 = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruis
 # nl = -1
 Vx2, Vz2, Mx2, My2, Mz2 = InternalLoads(nl2*L_cruise, T, W_cruise, abs(nl2)*D_cruise, nl2*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
-
+'''
 plt.subplot(2, 2, 1)
 plt.plot(y_points, nl*L_cruise, label='Lift')
 plt.plot(y_points, -W_cruise, label = 'Weight')
@@ -191,3 +191,4 @@ plt.grid()
 plt.tight_layout()
 
 plt.show()
+'''

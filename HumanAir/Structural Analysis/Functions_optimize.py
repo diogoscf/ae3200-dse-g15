@@ -2,8 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy.integrate import cumtrapz
 from LoadDistributions import Mx
-from HumanAir.WingBox.TorsionalStiffness import TorsionalStiffness
-import math
+from TorsionalStiffness import TorsionalStiffness
 
 """
     Minimize the weight of the wing while optimizing for these three variables:
@@ -29,7 +28,8 @@ def calculate_sizes(percentage, total_size):
 
 def create_segments(sizes, no_string):
     segments = [np.full(size, value) for size, value in zip(sizes, no_string)]
-    return np.concatenate(segments)
+    seg = np.concatenate(segments)
+    return seg.reshape((len(seg), 1))
 
 def objective(t_spar, t_skin, no_stringers): 
     W_spar = np.sum(rho*t_spar*htot* delta_y)
@@ -104,12 +104,13 @@ AoA = -6 # [deg]
 t1_spar = 0.010 # [m] thickness at the tip
 t2_spar = 0.025 # [m] thickness at the root
 t_skin = 0.007 # [m] thickness of skin
-file_path = 'D:\OneDrive\Desktop\DSE\Git\ae3200-dse-g15\HumanAir\WingBox\airfoil.txt'
-file_path_y = 'D:\OneDrive\Desktop\DSE\Git\ae3200-dse-g15\HumanAir\Structural Analysis\Cl_DATA.txt'
+file_path = 'HumanAir/WingBox/airfoil.txt'
+file_path_y = 'HumanAir\WingBox\Cl_DATA.txt'
 A_str = 0.02
 Cr = 2.5 # [m] root chord length
 b = 19.93
 x_pos = np.array([0.15, 0.5])
+n = 100
 
 # Initialise Class
 torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr,b)
@@ -142,11 +143,14 @@ no_string = [20, 30, 50, 50, 30, 20]
 
 #Initial guess for thickness of spar
 t_spar0 = torisonal_stiffness.t_spar() #array with thickness per segment [m]
-t_skin0 = 0.07 * np.ones((len(t_spar0, 1))) #constant thickness [m]
+t_skin0 = 0.07 * np.ones((len(t_spar0),1)) #constant thickness [m]
 size = calculate_sizes(percentage, len(t_spar0) )
 no_stringers0 = create_segments(size, no_string)
+#print('t_spar0', t_spar0)
+#print('t_skin0', t_skin0)
+#print('no_stringers',  no_stringers0)
 
-t0 = np.concatenate(t_spar0, t_skin0, no_stringers0).reshape((len(t_spar0), 3))
+t0 = np.hstack((t_spar0, t_skin0, no_stringers0))
 
 #Bounds for thickness (must be greater than zero)
 bounds = [(0.001, 0.1)] * n
