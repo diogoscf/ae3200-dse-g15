@@ -12,7 +12,7 @@ import colorlog
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Add the project root directory to the Python path
-project_root = os.path.abspath(os.path.join(script_dir,'..'))
+project_root = os.path.abspath(os.path.join(script_dir, ".."))
 sys.path.append(project_root)
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
@@ -46,6 +46,7 @@ def setup_logging():
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
 
+
 def load_json_file(file_name):
 
     "Getting the design.json file"
@@ -53,26 +54,26 @@ def load_json_file(file_name):
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Construct the absolute path to the design.json file
-    design_json_path = os.path.join(script_dir,'..', 'HumanAir','Configurations', file_name)
+    design_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", file_name)
 
     # Print the absolute path for debugging
     logging.info(f" Looking for {file_name} at: {os.path.abspath(design_json_path)}")
 
     # Attempt to open the file
-    with open(design_json_path, 'r') as f:
-        ac_data = json.load(f)
+    with open(design_json_path, "r") as f:
+        data = json.load(f)
 
     logging.info(f" Opening {file_name} successful")
 
-    return ac_data
-    #
+    return data
+
 
 "Generating the design points"
-def Generate(p, ac_data, run=False):
 
-    # tune the parameters with a reasonable range
-    A_lst = np.arange(9.0, 9.51, 0.5)
-    eta_p_lst = np.arange(0.85, 0.851, 0.05)
+
+def create_parameters_lists():
+    A_lst = np.arange(7.0, 18.51, 0.5)
+    eta_p_lst = np.arange(0.80, 0.851, 0.05)
     Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
     Clmax_TO_lst = np.arange(2, 2.61, 0.2)
     Clmax_Land_lst = np.arange(2.2, 2.81, 0.2)
@@ -80,10 +81,36 @@ def Generate(p, ac_data, run=False):
     V_cruise_lst = np.arange(60, 65.1, 1)
     climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
+    return A_lst, eta_p_lst, Clmax_clean_lst, Clmax_TO_lst, Clmax_Land_lst, Cd0_lst, V_cruise_lst, climbrate_lst
+
+
+def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_step=0.001):
+
+    # tune the parameters with a reasonable range
+    # A_lst = np.arange(7.0, 18.51, 0.5)
+    # eta_p_lst = np.arange(0.80, 0.851, 0.05)
+    # Clmax_clean_lst = np.arange(1.6, 2.21, 0.2)
+    # Clmax_TO_lst = np.arange(2, 2.61, 0.2)
+    # Clmax_Land_lst = np.arange(2.2, 2.81, 0.2)
+    # Cd0_lst = np.arange(0.028, 0.031, 0.002)
+    # V_cruise_lst = np.arange(60, 65.1, 1)
+    # climbrate_lst = np.arange(2.5, 5.01, 0.5)
+
+    A_lst, eta_p_lst, Clmax_clean_lst, Clmax_TO_lst, Clmax_Land_lst, Cd0_lst, V_cruise_lst, climbrate_lst = (
+        parameter_func()
+    )
+
     # calculate the total numbers of iterations
-    total_iterations = (len(A_lst) * len(eta_p_lst) * len(Clmax_clean_lst) *
-                        len(Clmax_TO_lst) * len(Clmax_Land_lst) * len(Cd0_lst) *
-                        len(V_cruise_lst) * len(climbrate_lst))
+    total_iterations = (
+        len(A_lst)
+        * len(eta_p_lst)
+        * len(Clmax_clean_lst)
+        * len(Clmax_TO_lst)
+        * len(Clmax_Land_lst)
+        * len(Cd0_lst)
+        * len(V_cruise_lst)
+        * len(climbrate_lst)
+    )
 
     # initialise the iteration counter
     current_iteration = 0
@@ -91,26 +118,28 @@ def Generate(p, ac_data, run=False):
     # run condition to not run the loop by mistake
     if run:
         idx = -1
-        dict_iterations= {}
+        dict_iterations = {}
         for A in A_lst:
             for eta_p in eta_p_lst:
                 for Clmax_clean in Clmax_clean_lst:
                     for Clmax_TO in Clmax_TO_lst:
-                        Clmax_Land_lst = np.arange(Clmax_TO+0.2, 2.81, 0.2)
+                        Clmax_Land_lst = np.arange(Clmax_TO + 0.2, 2.81, 0.2)
                         for Clmax_Land in Clmax_Land_lst:
                             for Cd0 in Cd0_lst:
                                 for V_cruise in V_cruise_lst:
 
                                     # update the endurance based on v cruise
-                                    ac_data["Performance"]["endurance"]=1111200/V_cruise/3600
+                                    ac_data["Performance"]["endurance"] = 1111200 / V_cruise / 3600
 
                                     for climbrate in climbrate_lst:
-                                        current_iteration+=1
+                                        current_iteration += 1
 
                                         # print the iteration number every 500 steps
-                                        if current_iteration%500==0: 
-                                            logging.info(" Iteration: "+str(current_iteration)+"/"+str(total_iterations))
-                                            #print()
+                                        if current_iteration % 500 == 0:
+                                            logging.info(
+                                                " Iteration: " + str(current_iteration) + "/" + str(total_iterations)
+                                            )
+                                            # print()
 
                                         # update the parameters
                                         p.A = A
@@ -121,7 +150,6 @@ def Generate(p, ac_data, run=False):
                                         p.Cdo = Cd0
                                         p.V_cruise = V_cruise
                                         p.climbrate = climbrate
-                                        
 
                                         # initialise the loading diagram to get W/P and W/S
                                         ac_data['Performance']['W/P_N/W'], ac_data['Performance']['W/S_N/m2'] = WP_WS().calculate_optimal_point()
@@ -130,7 +158,7 @@ def Generate(p, ac_data, run=False):
                                         WeightEstm = WeightEstimation(ac_data)
 
                                         # initialise the bat percentage
-                                        bat = np.arange(0, 0.18, 0.001)
+                                        bat = np.arange(0, 0.18, bat_step)
                                         coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
 
                                         # run the regression to find power required cruise
@@ -146,6 +174,21 @@ def Generate(p, ac_data, run=False):
 
                                             # calculate the co2 ratio for the specific combination of parameters
                                             co2_ratio = co2(ac_data=ac_data)
+
+                                            print("----------")
+                                            print(co2_ratio)
+                                            print(ac_data["Power_prop"]["E_bat_Wh"])
+                                            print(bat[step])
+                                            print(ac_data["Power_prop"]["P_req_cruise_W"] / 0.8)
+                                            print(
+                                                np.sqrt(
+                                                    ac_data["Power_prop"]["P_req_cruise_W"]
+                                                    / ac_data["Performance"]["P_cruise/P_TO"]
+                                                    * ac_data["Performance"]["W/P_N/W"]
+                                                    / ac_data["Performance"]["W/S_N/m2"]
+                                                    * A
+                                                )
+                                            )
 
                                             if co2_ratio * 100 > 15 and ok == 0:
 
@@ -172,39 +215,58 @@ def Generate(p, ac_data, run=False):
                                                 dict_iterations[str(idx)]['W/S'] = ac_data['Performance']['W/S_N/m2']
                                                 dict_iterations[str(idx)]['bat'] = bat[step]
 
-                                                co2_ratio_max=co2_ratio
+                                                co2_ratio_max = co2_ratio
 
         # save the json file with all possible design options
-        data_iterations_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'data_iterations.json')
-        with open(data_iterations_json_path, 'w') as file:
-            json.dump(dict_iterations, file, indent=4)
+        data_iterations_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", "data_iterations.json")
+        with open(data_iterations_json_path, "w+") as f:
+            json.dump(dict_iterations, f, indent=4)
+
 
 "Calculating the weighted score to find the best design point"
+
+
 def calculate_weighted_score(point_data, weights):
 
     # setting the worst optimal data
-    worst_optimal_data = {'A': 9.5,
-                    'eta_p': 0.85,
-                    'Clmax_clean': 2.2,
-                    'Clmax_TO': 2.6,
-                    'Clmax_Land': 2.6,
-                    'Cd0': 0.026,
-                    'V_cruise': 60,
-                    'climbrate': 3.5,
-                    'bat': 0.01,
-                    'CO2': 30}
+    worst_optimal_data = {
+        "A": 9.5,
+        "eta_p": 0.85,
+        "Clmax_clean": 2.2,
+        "Clmax_TO": 2.6,
+        "Clmax_Land": 2.6,
+        "Cd0": 0.026,
+        "V_cruise": 60,
+        "climbrate": 3.5,
+        "bat": 0.01,
+        "CO2": 30,
+    }
 
     # initialing the score
     score = 0
 
     # calculate the score
     for key, weight in weights.items():
-        score += (worst_optimal_data[key] - point_data.get(key, 0))/worst_optimal_data[key] * weight # get a normalised value for the contribution of each key
+        score += (
+            (worst_optimal_data[key] - point_data.get(key, 0)) / worst_optimal_data[key] * weight
+        )  # get a normalised value for the contribution of each key
     return score
 
+
 "Finding the optimal design point with the highest score and the lowest battery weight"
-def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold=50, design_points=None, printing=False, step=0):
-    optimum_design_points = {key: value for key, value in design_points.items() if value['CO2'] > CO2_threshold}
+
+
+def find_optimal_design(
+    ac_data,
+    maximum_weight_battery=1000,
+    weights=None,
+    CO2_threshold=50,
+    design_points=None,
+    printing=False,
+    step=0,
+    weight_estimation_class=WeightEstimation,
+):
+    optimum_design_points = {key: value for key, value in design_points.items() if value["CO2"] > CO2_threshold}
     scores = [(key, calculate_weighted_score(value, weights)) for key, value in optimum_design_points.items()]
 
     sorted_design_points = sorted(scores, key=lambda x: x[1], reverse=True)
@@ -212,7 +274,7 @@ def find_optimal_design(maximum_weight_battery=1000, weights=None, CO2_threshold
     value = np.inf
     minimum = np.inf
 
-    while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]['Cd0'] < 0.027:
+    while value > maximum_weight_battery or design_points[sorted_design_points[step][0]]["Cd0"] < 0.027:
         step += 1
 
         optimum_design_option = design_points[sorted_design_points[step][0]]
@@ -262,7 +324,7 @@ if __name__ == '__main__':
     setup_logging()
 
     # Integration in progress v2
-    logging.info(' Starting the program')
+    logging.info(" Starting the program")
 
     # print which part of the main function will run
     print("\nWelcome to the HumanAir script. Hope you will have a good time!\n")
@@ -291,7 +353,7 @@ if __name__ == '__main__':
     if run_classI:
         logging.info(" Getting the data from the design point options")
 
-        design_points = load_json_file('data_iterations.json')
+        design_points = load_json_file("data_iterations.json")
 
         "Setting up the weights to get the optimal design point"
         # Weights for each key
@@ -300,16 +362,16 @@ if __name__ == '__main__':
         # no influence: weight = 0
 
         weights = {
-            'A': +0.,
-            'eta_p': +0.1,
-            'Clmax_clean': +0.05,
-            'Clmax_TO': +0,
-            'Clmax_Land': +0,
-            'Cd0': -0.25,
-            'V_cruise': -0.05,
-            'climbrate': -0.1,
-            'bat': -0.2,
-            'CO2': -0.25
+            "A": +0.0,
+            "eta_p": +0.1,
+            "Clmax_clean": +0.05,
+            "Clmax_TO": +0,
+            "Clmax_Land": +0,
+            "Cd0": -0.25,
+            "V_cruise": -0.05,
+            "climbrate": -0.1,
+            "bat": -0.2,
+            "CO2": -0.25,
         }
 
         maximum_weight_battery = 1000
@@ -325,20 +387,33 @@ if __name__ == '__main__':
         logging.info(" Starting the search for optimal stability range")
 
         while not find_optimal_stability:
-            find_optimal_design(maximum_weight_battery=maximum_weight_battery, weights=weights, CO2_threshold=CO2_threshold, design_points=design_points, printing=printing, step=step)
-            logging.info(f" Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg] with a CO2 threshold of {CO2_threshold}[%] successful")
+            find_optimal_design(
+                ac_data,
+                maximum_weight_battery=maximum_weight_battery,
+                weights=weights,
+                CO2_threshold=CO2_threshold,
+                design_points=design_points,
+                printing=printing,
+                step=step,
+            )
+            logging.info(
+                f"Finding the optimal design point with a maximum battery weight of {maximum_weight_battery}[kg]"
+                + f"with a CO2 threshold of {CO2_threshold}[%] successful"
+            )
             logging.info(" Calculating the weight components")
 
             weight_estimation = WeightEstimation(ac_data)
             component_weights = weight_estimation.Iterations(ac_data['Power_prop']['bat'])
 
-            print(f"Component weights:"
+            print(
+                f"Component weights:"
                 f" OEW {round(component_weights[2], 2)}[kg],"
                 f" Powertrain {round(component_weights[3], 2)}[kg],"
                 f" Battery {round(component_weights[4], 2)}[kg],"
                 f" Fuel {round(component_weights[5], 2)}[kg],"
                 f" Wing {round(component_weights[6], 2)}[kg],"
-                f" Wpl_des {round(component_weights[7], 2)}[kg]")
+                f" Wpl_des {round(component_weights[7], 2)}[kg]"
+            )
 
             print('Total weight:', round(component_weights[1], 2), '[kg] including contingency')
             print('Contingency:', (round((ac_data['Contingency'] - 1) * 100, 0)), "%")
@@ -374,7 +449,13 @@ if __name__ == '__main__':
                 logging.info(" Prepare to check the stability")
 
                 # dont remove this line as it complies with nicholas's mood
-                aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=False, checkstability=True, checkhsplanform=False)
+                aerodynamic_design(
+                    ac_data,
+                    checkwingplanform=False,
+                    checkflowparameters=False,
+                    checkstability=True,
+                    checkhsplanform=False,
+                )
 
                 print("Is stability satisfied at a X_LEMAC "+ str(round(ac_data['Stability']['XLEMAC_m'], 2))+ " [m]" + "|"  + "[Y/N]: ")
                 answer = input()
@@ -391,10 +472,14 @@ if __name__ == '__main__':
                 logging.info(" Calculating the MAC")
 
                 # dont remove this line as it complies with nicholas's mood
-                mac_wing= aerodynamic_design(ac_data, checkwingplanform=False, checkflowparameters=False, checkstability=False,
-                                        checkhsplanform=False)[0]
-
-                print(f'MAC: {round(mac_wing, 2)} [m]')
+                mac_wing = aerodynamic_design(
+                    ac_data,
+                    checkwingplanform=False,
+                    checkflowparameters=False,
+                    checkstability=False,
+                    checkhsplanform=False,
+                )[0]
+                print(f"MAC: {round(mac_wing, 2)} [m]")
 
                 logging.info(" Calculating the MAC successful")
                 logging.info(" Calculating the aerodynamic design")
@@ -434,10 +519,12 @@ if __name__ == '__main__':
 
                 print(f"Cost: {round(cost, 2)} [US$]")
 
+                print(ac_data["Stability"]["Cg_Aft"])
+
                 logging.info(" Calculating the hourly price successful")
                 logging.info(" Saving the modified design.json file")
 
-                design_json_path = os.path.join(script_dir, '..', "HumanAir", 'Configurations', 'design.json')
+                design_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", "design.json")
                 logging.info(" Design.json saved at: " + design_json_path)
 
                 # save the updated dictionary
@@ -549,7 +636,7 @@ if __name__ == '__main__':
         design_json_path = os.path.join(script_dir, 'Configurations', 'design.json')
         logging.info(" Design.json saved at: " + design_json_path)
 
-        with open(design_json_path, 'w') as f:
+        with open(design_json_path, "w") as f:
             json.dump(class_2_dictionary, f, indent=4)
 
         logging.info(" Program finished successfully")

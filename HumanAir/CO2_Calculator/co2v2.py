@@ -2,24 +2,26 @@ import numpy as np
 import os
 import pickle
 import sys
-import time
-import pandas as pd
+# import time
+# import pandas as pd
 import matplotlib.pyplot as plt
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from aircraft_data import aircraft_data, c206_data
-from unit_conversions import m_s_to_kt
-from CO2_Calculator.conceptual_co2 import maintenance_cost_per_hour, calculate_mission_freqs
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from HumanAir.aircraft_data import aircraft_data, c206_data
+from HumanAir.unit_conversions import m_s_to_kt
+from HumanAir.CO2_Calculator.conceptual_co2 import maintenance_cost_per_hour, calculate_mission_freqs
 
 MAINTENANCE_CO2_OVERHAUL = 0.2  # 20% of maintenance CO2 is overhaul
 
 # Caching for SPEEEEEEEEEEEED
 relevant_c206_data = None
 maintenance_overhaul_co2 = None
-vc_check = None # Check if the cruise speed has changed
+vc_check = None  # Check if the cruise speed has changed
 mission_freqs_global = None
 flight_distribution = None
+
 
 def get_flight_distribution(dist_file="flight_dist.pickle", size=10000):
     with open(os.path.join(os.path.dirname(__file__), dist_file), "rb") as f:
@@ -27,10 +29,10 @@ def get_flight_distribution(dist_file="flight_dist.pickle", size=10000):
     return dist.rvs(size=size)
 
 
-
 def calculate_standard_co2_flightdist(flightdist, ac_data=c206_data, design_range=600):
     """
-    Calculate the CO2 emissions (per hour) of a standard aircraft based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 emissions (per hour) of a standard aircraft based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -73,7 +75,8 @@ def calculate_new_co2_flightdist(
     maintenance_overhaul_co2=None,
 ):
     """
-    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -84,7 +87,8 @@ def calculate_new_co2_flightdist(
     ac_data : dict
         The aircraft data to use for the calculation. Will use main new design data by default.
     maintenance_standard_co2 : float or None
-        The maintenance CO2 emissions of the standard aircraft. If None, will calculate it from `standard_ac_data`.
+        The maintenance CO2 emissions of the standard aircraft.
+        If None, will calculate it from `standard_ac_data`.
     V_standard_kts : float or None
         The cruise speed of the standard aircraft. If None, will fetch it from `standard_ac_data`.
     standard_ac_data : dict
@@ -164,7 +168,8 @@ def calculate_co2_reduction_flightdist(
     standard_ac_data : dict, optional
         The standard aircraft data to use for the calculation. Will use C206 data by default.
     flightdist : np.ndarray or None, optional
-        Distribution of flight lengths. If None, will use the default distribution, or calculate it if not yet available.
+        Distribution of flight lengths. If None, will use the default distribution,
+        or calculate it if not yet available.
     flightdist_file : str, optional
         The file containing the flight length distribution. Default is "flightdist.pickle".
         Only relevant if `flightdist` is None.
@@ -182,23 +187,19 @@ def calculate_co2_reduction_flightdist(
 
         flightdist = flight_distribution
 
-
     if relevant_c206_data is None or standard_ac_data != c206_data:
-        c206_co2, c206_maintenance_co2 = calculate_standard_co2_flightdist(
-            flightdist, c206_data
-        )
+        c206_co2, c206_maintenance_co2 = calculate_standard_co2_flightdist(flightdist, c206_data)
         relevant_c206_data = (c206_co2, c206_maintenance_co2)
     else:
         c206_co2, c206_maintenance_co2 = relevant_c206_data
-    
+
     if vc_check != m_s_to_kt(ac_data["Performance"]["Vc_m/s"]):
         passed_overhaul_co2 = None
     else:
         passed_overhaul_co2 = maintenance_overhaul_co2
-    
+
     if mission_freqs_global is None:
         mission_freqs_global = calculate_mission_freqs("maf_mission_graph.csv")
-
 
     new_co2, mo_co2 = calculate_new_co2_flightdist(
         flightdist,
@@ -228,7 +229,7 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
     if check_over_time:
 
         year_max=0
-    
+
         for introduction_year in delta_year:
             target_reached=False
             lst_CO2=[0,]
@@ -241,18 +242,18 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
                     lst_CO2.append(lst_CO2[-1]+(1-first_level)*total_CO2_year)
                 else:
                     lst_CO2.append(lst_CO2[-1]+(1-second_level)*total_CO2_year)
-                
+
                 if lst_CO2[-1]<year*total_CO2_year*target_level:
                     target_reached=True
-            
-            if lst_year[-1]>year_max: 
+
+            if lst_year[-1]>year_max:
                 year_max=lst_year[-1]
 
             years=np.array(lst_year)+2030
             np.round(years,0)
             plt.plot(years,lst_CO2,label="Available in "+str(int(introduction_year+2030)))
     c206_years=np.ndarray.round(np.arange(2030,year_max+2031,1),0)
-    
+
     c206_CO2=(c206_years-2030) * total_CO2_year * target_level
     plt.plot(c206_years,c206_CO2,linestyle='dashed',label=str(int(target_level*100))+"% Cessna 206")
 
@@ -261,8 +262,8 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
     plt.ylabel("CO2 [t]")
     plt.legend()
     plt.grid()
-    plt.show()           
-            
+    plt.show()
+
 
 if __name__ == "__main__":
     # t1 = time.process_time()

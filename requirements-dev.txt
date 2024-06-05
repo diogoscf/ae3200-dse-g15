@@ -9,3 +9,4 @@ tox>=3.8
 pandas-stubs
 types-tabulate
 types-colorama
+types-tqdm
