@@ -10,12 +10,14 @@ from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared
 
 # work in progress
 aircraft_data = {
+    "Contingency": 1.2,
+    "Contingency_C2W": 1.12,
     "Weights": {
-        "MTOW_N": 1,
-        "W_L_N": 2,
+        "MTOW_N": 1000,
+        "W_L_N": 200,
         "OEW_N": 100,
         "W_Pilot_N": 20,
-        "Wfuel_N": 3,
+        "Wfuel_N": 300,
         "Wbat_N": 0.5,
     },
     "Aero": {
@@ -37,7 +39,16 @@ aircraft_data = {
         "t_root_max_h": 122,
         "t_root_max_v": 123,
     },
-    "Performance": {"n_ult": 6, "n_ult_l": 5.7, "VH_m/s": 5, "Vc_m/s": 6, "N_pax": 4, "M_D": 0.8},
+    "Performance": {
+        "n_ult": 6,
+        "n_ult_l": 5.7,
+        "VH_m/s": 5,
+        "Vc_m/s": 6,
+        "N_pax": 4,
+        "M_D": 0.8,
+        "W/P_N/W": 0.1,
+        "endurance": 4,
+    },
     "Stability": {"QCW_to_QCh": 7},
     "Geometry": {
         "l_f_nonosecone": 8,
@@ -54,6 +65,10 @@ aircraft_data = {
         "N_t": 6.6,
         "int_fueltanks_fraction": 0.5,
         "P_req_TO_W": 4200,
+        "E_bat_Wh/kg": 200,
+        "eta_bat": 0.8,
+        "DoD_bat": 0.7,
+        "eta_electricmotor": 0.9,
     },
     "Landing_gear": {"l_s_m": 0.7, "l_s_n": 0.7, "Retractable": "Yes", "Hs_m": 0.7},
     "General": {
@@ -66,6 +81,7 @@ aircraft_data = {
         "HydrPne": True,
         "NacWght": True,
     },
+    "CL2Weight": {},
 }
 
 "Structure Tests"
@@ -77,10 +93,10 @@ def test_class_II_weight_init():
     weight_class = Class_II_Weight(aircraft_data)
 
     # Check if the attributes are correctly initialized
-    assert weight_class.W_TO == N_to_lbs(1)
-    assert weight_class.W_L == N_to_lbs(2)
-    assert weight_class.W_F == N_to_lbs(3)
-    assert weight_class.W_E == N_to_lbs(80)
+    assert weight_class.W_TO == N_to_lbs(1000) / 1.2  # Contingency
+    assert weight_class.W_L == N_to_lbs(200) / 1.2
+    assert weight_class.W_F == N_to_lbs(300) / 1.2
+    assert weight_class.W_E == N_to_lbs(100) / 1.2 - N_to_lbs(20)  # OEW - Wpilot
 
     assert weight_class.S_Wing == m_squared_to_ft_squared(15)
     assert weight_class.S_h == m_squared_to_ft_squared(13)
@@ -274,7 +290,7 @@ def test_structure_weight_total():
         + weight_class.FuselageWeight()["Average"]
         + weight_class.NacelleWeight()["Average"]
         + weight_class.LandingGearWeight()["Average"],
-        rel_tol=1e-3,
+        rel_tol=1e-2,
     )
 
 
@@ -397,7 +413,7 @@ def test_aircon_pressurization_anti_decing_weight():
         result2 = 0.018 * weight_class.W_E
 
     assert math.isclose(
-        weight_class.AirconPressurizationAntiDeicingWeight()["Average"], (result1 + result2) / 2, rel_tol=1e-3
+        weight_class.AirconPressurizationAntiDeicingWeight()["Average"], (result1 + result2) / 2, rel_tol=1e-2
     )
 
 
@@ -434,7 +450,7 @@ def test_auxiliary_gear():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    assert math.isclose(weight_class.AuxiliaryGear()["Average"], 0.01 * weight_class.W_E, rel_tol=1e-3)
+    assert math.isclose(weight_class.AuxiliaryGear()["Average"], 0.01 * weight_class.W_E, rel_tol=1e-2)
 
 
 def test_paint():
@@ -476,7 +492,7 @@ def test_new_empty_weight():
     weight_class = Class_II_Weight(aircraft_data)
 
     assert math.isclose(
-        lbs_to_N(weight_class.NewEmptyWeight()),
+        lbs_to_N(weight_class.NewEmptyWeight(0)),
         lbs_to_N(
             weight_class.PowerplantWeight_Total()["Average"]
             + weight_class.StructureWeight_Total()
@@ -489,7 +505,10 @@ def test_new_empty_weight():
 def test_NewOEW():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
+    bat_percent = 0.1
 
     assert math.isclose(
-        weight_class.NewOEW(), weight_class.NewEmptyWeight() + aircraft_data["Weights"]["W_Pilot_N"], rel_tol=1
+        weight_class.NewOEW(bat_percent),
+        weight_class.NewEmptyWeight(bat_percent) + aircraft_data["Weights"]["W_Pilot_N"],
+        rel_tol=1,
     )

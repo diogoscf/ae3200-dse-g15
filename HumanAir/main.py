@@ -633,9 +633,9 @@ if __name__ == "__main__":
             # calculate the co2 ratio for the specific combination of parameters
             co2_ratio = co2(ac_data=ac_data)
 
-            # set the condition to find the best battery percentage with the highest co2 reduction and a specific energy bellow
-            if co2_ratio * 100 > co2_ratio_max  and ac_data['Power_prop']['E_bat_Wh']<189000:
-                co2_ratio_max=co2_ratio
+            # set condition to find best battery percentage with highest co2 reduction and specific energy below
+            if co2_ratio * 100 > co2_ratio_max and ac_data["Power_prop"]["E_bat_Wh"] < 189000:
+                co2_ratio_max = co2_ratio
                 pbat = bat[step]
                 old_P_cruise = ac_data["Power_prop"]["P_req_cruise_W"]
                 old_E_bat = ac_data["Power_prop"]["E_bat_Wh"]
@@ -646,7 +646,6 @@ if __name__ == "__main__":
         ac_data["Power_prop"]["P_req_cruise_W"] = old_P_cruise
         ac_data["Power_prop"]["E_bat_Wh"] = old_E_bat
         ac_data["Power_prop"]["P_req_TO_W"] = old_P_TO
-        
 
         # calculate the class 2 weights components and print them
         logging.info(" Calculate Class II Weight Groups")
