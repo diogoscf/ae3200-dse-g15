@@ -32,7 +32,7 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
             break
 
     if Pmw > tyres[-1, 2]:
-        print("WARNING: NO TYRE AVAILBLE")
+        print("WARNING: NO TYRE AVAILABLE")
         con = input("Continue? (y/n): ")
         if con == "n":
             sys.exit("Too heavy for landing gear")
@@ -48,11 +48,14 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
         l_m = tan(np.radians(16)) * (Hcg + H_s + 0.5 * Dw_m)
         H_strike = (ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)) * np.tan(np.radians(18))
         iter = abs(H_s/H_strike - 1)
+        if H_strike < 0.6*Dw_m:
+            H_strike = 0.6*Dw_m
+            iter = 0
 
     H_s = H_strike
     l_n = l_m * Pmg/Pnw
     ymin = (l_m + l_n)/(sqrt(l_n**2 * tan(np.radians(55))**2 / (Hcg+H_s+0.5*Dw_m)**2 - 1))
-
+    print(H_s)
     # Write values to dict
     ac_datafile["Landing_gear"]["lm_m"] = l_m
     ac_datafile["Landing_gear"]["ln_m"] = l_n
@@ -119,14 +122,15 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
 
     # Get preliminary moving CG locations from the nose
     Xcg_pld = 0.5 * ac_datafile["Geometry"]["fus_length_m"]
-    Xcg_f = ac_datafile["Geometry"]["XLEMAC_m"] + 0.4 * ac_datafile["Geometry"]["MGC_m"]
+    Xcg_f = ac_datafile["Geometry"]["XLEMAC_m"] + 0.4 * ac_datafile["Aero"]["MAC_wing"]
 
     # Get preliminary component CG locations
-    CGw_MAC = 0.4 * ac_datafile["Geometry"]["MGC_m"]
+    # TODO: update Cg locations and powertrain weight
+    CGw_MAC = 0.4 * ac_datafile["Aero"]["MAC_wing"]
     wcg[2, 0] = ac_datafile["Geometry"]["XLEMAC_m"] + CGw_MAC # Wing
     wcg[2, 2] = 0.05 * ac_datafile["Geometry"]["fus_length_m"] # Powertrain
     wcg[2, 4] = 0.4 * ac_datafile["Geometry"]["fus_length_m"] # Fuselage
-    wcg[2, 5] = 0.95 * ac_datafile["Geometry"]["fus_length_m"] # Empennage
+    wcg[2, 5] = 1.0 * ac_datafile["Geometry"]["fus_length_m"] # Empennage
     wcg[2, 6] = 0.4 * ac_datafile["Geometry"]["fus_length_m"] # Fixed equipment
     wcg[2, 7] = 0.4 * ac_datafile["Geometry"]["fus_length_m"] # Battery
 
@@ -148,7 +152,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
         # Get CG excursion positions
         xlemacold = xlemac
         Xcg_OEW = np.average(wcg[2, 0:8], weights=wcg[1, 0:8])
-        Xcg_f = xlemac + 0.4 * ac_datafile["Geometry"]["MGC_m"]
+        Xcg_f = xlemac + 0.4 * ac_datafile["Aero"]["MAC_wing"]
         CGlist = [Xcg_OEW, (Xcg_OEW * wcg[1, -1] + Xcg_pld * WPL_cont) / (wcg[1, -1] + WPL_cont), (Xcg_OEW * wcg[1, -1] + Xcg_f * WF_cont) / (wcg[1, -1] + WF_cont), (Xcg_OEW * wcg[1, -1] + Xcg_pld * WPL_cont + Xcg_f * WF_cont) / (wcg[1, -1] + WPL_cont + WF_cont)]
         aftcg = np.max(CGlist)
         # Revise nosewheel loading in case wheel is too far forward
@@ -161,7 +165,6 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
                 con = input("Continue? (y/n): ")
                 if con == "n":
                     sys.exit("Nose wheel could not be placed")
-
 
         # Place nosewheel
         l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]
@@ -176,7 +179,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
         # Update X LEMAC
         wcg[2, -1] = Xcg_OEW
         cgwg = np.average(wcg[2, 0:2] - xlemac, weights=wcg[1, 0:2])
-        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8])+ac_datafile["Geometry"]["MGC_m"]*((cgwg/ac_datafile["Geometry"]["MGC_m"])*np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])-PERCENTAGE*(1+np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])))
+        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8])+ac_datafile["Aero"]["MAC_wing"]*((cgwg/ac_datafile["Aero"]["MAC_wing"])*np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])-PERCENTAGE*(1+np.sum(wcg[1, 0:2])/np.sum(wcg[1, 2:8])))
         wcg[2, 0] = CGw_MAC + xlemac
         iter = abs(xlemacold/xlemac - 1)
 

@@ -43,7 +43,8 @@
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 250514.76804657077
+        "P_req_TO_W": 250514.76804657077,
+        "Dp_m": 2.2
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -72,7 +73,7 @@
         "HalfChordSweep_Wing_deg": 3.297,
         "HalfChordSweep_v_deg": 28.23,
         "deda": 0,
-        "VhV": 1,
+        "VhV": 0.85,
         "S_Wing": 41.67,
         "S_h": 5.1,
         "S_v": 3.168,
@@ -92,6 +93,15 @@
         "c_tip_HS": 0.5217118365738264,
         "MAC_wing": 1.8398920272392012,
         "MAC_HS": 0.9688934107799633
+    },
+    "Flaps": {
+        "DeltaClmax": 1.2,
+        "cprime_c": 1.075,
+        "Swf": 25,
+        "delta_f": 45,
+        "mu1": 0.17,
+        "mu2": 0.75,
+        "CL0": 1.4
     },
     "Performance": {
         "W/S_N/m2": 902.5001,
@@ -138,7 +148,7 @@
         "X_cg_HS": 0.95,
         "C_L_h": -0.5,
         "C_L_AH": 1.72,
-        "QCW_to_QCh": 6
+        "QCW_to_QCh": 8
     },
     "General": {
         "Paint": true,
