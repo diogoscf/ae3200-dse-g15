@@ -256,7 +256,7 @@ if __name__ == '__main__':
     run_generate = False
     run_classI = False
     run_classII = True
-    run_fuselage_sizing = True
+    run_fuselage_sizing = False
 
     # initialise the logging
     setup_logging()
@@ -487,7 +487,7 @@ if __name__ == '__main__':
             co2_ratio = co2(ac_data=ac_data)
 
             # set the condition to find the best battery percentage with the highest co2 reduction and a specific energy bellow
-            if co2_ratio * 100 > co2_ratio_max  and ac_data['Power_prop']['E_bat_Wh']<182000:
+            if co2_ratio * 100 > co2_ratio_max  and ac_data['Power_prop']['E_bat_Wh']<189000:
                 co2_ratio_max=co2_ratio
                 pbat = bat[step]
                 old_P_cruise=ac_data['Power_prop']['P_req_cruise_W']
@@ -499,6 +499,7 @@ if __name__ == '__main__':
         ac_data['Power_prop']['P_req_cruise_W'] = old_P_cruise
         ac_data['Power_prop']['E_bat_Wh'] = old_E_bat
         ac_data['Power_prop']["P_req_TO_W"] = old_P_TO
+        
 
         # calculate the class 2 weights components and print them
         logging.info(" Calculate Class II Weight Groups")
