@@ -123,14 +123,13 @@ Cm_DATA = import_data2('HumanAir/Structural Analysis/Cm_DATA.txt')
 Cdi_DATA = import_data2('HumanAir/Structural Analysis/Cdi_DATA.txt')
 
 n = len(Cl_DATA[AoA]['coefficient'])
-print("number of elements: ",n)
+#print("number of elements: ",n)
 
 c, y_points = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
 L_cruise, D_cruise = force_distribution(Cl_DATA, Cdi_DATA, AoA, c ,Vcruise, rho)
 W_cruise = weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA)
 M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
 
-print(c)
 # nl = 3.8
 Vx, Vy, Vz, Mx, My, Mz = InternalLoads(nl*L_cruise, T, W_cruise, abs(nl)*D_cruise, nl*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
@@ -140,7 +139,7 @@ Vx1, Vy1, Vz1, Mx1, My1, Mz1 = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_
 # nl = -1
 Vx2, Vy2, Vz2, Mx2, My2, Mz2 = InternalLoads(nl2*L_cruise, T, W_cruise, abs(nl2)*D_cruise, nl2*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
-
+'''
 plt.subplot(2, 2, 1)
 plt.plot(y_points, nl*L_cruise, label='Lift')
 plt.plot(y_points, -W_cruise, label = 'Weight')
@@ -214,7 +213,4 @@ plt.legend()
 plt.grid()
 plt.tight_layout()
 
-plt.show()
-
-plt.plot(y_points, Vy, label ='Vy - axial loading on cruise')
 plt.show()

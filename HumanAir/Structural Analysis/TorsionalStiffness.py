@@ -217,7 +217,6 @@ A_str = 0.02
 Cr = 2.5 # [m] root chord length
 b = 19.93
 
-
 ######## Execution ########
 
 torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio, AoA, n, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr,b)
@@ -228,14 +227,11 @@ chord1, y = torisonal_stiffness.chord()
 #plt.axis('equal')
 #plt.show()
 idx = find_nearest(y, 3.986)
-#print(y[idx])
+print(y[idx])
 
-l_box_up, l_box_down = torisonal_stiffness.d_s1s2()
-
-print(l_box_up.reshape(len(l_box_up), 1))
-
+#print(torisonal_stiffness.spars())
 h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
-#print(h_s1s2[idx])
+print(h_s1s2[idx])
 
 '''
 plt.plot(df_down[:,0], df_down[:,1])

@@ -1,37 +1,6 @@
 import numpy as np
-import re
 import pandas as pd
-# Define the path to the text file
-# file_path = 'data.txt'
-
-''' DATA_EXAMPLE'''
-
-def import_data(file_path):    
-    # Initialise lists
-    column_names = []
-    data_rows = []
-    
-    # Read the text file
-    
-    with open(file_path, 'r') as file:
-        lines = file.readlines()
-        
-        header_found = False
-        for line in lines:
-            if re.match(r'^\s*alpha\s+Beta\s+CL\s+CDi\s+CDv\s+CD\s+CY\s+Cl\s+Cm\s+Cn\s+Cni\s+QInf\s+XCP\s*$', line):
-                column_names = re.findall(r'\S+', line.strip())
-                header_found = True
-                continue
-
-            if header_found and re.match(r'^\s*-?\d+', line):
-                data_rows.append(re.findall(r'-?\d+\.\d+', line.strip()))
-                
-    df = pd.DataFrame(data_rows, columns=column_names)
-    df = df.astype(float)
-    return df
-
-
-'''WING_SPAN'''
+import re
 
 def import_data2(file_path):
     data = {}
@@ -56,3 +25,11 @@ def import_data2(file_path):
                 data[angle]["y_span"].append(y_positions)
                 data[angle]["coefficient"].append(lift_distribution)
     return data
+
+def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
+    b = Cl_DATA[AoA]['y_span'][-1] * 2  
+    # Generate spanwise coordinate points
+    y = np.linspace(Cl_DATA[AoA]['y_span'][0], Cl_DATA[AoA]['y_span'][-1], n)  # n is the number of nodes
+    # Calculate the chord distribution
+    chord_length = 2 * Sw / (1 + taper_ratio) / b * (1 - (1 - taper_ratio) * np.abs(2 * y / b))
+    return chord_length.reshape(len(chord_length), 1), y
