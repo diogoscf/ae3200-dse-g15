@@ -5,14 +5,19 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-print(sys.path)
-
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
 from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 
 # work in progress
 aircraft_data = {
-    "Weights": {"MTOW_N": 1, "W_L_N": 2, "WF_N": 3, "OEW_N": 100, "W_Pilot_N": 20},
+    "Weights": {
+        "MTOW_N": 1,
+        "W_L_N": 2,
+        "OEW_N": 100,
+        "W_Pilot_N": 20,
+        "Wfuel_N": 3,
+        "Wbat_N": 0.5,
+    },
     "Aero": {
         "S_Wing": 15,
         "AR": 6,
@@ -42,7 +47,14 @@ aircraft_data = {
         "fus_height_m": 12,
         "N_row": 2,
     },
-    "Power_prop": {"P_TO": 4200, "K_n": 0.24, "int": 0.5, "N_e": 5.5, "N_t": 6.6, "int_fueltanks_fraction": 0.5},
+    "Power_prop": {
+        "K_n": 0.24,
+        "int": 0.5,
+        "N_e": 5.5,
+        "N_t": 6.6,
+        "int_fueltanks_fraction": 0.5,
+        "P_req_TO_W": 4200,
+    },
     "Landing_gear": {"l_s_m": 0.7, "l_s_n": 0.7, "Retractable": "Yes", "Hs_m": 0.7},
     "General": {
         "Paint": True,
@@ -51,6 +63,8 @@ aircraft_data = {
         "N_pax": 3,
         "N_row": 3,
         "APU": False,
+        "HydrPne": True,
+        "NacWght": True,
     },
 }
 
@@ -308,16 +322,16 @@ def test_flight_control_system():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    result1 = 0.0168 * weight_class.W_TO
+    result1 = 0.0168 * (weight_class.W_TO - weight_class.W_bat)
 
     if not weight_class.PoweredFlightControls:
-        result2 = 1.066 * weight_class.W_TO**0.626
+        result2 = 1.066 * (weight_class.W_TO - weight_class.W_bat) ** 0.626
 
         if not weight_class.DuplicatedFlightControls:
-            result3 = 0.33 * weight_class.W_TO ** (2 / 3)
+            result3 = 0.33 * (weight_class.W_TO - weight_class.W_bat) ** (2 / 3)
 
     else:
-        result2 = 1.08 * weight_class.W_TO**0.7
+        result2 = 1.08 * (weight_class.W_TO - weight_class.W_bat) ** 0.7
         result3 = False
 
     assert math.isclose(weight_class.FlightControlSystem()["Cessna"], result1, rel_tol=1e-3)
@@ -330,7 +344,9 @@ def test_hydraulics_pneumatics():
     weight_class = Class_II_Weight(aircraft_data)
 
     assert math.isclose(
-        weight_class.HydraulicsPneumatics()["Average"], (0.006 + 0.0120) / 2 * weight_class.W_TO, rel_tol=1e-3
+        weight_class.HydraulicsPneumatics()["Average"],
+        (0.006 + 0.0120) / 2 * (weight_class.W_TO - weight_class.W_bat),
+        rel_tol=1e-3,
     )
 
 
@@ -338,7 +354,11 @@ def test_instruments_avionics_electronics():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    assert math.isclose(weight_class.InstrumentsAvionicsElectronics()["Average"], 33 * weight_class.N_pax, rel_tol=1e-3)
+    assert math.isclose(
+        weight_class.InstrumentsAvionicsElectronics()["Average"],
+        40 + 0.008 * (weight_class.W_TO - weight_class.W_bat),
+        rel_tol=1e-3,
+    )
 
 
 def test_electrical_system_weight():
@@ -404,7 +424,7 @@ def test_furnishing():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    result1 = 0.412 * weight_class.N_pax**1.145 * weight_class.W_TO**0.489
+    result1 = 0.412 * weight_class.N_pax**1.145 * (weight_class.W_TO - weight_class.W_bat) ** 0.489
     result2 = 5 + 13 * weight_class.N_pax + 25 * weight_class.N_row
 
     assert math.isclose(weight_class.Furnishings()["Average"], (result1 + result2) / 2, rel_tol=1e-3)
@@ -422,7 +442,7 @@ def test_paint():
     weight_class = Class_II_Weight(aircraft_data)
 
     if weight_class.paint:
-        result1 = 0.0045 * weight_class.W_TO
+        result1 = 0.0045 * (weight_class.W_TO - weight_class.W_bat)
     else:
         result1 = 0
 

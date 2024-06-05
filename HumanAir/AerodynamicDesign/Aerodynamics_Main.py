@@ -48,8 +48,8 @@ def aerodynamic_design(
     tc_wing = ac_data["Aero"]["tc_m_Wing"]
     tc_HP = ac_data["Aero"]["tc_m_HP"]
 
-    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing,tc_wing,MTOW=MTOW, WS=WS)
-    
+    WingPlanform = Planform(AR_Wing, Taper_Wing, QuarterChordSweep_Wing, tc_wing, MTOW=MTOW, WS=WS)
+
     c_root_wing = WingPlanform.RootChord()
     c_tip_wing = WingPlanform.TipChord()
     S_Wing = WingPlanform.WingSurfaceArea()
@@ -66,7 +66,6 @@ def aerodynamic_design(
         print("MACH = ", Flowvariables.Mach())
         print("Reynolds = ", Flowvariables.Reynolds())
         print("Beta =", Flowvariables.Beta())
-
 
     """========== Stability Analysis =========="""
     # replace with 'FX_63-137.json' and for pycharm 'NACA0012.json'
@@ -124,8 +123,8 @@ def aerodynamic_design(
 
     mac_wing = WingPlanform.MAC()
     mac_HS = HSPlanform.MAC()
-    S_h=HSPlanform.WingSurfaceArea()
-    b_h=HSPlanform.WingSpan()
+    S_h = HSPlanform.WingSurfaceArea()
+    b_h = HSPlanform.WingSpan()
 
     return mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h
 

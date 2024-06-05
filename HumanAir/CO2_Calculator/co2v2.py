@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pickle
 import sys
+
 # import time
 # import pandas as pd
 import matplotlib.pyplot as plt
@@ -218,46 +219,53 @@ def calculate_co2_reduction_flightdist(
     co2_ratio = 1 - (new_co2 / c206_co2)
     return co2_ratio
 
-def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
-    c206_hour=134                               #Cessna 206 CO2 emissions in kg/hr
-    c206_flight_hours=(359+149)/2               #Average Cessna 206 flight hours
-    target_level=0.5                            #CO2 reduction level
-    delta_year=np.arange(5,11.1,2)
 
-    total_CO2_year=c206_hour*c206_flight_hours/1000 #Cessna 206 emissions per year measured in tons assuming a target_value CO2 reduction
+def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
+    c206_hour = 134  # Cessna 206 CO2 emissions in kg/hr
+    c206_flight_hours = (359 + 149) / 2  # Average Cessna 206 flight hours
+    target_level = 0.5  # CO2 reduction level
+    delta_year = np.arange(5, 11.1, 2)
+
+    total_CO2_year = (
+        c206_hour * c206_flight_hours / 1000
+    )  # Cessna 206 emissions per year measured in tons assuming a target_value CO2 reduction
 
     if check_over_time:
 
-        year_max=0
+        year_max = 0
 
         for introduction_year in delta_year:
-            target_reached=False
-            lst_CO2=[0,]
-            lst_year=[0,]
-            year=0
-            while target_reached==False:
-                year+=1
+            target_reached = False
+            lst_CO2 = [
+                0,
+            ]
+            lst_year = [
+                0,
+            ]
+            year = 0
+            while not target_reached:
+                year += 1
                 lst_year.append(year)
-                if year<=introduction_year:
-                    lst_CO2.append(lst_CO2[-1]+(1-first_level)*total_CO2_year)
+                if year <= introduction_year:
+                    lst_CO2.append(lst_CO2[-1] + (1 - first_level) * total_CO2_year)
                 else:
-                    lst_CO2.append(lst_CO2[-1]+(1-second_level)*total_CO2_year)
+                    lst_CO2.append(lst_CO2[-1] + (1 - second_level) * total_CO2_year)
 
-                if lst_CO2[-1]<year*total_CO2_year*target_level:
-                    target_reached=True
+                if lst_CO2[-1] < year * total_CO2_year * target_level:
+                    target_reached = True
 
-            if lst_year[-1]>year_max:
-                year_max=lst_year[-1]
+            if lst_year[-1] > year_max:
+                year_max = lst_year[-1]
 
-            years=np.array(lst_year)+2030
-            np.round(years,0)
-            plt.plot(years,lst_CO2,label="Available in "+str(int(introduction_year+2030)))
-    c206_years=np.ndarray.round(np.arange(2030,year_max+2031,1),0)
+            years = np.array(lst_year) + 2030
+            np.round(years, 0)
+            plt.plot(years, lst_CO2, label="Available in " + str(int(introduction_year + 2030)))
+    c206_years = np.ndarray.round(np.arange(2030, year_max + 2031, 1), 0)
 
-    c206_CO2=(c206_years-2030) * total_CO2_year * target_level
-    plt.plot(c206_years,c206_CO2,linestyle='dashed',label=str(int(target_level*100))+"% Cessna 206")
+    c206_CO2 = (c206_years - 2030) * total_CO2_year * target_level
+    plt.plot(c206_years, c206_CO2, linestyle="dashed", label=str(int(target_level * 100)) + "% Cessna 206")
 
-    plt.xticks(np.arange(2030,year_max+2031,5))
+    plt.xticks(np.arange(2030, year_max + 2031, 5))
     plt.xlabel("Years")
     plt.ylabel("CO2 [t]")
     plt.legend()
@@ -284,6 +292,6 @@ if __name__ == "__main__":
     # tot2 = time.process_time() - t2
     # print(f"Time 1: {tot1:.8f}s, Time 2: {tot2:.8f}s")
 
-    #co2_ratio = calculate_co2_reduction_flightdist(ac_data=aircraft_data, standard_ac_data=c206_data)
-    improvement_co2(0.37,0.7,check_over_time=True)
-    #print(f"CO2 reduction: {co2_ratio*100:.2f}%")
+    # co2_ratio = calculate_co2_reduction_flightdist(ac_data=aircraft_data, standard_ac_data=c206_data)
+    improvement_co2(0.37, 0.7, check_over_time=True)
+    # print(f"CO2 reduction: {co2_ratio*100:.2f}%")

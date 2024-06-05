@@ -19,7 +19,7 @@ aircraft_data = {
         "W_L_N": 24500,
         "OEW_N": 17651,
         "MFW_N": 1390,
-        "WF_N": 1922,
+        "Wfuel_N": 1922,
         "Wbat_N": 11772,
         "Ww_N": 5000,
         "Wpl_des_kg": 630,
@@ -40,12 +40,11 @@ aircraft_data = {
         "eta_p": 0.8500000000000001,
         "bat": 0.163,
         "P_req_cruise_W": 197683.3976973128,
-        "P_TO": 230000,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 247104.24712164098,
+        "P_req_TO_W": 230000,
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -375,9 +374,27 @@ def test_calculate_weighted_score():
 
 def test_find_optimal_design():
     ac_data = {
+        "Contingency": 1.2,
         "Aero": {},
-        "Power_prop": {},
+        "Power_prop": {
+            "eta_powertrain": 0.9216,
+            "P_ptr_kW/kg": 1.5,
+            "E_bat_Wh/kg": 350,
+            "eta_bat": 0.97,
+            "DoD_bat": 0.8,
+            "eta_electricmotor": 0.925,
+            "E_fuel_Wh/kg": 11972,
+            "eta_generator": 0.4,
+        },
         "Performance": {"endurance": 5.2, "P_cruise/P_TO": 0.8},
+        "Iterations Class I": {
+            "MTOW_kg": 2650.285,
+            "A": 0.3632,
+            "B": -81.896,
+            "Aw": 0.09,
+            "Bw": 14.018,
+            "Wpl_des_kg": 630,
+        },
     }
 
     design_points = {

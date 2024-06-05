@@ -1,4 +1,3 @@
-
 def PrelimSizing(Vx, Vy, Mx, My, Mz, chords):
     # Material properties
     sigma = 324000000  # Pa yield strength 2024 Al

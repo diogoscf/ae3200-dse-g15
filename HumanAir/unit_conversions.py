@@ -48,4 +48,3 @@ def m_squared_to_ft_squared(a):
 
 def W_to_hp(a):
     return 0.00134102209 * a
-

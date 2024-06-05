@@ -7,116 +7,119 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from aircraft_data import aircraft_data
+from HumanAir.aircraft_data import aircraft_data
+
+
 class FuselageSizing:
-    '''
+    """
     Seat specification
-    '''
+    """
+
     w_pax = 0.56  # seat width [m]
     l_pax = 1.09  # seat length [m]
     h_pax = 1.40  # seat height [m]
     s = 0.01  # clearance [m]
     n_row_seat = 2  # seats per row [-]
-    
-    '''
+
+    """
     Cockpit specification
-    '''
+    """
     l_cock = 1.42  # cockpit length [m]
     h_cock = 1.2  # cockpit height [m]
     h_cockeye = 1.1  # cockpit eye height [m]
-    
-    '''
+
+    """
     Battery specification
-    '''
+    """
     s_battery = 0.1  # battery clearance [m]
-    
-    '''
+
+    """
     Landing gear specification
-    '''
+    """
     s_aft = 0.05  # landing gear clearance [m]
-    
-    '''
+
+    """
     Other specifications
-    '''
+    """
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
-    
-    def __init__(self, ac_data = aircraft_data):
-        self.n_seat = ac_data['General']['N_pax'] + 1  # number of total seats
-        self.w_engine = ac_data['Geometry']['w_engine']  # width of engine [m]
-        self.h_engine = ac_data['Geometry']['h_engine']  # height of engine [m]
-        self.l_engine = ac_data['Geometry']['l_engine']  # length of engine [m]
-        self.s_engine = ac_data['Geometry']['s_engine'] # small space in front of engine [m]
-        self.D_nose = ac_data['Landing_gear']['Dwn_m']  # diameter of nose tire [m]
-        self.h_nose = ac_data['Landing_gear']['Wtn_m'] # height of nose tire [m]
-        self.D_main = ac_data['Landing_gear']['Dwm_m']  # diameter of main tire [m]
-        self.h_main = ac_data['Landing_gear']['Wtm_m']  # height of main tire [m]
-        self.h_nose_strut = ac_data['Landing_gear']['l_s_n']  # height of nose strut [m]
-        self.h_main_strut = ac_data['Landing_gear']['l_s_m']  # height of main strut [m]
-        self.l_main_lateral = ac_data['Landing_gear']['ymin_m']  # main landing gear position when opened
-        self.l_long_nose = ac_data['Landing_gear']['lm_m']  # nose landing gear longitudinal position
-        self.l_long_main = ac_data['Landing_gear']['ln_m']  # main landing gear longitudinal position
-        self.h_battery = ac_data['Geometry']['h_battery']  # battery height
-        self.l_tailcone = ac_data['Geometry']['tail_length_m']  # length of tailcone
-        self.h_tail = ac_data['Geometry']['h_tail']  # height of tail
-        self.V_battery = ac_data['Geometry']['volume_battery'] # volume of battery [m^3]
-        
+
+    def __init__(self, ac_data=aircraft_data):
+        self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
+        self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
+        self.h_engine = ac_data["Geometry"]["h_engine"]  # height of engine [m]
+        self.l_engine = ac_data["Geometry"]["l_engine"]  # length of engine [m]
+        self.s_engine = ac_data["Geometry"]["s_engine"]  # small space in front of engine [m]
+        self.D_nose = ac_data["Landing_gear"]["Dwn_m"]  # diameter of nose tire [m]
+        self.h_nose = ac_data["Landing_gear"]["Wtn_m"]  # height of nose tire [m]
+        self.D_main = ac_data["Landing_gear"]["Dwm_m"]  # diameter of main tire [m]
+        self.h_main = ac_data["Landing_gear"]["Wtm_m"]  # height of main tire [m]
+        self.h_nose_strut = ac_data["Landing_gear"]["l_s_n"]  # height of nose strut [m]
+        self.h_main_strut = ac_data["Landing_gear"]["l_s_m"]  # height of main strut [m]
+        self.l_main_lateral = ac_data["Landing_gear"]["ymin_m"]  # main landing gear position when opened
+        self.l_long_nose = ac_data["Landing_gear"]["lm_m"]  # nose landing gear longitudinal position
+        self.l_long_main = ac_data["Landing_gear"]["ln_m"]  # main landing gear longitudinal position
+        self.h_battery = ac_data["Geometry"]["h_battery"]  # battery height
+        self.l_tailcone = ac_data["Geometry"]["tail_length_m"]  # length of tailcone
+        self.h_tail = ac_data["Geometry"]["h_tail"]  # height of tail
+        self.V_battery = ac_data["Geometry"]["volume_battery"]  # volume of battery [m^3]
+
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
-    
+
     def l_nosecone(self):
         return self.l_engine + FuselageSizing.l_enbu
-    
+
     def l_cabin(self):
         return FuselageSizing.l_pax * self.n_row()
-    
+
     def length_main_strut(self, s_gear):
         l_lateral_strut = (self.D_main / 2) + s_gear
         h = self.h_main_strut
-        l = self.l_main_lateral - l_lateral_strut
-        return np.sqrt(l**2 + h**2) 
-    
+        l_lateral = self.l_main_lateral - l_lateral_strut
+        return np.sqrt(l_lateral**2 + h**2)
+
     def l_battery(self, w_battery):
         return self.V_battery / (self.h_battery * w_battery)
-    
+
     def w_battery(self, l_battery):
         return self.V_battery / (self.h_battery * l_battery)
-    
+
     def l_end_nose_land(self):
         return self.l_long_nose + self.h_nose_strut + (self.D_nose / 2) + FuselageSizing.s_battery
-    
+
     def l_end_main_land(self, s_gear):
         return self.l_long_main - self.length_main_strut(s_gear) - (self.D_main / 2)
-    
-    def check_back(self,s_gear):
+
+    def check_back(self, s_gear):
         l_end_main_land = self.l_end_main_land(s_gear)
         l_end_nose_land = self.l_end_nose_land()
-        
-        return True if  l_end_main_land - l_end_nose_land < 0 else False
-        
-    def battery_dim(self, s_gear):        
+
+        return True if l_end_main_land - l_end_nose_land < 0 else False
+
+    def battery_dim(self, s_gear):
         if self.check_back(s_gear):
-            print('Landing gear folds backward')
+            print("Landing gear folds backward")
             l_end_main_land = self.l_long_main + self.length_main_strut(s_gear) + (self.D_main / 2)
             w_battery = s_gear * 2 + (self.D_main / 2)
             l_battery = self.l_battery(w_battery)
-            
+
             while self.length_main_strut(s_gear) - (self.D_main / 2) - l_battery < 0:
                 s_gear += 0.01
                 w_battery = s_gear * 2 + (self.D_main / 2)
                 l_battery = self.l_battery(w_battery)
-            
+
             l_fus = self.length_fus()
-            
+
             if l_fus - self.l_tailcone < l_end_main_land:
-                print('Landing gear cannot be folded backward or forward')
-                
+                print("Landing gear cannot be folded backward or forward")
+
         else:
-            #print('Landing gear folds forward')
-            w_battery = (self.top_width()-2*FuselageSizing.s)* 2
+            # print('Landing gear folds forward')
+            w_battery = (self.top_width() - 2 * FuselageSizing.s) * 2
             l_battery = self.l_battery(w_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
@@ -129,16 +132,16 @@ class FuselageSizing:
     @staticmethod
     def bigger_mag(a, b):
         return a if a > b else b
-        
+
     def bottom_width(self, s_gear):
-        # s_gear is the distance between the two areas 
+        # s_gear is the distance between the two areas
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # bottom width from seats:
         bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2
-        
-        # bottom width from landing gear: 
+
+        # bottom width from landing gear:
         bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft + FuselageSizing.s)
-    
+
         return round(FuselageSizing.bigger_mag(bw1, bw2), 3)
 
     def height(self):
@@ -412,12 +415,13 @@ class FuselageSizing:
         # ax.add_patch(circle2)
         ax.add_patch(circle3)
         ax.add_patch(circle4)
-        ax.axvline(x=0, color='gray', linestyle='--', linewidth=1)
-        plt.axis('equal')
-        plt.title('Fuselage front view')
+        ax.axvline(x=0, color="gray", linestyle="--", linewidth=1)
+        plt.axis("equal")
+        plt.title("Fuselage front view")
         plt.show()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # # Example usage:
     # n_seat = 8
     # w_engine = 0.85
@@ -437,17 +441,17 @@ if __name__ == '__main__':
     # h_tail = 2.52
     # V_battery = 0.3
 
-    fuselage_size = FuselageSizing(ac_data = aircraft_data)
+    fuselage_size = FuselageSizing(ac_data=aircraft_data)
 
-    print('top_width', fuselage_size.top_width())
-    print('bottom_width',fuselage_size.bottom_width(s_gear=0.2))
-    print('fuselage height', fuselage_size.height())
-    print('fuselage_length without engine', fuselage_size.length_fus()-fuselage_size.l_engine-fuselage_size.l_enbu)
-    print('fuselage length', fuselage_size.length_fus())
-    print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.2))
-    #print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
-    print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.2))
-    print('nose_strut_length',fuselage_size.h_nose_strut)
+    print("top_width", fuselage_size.top_width())
+    print("bottom_width", fuselage_size.bottom_width(s_gear=0.2))
+    print("fuselage height", fuselage_size.height())
+    print("fuselage_length without engine", fuselage_size.length_fus() - fuselage_size.l_engine - fuselage_size.l_enbu)
+    print("fuselage length", fuselage_size.length_fus())
+    print("maximum perimeter", fuselage_size.maximum_perimeter(s_gear=0.2))
+    # print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
+    print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.2))
+    print("nose_strut_length", fuselage_size.h_nose_strut)
 
     fuselage_size.plot_side_drawing(s_gear=0.2)
     fuselage_size.plot_front_view(s_gear=0.2)
