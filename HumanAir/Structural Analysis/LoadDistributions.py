@@ -28,7 +28,21 @@ def weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA):
 
 def moment_distribution(c, V, rho, Cm_DATA, AoA):
     c = np.array(c)
-    return np.array(Cm_DATA[AoA]['coefficient']) * 0.5 * rho * V**2 * c
+    return np.array(Cm_DATA[AoA]['coefficient']) * 0.5 * rho * V**2 * c #M_cruise
+
+#axial forces distribution - during ground - so only the ends (0.6L)
+Vy_Strut = 6670/np.tan(0.546) #deg in radian
+def axial_distribution_ground(n):
+    A_ground = np.zeros(n)
+    A_ground[0:12]=np.ones(12)*Vy_Strut
+    A_ground[38-12:38]=np.ones(12)*Vy_Strut
+    return A_ground
+#axial forces distribution - during flight - so only on the inner (inside 0.4L))
+def axial_distribution_flight(n):
+    A_cruise = np.ones(n)*Vy_Strut
+    A_cruise[0:12]=np.zeros(12)
+    A_cruise[38-12:38]=np.zeros(12)
+    return A_cruise
 
 def TestForces(Lcruise, W, Cl_DATA, AoA):
     dy = (Cl_DATA[AoA]['y_span'][-1] - Cl_DATA[AoA]['y_span'][0]) / n
@@ -42,6 +56,15 @@ def InternalLoads(L, T, W, D, M, n, y_points, Cl_DATA, AoA, sweep):
     Vz = integrate.cumtrapz(np.flip((-L + W) * b / (2 * n)), y_points)[::-1]
     Vx = np.append(Vx, [0])
     Vz = np.append(Vz, [0])
+
+    #Vy - axial force diagram because of the strut
+    Ax_total_flight = axial_distribution_flight(n)#axial force in the y span, during flight -- this is what we want now cause of cruise
+    Ax_total_ground = axial_distribution_ground(n) #axial force in the y span, on the ground 
+    Vy = Ax_total_flight
+
+    #Vz - shear force because of the strut
+    Vz[12] = -6670 #[N]
+    Vz[38-12] = -6670
 
     # add the moment about x 
     Mx = -integrate.cumtrapz(np.flip(Vz * b / (2 * n)), y_points)[::-1]
@@ -68,7 +91,7 @@ def InternalLoads(L, T, W, D, M, n, y_points, Cl_DATA, AoA, sweep):
     My = (np.array(Ml) + np.array(Mw) + np.array(Mym))[::-1]
     My = np.append(My, [0])
 
-    return Vx, Vz, Mx, My, Mz
+    return Vx, Vy, Vz, Mx, My, Mz
 
 def IntegrateTorqueFromLift(c, axis, data, sweep):
     data = np.flip(data)
@@ -79,6 +102,7 @@ def IntegrateTorqueFromLift(c, axis, data, sweep):
 
     M = np.trapz(data, axis)
     return M
+
 
 # Data
 AoA = -6
@@ -108,13 +132,13 @@ M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
 
 print(c)
 # nl = 3.8
-Vx, Vz, Mx, My, Mz = InternalLoads(nl*L_cruise, T, W_cruise, abs(nl)*D_cruise, nl*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
+Vx, Vy, Vz, Mx, My, Mz = InternalLoads(nl*L_cruise, T, W_cruise, abs(nl)*D_cruise, nl*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
 # nl = origin
-Vx1, Vz1, Mx1, My1, Mz1 = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruise, n, y_points, Cl_DATA, AoA, sweep)
+Vx1, Vy1, Vz1, Mx1, My1, Mz1 = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
 # nl = -1
-Vx2, Vz2, Mx2, My2, Mz2 = InternalLoads(nl2*L_cruise, T, W_cruise, abs(nl2)*D_cruise, nl2*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
+Vx2, Vy2, Vz2, Mx2, My2, Mz2 = InternalLoads(nl2*L_cruise, T, W_cruise, abs(nl2)*D_cruise, nl2*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
 
 
 plt.subplot(2, 2, 1)
@@ -190,4 +214,7 @@ plt.legend()
 plt.grid()
 plt.tight_layout()
 
+plt.show()
+
+plt.plot(y_points, Vy, label ='Vy - axial loading on cruise')
 plt.show()

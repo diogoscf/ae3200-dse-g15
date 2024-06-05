@@ -11,7 +11,7 @@ from LoadDistributions import Mx
     """
 #Parameters
 rho= 2710 #density of aluminium (kg/m^3)
-n = 10 #number of segments, discretization
+n = 38 #number of segments, discretization
 L = 17.61/2 #length of the halfspan (m)
 h_15c = 0 #height of the spar at 15% of the chord, as a function of y -- NOTE: MAKE THEM ARRAYS like np.full of t_spar0
 h_50c = 0 #height of the spar at 50% of the chord, as a function of y 
@@ -66,7 +66,7 @@ def deflection_constraint(t_spar,t_skin,no_stringers):
     deflection = get_deflection(I)
     return max_deflection - deflection
 
-def bending_stress_constraint(t_spar,t_skin, no_stringers):
+#def bending_stress_constraint(t_spar,t_skin, no_stringers):
     stresses = []
     for i in range(n):
         h_avemax = h_avemax[i]
@@ -104,7 +104,7 @@ def bending_stress_constraint(t_spar,t_skin, no_stringers):
 bounds = [(0.001, 0.1)] * n
 
 # Constraints dictionary
-con1 = {'type': 'ineq', 'fun': bending_stress_constraint}
+con1 = {'type': 'ineq', 'fun':deflection_constraint}
 constraints = [con1]
 
 # Perform the optimization
