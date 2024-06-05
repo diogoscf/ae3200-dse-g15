@@ -5,7 +5,7 @@ import numpy as np
 import logging
 import colorlog
 
-# integration v2 dont touch this please
+# integration v3 don't touch this please
 "Dear Programmer Please do not remove this line, it is very important for the correct function of the main program"
 
 # Get the directory of the current script
@@ -18,12 +18,17 @@ sys.path.append(project_root)
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 from HumanAir.Class_I_Weight.Class_I_Weight_Estimation import WeightEstm as WeightEstimation
 from HumanAir.LoadingDiagram.Main import WP_WS
-from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg  # , find_lg
+from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
+from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight as ClassIIWeight
 from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
+from HumanAir.Vn_Diagrams.loading_diagram import calc_nmax_nmin_manoeuvre
 from HumanAir.CO2_Calculator.co2v2 import calculate_co2_reduction_flightdist as co2
+from HumanAir.CO2_Calculator.co2v2 import improvement_co2
+from HumanAir.StructuralAnalysis.LoadDistributions import load_distribution_diagram
+from HumanAir.FuselageSizing.FuselageSizing import FuselageSizing
 
 
 def setup_logging():
@@ -193,14 +198,14 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
                                                 )
                                             )
 
-                                            if co2_ratio * 100 > 25 and ok == 0:
+                                            if co2_ratio * 100 > 15 and ok == 0:
 
                                                 idx += 1
                                                 ok = 1
 
                                             if (
                                                 co2_ratio * 100 > co2_ratio_max
-                                                and co2_ratio * 100 > 25
+                                                and co2_ratio * 100 > 15
                                                 and ac_data["Power_prop"]["E_bat_Wh"] < 200000
                                                 and bat[step] > 0.1
                                                 and ac_data["Power_prop"]["P_req_cruise_W"] / 0.8 < 330000
@@ -272,7 +277,7 @@ def calculate_weighted_score(point_data, weights):
 
 
 def find_optimal_design(
-    ac_dict,
+    ac_data,
     maximum_weight_battery=1000,
     weights=None,
     CO2_threshold=50,
@@ -295,30 +300,30 @@ def find_optimal_design(
         optimum_design_option = design_points[sorted_design_points[step][0]]
 
         # Updating the design.json file with the optimum design option
-        ac_dict["Aero"]["AR"] = optimum_design_option["A"]
-        ac_dict["Power_prop"]["eta_p"] = optimum_design_option["eta_p"]
-        ac_dict["Aero"]["CLmax_clean"] = optimum_design_option["Clmax_clean"]
-        ac_dict["Aero"]["CLmax_TO"] = optimum_design_option["Clmax_TO"]
-        ac_dict["Aero"]["CLmax_Land"] = optimum_design_option["Clmax_Land"]
-        ac_dict["Aero"]["CD0"] = optimum_design_option["Cd0"]
-        ac_dict["Performance"]["Vc_m/s"] = optimum_design_option["V_cruise"]
-        ac_dict["Performance"]["climb_rate"] = optimum_design_option["climbrate"]
-        ac_dict["Power_prop"]["bat"] = optimum_design_option["bat"]
-        ac_dict["Performance"]["W/S_N/m2"] = optimum_design_option["W/S"]
-        ac_dict["Performance"]["W/P_N/W"] = optimum_design_option["W/P"]
-        ac_dict["Performance"]["CO2"] = optimum_design_option["CO2"]
+        ac_data["Aero"]["AR"] = optimum_design_option["A"]
+        ac_data["Power_prop"]["eta_p"] = optimum_design_option["eta_p"]
+        ac_data["Aero"]["CLmax_clean"] = optimum_design_option["Clmax_clean"]
+        ac_data["Aero"]["CLmax_TO"] = optimum_design_option["Clmax_TO"]
+        ac_data["Aero"]["CLmax_Land"] = optimum_design_option["Clmax_Land"]
+        ac_data["Aero"]["CD0"] = optimum_design_option["Cd0"]
+        ac_data["Performance"]["Vc_m/s"] = optimum_design_option["V_cruise"]
+        ac_data["Performance"]["climb_rate"] = optimum_design_option["climbrate"]
+        ac_data["Power_prop"]["bat"] = optimum_design_option["bat"]
+        ac_data["Performance"]["W/S_N/m2"] = optimum_design_option["W/S"]
+        ac_data["Performance"]["W/P_N/W"] = optimum_design_option["W/P"]
+        ac_data["Performance"]["CO2"] = optimum_design_option["CO2"]
 
-        weight_estimation = weight_estimation_class(ac_dict)  # Correct instantiation of the WeightEstimation class
-        iteration_results = weight_estimation.Iterations(ac_dict["Power_prop"]["bat"])
+        weight_estimation = WeightEstimation(ac_data)  # Correct instantiation of the WeightEstimation class
+        iteration_results = weight_estimation.Iterations(ac_data["Power_prop"]["bat"])
         value = iteration_results[4]
         MTOW = iteration_results[1]
-        ac_dict["Power_prop"]["P_req_TO_W"] = 9.81 * MTOW / ac_dict["Performance"]["W/P_N/W"]
-        ac_dict["Power_prop"]["P_req_cruise_W"] = 9.81 * 0.8 * MTOW / ac_dict["Performance"]["W/P_N/W"]
-        ac_dict["Power_prop"]["E_bat_Wh"] = (
-            ac_dict["Power_prop"]["P_req_cruise_W"]
-            * ac_dict["Performance"]["endurance"]
-            / ac_dict["Performance"]["P_cruise/P_TO"]
-            * ac_dict["Power_prop"]["bat"]
+        ac_data["Power_prop"]["P_req_TO_W"] = 9.81 * MTOW / ac_data["Performance"]["W/P_N/W"]
+        ac_data["Power_prop"]["P_req_cruise_W"] = 9.81 * 0.8 * MTOW / ac_data["Performance"]["W/P_N/W"]
+        ac_data["Power_prop"]["E_bat_Wh"] = (
+            ac_data["Power_prop"]["P_req_cruise_W"]
+            * ac_data["Performance"]["endurance"]
+            / ac_data["Performance"]["P_cruise/P_TO"]
+            * ac_data["Power_prop"]["bat"]
         )
 
         if value < minimum:
@@ -328,16 +333,32 @@ def find_optimal_design(
     if printing:
         print(sorted_design_points[step])
         print(design_points[str(sorted_design_points[step][0])])
-        print(weight_estimation.Iterations(ac_dict["Power_prop"]["bat"]))
+        print(weight_estimation.Iterations(ac_data["Power_prop"]["bat"]))
 
 
 "Main Function to run the program"
 if __name__ == "__main__":
+
+    # set up the conditions to run the program
+    run_generate = False
+    run_classI = False
+    run_classII = False
+    run_fuselage_sizing = True
+
     # initialise the logging
     setup_logging()
 
     # Integration in progress v2
     logging.info(" Starting the program")
+
+    # print which part of the main function will run
+    print("\nWelcome to the HumanAir script. Hope you will have a good time!\n")
+    print("The following parts of the program will run: \n")
+    print("Generate design points: ", run_generate)
+    print("Class I Weight Estimation: ", run_classI)
+    print("Class II Weight Estimation: ", run_classII)
+    print("Fuselage Sizing: ", run_fuselage_sizing)
+    print("\n")
 
     # initialise the design.json file
     ac_data = load_json_file("design.json")
@@ -348,11 +369,7 @@ if __name__ == "__main__":
     ac_data["Performance"]["Vh_m/s"] = V_H
     ac_data["Performance"]["n_ult_l"] = n_ult_land
 
-    # set up the conditions to run the program
-    run_generate = False
-    run_classI = True
-    run_classII = True
-
+    # run the generation code for the data iteration points
     if run_generate:
         logging.info(" Starting generating the new possible design points. This may take a while.")
         Generate(p, ac_data, run_generate)
@@ -383,11 +400,12 @@ if __name__ == "__main__":
         }
 
         maximum_weight_battery = 1000
-        CO2_threshold = 25
+        CO2_threshold = 20
         printing = False
 
         # set up that the optimal stability range is not yet set
         find_optimal_stability = False
+
         # initialise from which step to start to search from the design_iterations.json
         step = 0
 
@@ -424,6 +442,8 @@ if __name__ == "__main__":
 
             print("Total weight:", round(component_weights[1], 2), "[kg] including contingency")
             print("Contingency:", (round((ac_data["Contingency"] - 1) * 100, 0)), "%")
+
+            # save the component weights to the dictionary in newtons
             ac_data["Weights"]["MTOW_N"] = 9.81 * round(component_weights[1], 2)
             ac_data["Weights"]["OEW_N"] = 9.81 * (
                 round(component_weights[2], 2)
@@ -440,30 +460,29 @@ if __name__ == "__main__":
             logging.info(" Calculating the weight components successful")
 
             # set up the condition to set up the range where the cg of the wing is with report of the mac
-            PERCENTAGE = np.arange(-0.1, 0.51, 0.1)
+            xcg_location_percentage = np.arange(-0.1, 0.51, 0.1)
             logging.info(
                 " Starting the search for the optimal stability range in terms of where to position the cg of the wing"
             )
 
             # iterate over the percentage to find the optimal stability range
-            for pct in PERCENTAGE:
-
+            for pct in xcg_location_percentage:
                 logging.info(" Calculating the Xcg excursion")
 
                 wcg, CGlist, xlemac = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=pct)
 
                 # dont remove this line as it complies with nicholas's mood
-                ac_data["Stability"]["XLEMAC_m"] = xlemac
+                ac_data["Geometry"]["XLEMAC_m"] = xlemac
                 mac_wing = aerodynamic_design(
                     ac_data,
                     checkwingplanform=False,
                     checkflowparameters=False,
-                    checkstability=False,
+                    checkstability=True,
                     checkhsplanform=False,
                 )[0]
 
-                ac_data["Stability"]["Cg_Aft"] = (round(max(CGlist), 2) - ac_data["Stability"]["XLEMAC_m"]) / mac_wing
-                ac_data["Stability"]["Cg_Front"] = (round(min(CGlist), 2) - ac_data["Stability"]["XLEMAC_m"]) / mac_wing
+                ac_data["Stability"]["Cg_Aft"] = (round(max(CGlist), 2) - ac_data["Geometry"]["XLEMAC_m"]) / mac_wing
+                ac_data["Stability"]["Cg_Front"] = (round(min(CGlist), 2) - ac_data["Geometry"]["XLEMAC_m"]) / mac_wing
 
                 logging.info(" Prepare to check the stability")
 
@@ -478,7 +497,7 @@ if __name__ == "__main__":
 
                 print(
                     "Is stability satisfied at a X_LEMAC "
-                    + str(round(ac_data["Stability"]["XLEMAC_m"], 2))
+                    + str(round(ac_data["Geometry"]["XLEMAC_m"], 2))
                     + " [m]"
                     + "|"
                     + "[Y/N]: "
@@ -511,22 +530,41 @@ if __name__ == "__main__":
 
                 find_optimal_stability = True
 
-                mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS = aerodynamic_design(
-                    ac_data,
-                    checkwingplanform=True,
-                    checkflowparameters=False,
-                    checkstability=False,
-                    checkhsplanform=True,
+                # get the aerodynamic specifications and save them to the dictionary
+                mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h = (
+                    aerodynamic_design(
+                        ac_data,
+                        checkwingplanform=True,
+                        checkflowparameters=False,
+                        checkstability=True,
+                        checkhsplanform=True,
+                    )
                 )
 
+                # updating the aerodynamic data in the dictionary
+                ac_data["Aero"]["S_Wing"] = S_Wing
+                ac_data["Aero"]["S_h"] = S_h
                 ac_data["Aero"]["MAC_wing"] = mac_wing
                 ac_data["Aero"]["MAC_HS"] = mac_HS
                 ac_data["Aero"]["c_root_wing"] = c_root_wing
                 ac_data["Aero"]["c_tip_wing"] = c_tip_wing
                 ac_data["Aero"]["c_root_HS"] = c_root_HS
                 ac_data["Aero"]["c_tip_HS"] = c_tip_HS
+                ac_data["Aero"]["b_Wing"] = b_Wing
+                ac_data["Aero"]["b_h"] = b_h
 
                 logging.info(" Calculating the aerodynamic design successful")
+
+                # calculate the loading distribution diagrams
+                ac_data["Performance"]["n_max"], ac_data["Performance"]["n_min"] = calc_nmax_nmin_manoeuvre(
+                    ac_data["Weights"]["MTOW_N"]
+                )
+
+                logging.info(" Calculating the loading distribution diagram")
+
+                load_distribution_diagram(ac_data=ac_data)
+
+                logging.info(" Calculating the loading distribution diagram successful")
                 logging.info(" Calculating the hourly price")
 
                 # calculating the hourly cost
@@ -542,28 +580,167 @@ if __name__ == "__main__":
                 design_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", "design.json")
                 logging.info(" Design.json saved at: " + design_json_path)
 
+                # save the updated dictionary
                 with open(design_json_path, "w") as f:
                     json.dump(ac_data, f, indent=4)
 
                 # calculating if we get the copium batteries how much co2 reduction would increase
-                print(ac_data["Power_prop"]["E_bat_Wh"], ac_data["Power_prop"]["P_req_TO_W"])
-                ac_data["Power_prop"]["E_bat_Wh"] = 700 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
+                ac_data["Power_prop"]["E_bat_Wh"] = 685 / 350 * ac_data["Power_prop"]["E_bat_Wh"]
+
                 print(
                     "Reduction with future expected battery technology: "
                     + str(round(co2(ac_data=ac_data) * 100, 2))
                     + "[%]"
                 )
+                ac_data["Power_prop"]["E_bat_Wh"] = 350 / 685 * ac_data["Power_prop"]["E_bat_Wh"]
 
     # run the class 2 estimation
     if run_classII:
 
-        logging.info(" Calculate Class II Weight Groups")
-        class_2_dictionary = RunClassII(ac_data, check=True, pbat=ac_data["Power_prop"]["bat"])
+        # initialise the class I weight estimation
+        WeightEstm = ClassIIWeight(ac_data=ac_data)
 
-        design_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", "design.json")
+        # initialise the bat percentage
+        bat = np.arange(0, 0.3, 0.001)
+        coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
+
+        # run the regression to find power required cruise
+        co2_ratio_max = 0
+
+        # set the condition to find the first point with co2 ratio > 50
+        ok = 0
+        co2_ratio_max = 0
+        pbat = ac_data["Power_prop"]["bat"]
+
+        # update the power required and the battery energy
+        old_P_cruise = ac_data["Power_prop"]["P_req_cruise_W"]
+        old_E_bat = ac_data["Power_prop"]["E_bat_Wh"]
+
+        # loop to find the best battery percentage after the class 2 weight estimation
+        for step in range(len(bat)):
+
+            # calculate the power required cruise
+            ac_data["Power_prop"]["P_req_cruise_W"] = (
+                ac_data["Performance"]["P_cruise/P_TO"] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
+            )
+            ac_data["Power_prop"]["E_bat_Wh"] = (
+                ac_data["Power_prop"]["P_req_cruise_W"]
+                * ac_data["Performance"]["endurance"]
+                / ac_data["Performance"]["P_cruise/P_TO"]
+                * bat[step]
+            )
+
+            # calculate the co2 ratio for the specific combination of parameters
+            co2_ratio = co2(ac_data=ac_data)
+
+            # set condition to find best battery percentage with highest co2 reduction and specific energy below
+            if co2_ratio * 100 > co2_ratio_max and ac_data["Power_prop"]["E_bat_Wh"] < 189000:
+                co2_ratio_max = co2_ratio
+                pbat = bat[step]
+                old_P_cruise = ac_data["Power_prop"]["P_req_cruise_W"]
+                old_E_bat = ac_data["Power_prop"]["E_bat_Wh"]
+                old_P_TO = ac_data["Power_prop"]["P_req_cruise_W"] / ac_data["Performance"]["P_cruise/P_TO"]
+
+        # update the power required and the battery energy with the one found in the co2 loop
+        ac_data["Power_prop"]["bat"] = pbat
+        ac_data["Power_prop"]["P_req_cruise_W"] = old_P_cruise
+        ac_data["Power_prop"]["E_bat_Wh"] = old_E_bat
+        ac_data["Power_prop"]["P_req_TO_W"] = old_P_TO
+
+        # calculate the class 2 weights components and print them
+        logging.info(" Calculate Class II Weight Groups")
+        class_2_dictionary = RunClassII(ac_data=ac_data, check=True, pbat=ac_data["Power_prop"]["bat"])
+
+        # print the new MTOW and the battery weight with a 12% contingency
+        print(f"Battery Weight: {round(class_2_dictionary['CL2Weight']['Wbat_N'] / 9.81, 2)} [kg]")
+        print(f"Total Weight: {round(class_2_dictionary['CL2Weight']['MTOW_N'] / 9.81, 2)} [kg]")
+        print(f"Contingency: {round((class_2_dictionary['Contingency_C2W'] - 1) * 100, 0)} %")
+
+        logging.info(" Class II Weight Groups calculated successfully")
+
+        # update the power required
+        class_2_dictionary["Power_prop"]["P_req_TO_W"] = (
+            class_2_dictionary["CL2Weight"]["MTOW_N"] / class_2_dictionary["Performance"]["W/P_N/W"]
+        )
+        class_2_dictionary["Power_prop"]["P_req_cruise_W"] = (
+            class_2_dictionary["Performance"]["P_cruise/P_TO"]
+            * class_2_dictionary["CL2Weight"]["MTOW_N"]
+            / class_2_dictionary["Performance"]["W/P_N/W"]
+        )
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = (
+            class_2_dictionary["CL2Weight"]["Wbat_N"] / 9.81 * class_2_dictionary["Power_prop"]["E_bat_Wh/kg"]
+        )
+
+        # print the co2 reduction with the current battery technology
+        first_level = round(co2(ac_data=class_2_dictionary), 2)
+        print("Reduction with current battery technology: " + str(round(first_level * 100, 2)) + "[%]")
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
+
+        # print the co2 reduction with the future expected battery technology
+        second_level = round(co2(ac_data=class_2_dictionary), 2)
+        print("Reduction with future expected battery technology: " + str(round(second_level * 100, 2)) + "[%]")
+        logging.info(" Class II Weight Groups calculated successfully")
+
+        # save the correct energy for current battery technology
+        class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
+
+        logging.info(" Yearly prediction of CO2 reduction vs new Battery technology introduction year")
+        improvement_co2(first_level=first_level, second_level=second_level, check_over_time=True)
+
+        # calculate the loading distribution diagrams
+        class_2_dictionary["Performance"]["n_max"], class_2_dictionary["Performance"]["n_min"] = (
+            calc_nmax_nmin_manoeuvre(class_2_dictionary["Weights"]["MTOW_N"])
+        )
+
+        logging.info(" Calculating the loading distribution diagram")
+
+        # plot the load distribution diagrams
+        load_distribution_diagram(ac_data=class_2_dictionary)
+
+        logging.info(" Calculating the loading distribution diagram successful")
+
+        # save the updated dictionary
+        design_json_path = os.path.join(script_dir, "Configurations", "design.json")
         logging.info(" Design.json saved at: " + design_json_path)
 
         with open(design_json_path, "w") as f:
             json.dump(class_2_dictionary, f, indent=4)
 
         logging.info(" Program finished successfully")
+
+    # run the fuselage sizing script
+    if run_fuselage_sizing:
+
+        # initialise the gear clearance
+        s_gear = 0.2
+
+        # load the design.json file
+        fuselage_sizing_dict = load_json_file("design.json")
+
+        logging.info(" Calculating the fuselage dimension")
+
+        # get the fuselage sizing class
+        fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict)
+
+        # show all of the dimensions of the fuselage
+        print("Top Width", round(fuselage_size.top_width(), 2), "[m]")
+        print("Bottom Width", round(fuselage_size.bottom_width(s_gear=s_gear), 2), "[m]")
+        print("Fuselage Height", round(fuselage_size.height(), 2), "[m]")
+        print(
+            "Fuselage Length Without Engine",
+            round(fuselage_size.length_fus() - fuselage_size.l_engine - fuselage_size.l_enbu, 2),
+            "[m]",
+        )
+        print("Fuselage Length", round(fuselage_size.length_fus(), 2), "[m]")
+        print("Maximum Perimeter", round(fuselage_size.maximum_perimeter(s_gear=s_gear), 2), "[m]")
+        print("Fuselage Wetted Area", round(fuselage_size.fuselage_wetted(s_gear=s_gear), 2), "[m^2]")
+        print("Main Strut Length", round(fuselage_size.length_main_strut(s_gear=s_gear), 2), "[m]")
+        print("Nose Strut Length", round(fuselage_size.h_nose_strut, 2), "[m]")
+
+        # plot the side and front view
+        fuselage_size.plot_side_drawing(s_gear=0.2)
+        fuselage_size.plot_front_view(s_gear=0.2)
+
+        logging.info(" Calculating the fuselage dimension successful")
+
+print("Finally, I am free!")

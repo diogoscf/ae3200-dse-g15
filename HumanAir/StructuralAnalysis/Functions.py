@@ -1,6 +1,9 @@
 # import numpy as np
 import re
 import pandas as pd
+import os
+
+# import sys
 
 # Define the path to the text file
 # file_path = 'data.txt'
@@ -22,8 +25,13 @@ def import_data(file_path):
         for line in lines:
             if re.match(r"^\s*alpha\s+Beta\s+CL\s+CDi\s+CDv\s+CD\s+CY\s+Cl\s+Cm\s+Cn\s+Cni\s+QInf\s+XCP\s*$", line):
                 column_names = re.findall(r"\S+", line.strip())
+            if re.match(r"^\s*alpha\s+Beta\s+CL\s+CDi\s+CDv\s+CD\s+CY\s+Cl\s+Cm\s+Cn\s+Cni\s+QInf\s+XCP\s*$", line):
+                column_names = re.findall(r"\S+", line.strip())
                 header_found = True
                 continue
+
+            if header_found and re.match(r"^\s*-?\d+", line):
+                data_rows.append(re.findall(r"-?\d+\.\d+", line.strip()))
 
             if header_found and re.match(r"^\s*-?\d+", line):
                 data_rows.append(re.findall(r"-?\d+\.\d+", line.strip()))
@@ -36,8 +44,14 @@ def import_data(file_path):
 """WING_SPAN"""
 
 
-def import_data2(file_path):
+def import_data2(file_name):
+
     data = {}
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the absolute path to the design.json file
+    file_path = os.path.join(script_dir, file_name)
+
     with open(file_path, "r") as file:
         lines = file.readlines()
         angle_file = lines[0]

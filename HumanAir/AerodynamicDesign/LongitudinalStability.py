@@ -66,12 +66,44 @@ class LongitudinalStability:
         return np.max([ShSStability, ShSControllability])
 
     def Plotting(self):
+        stability = self.Stability()
+        stability_no_margin = self.Stability_NoMargin()
+        controllability = self.Controllability()
+
+        positive_stability_mask = stability > 0
+        positive_stability_no_margin_mask = stability_no_margin > 0
+        positive_controllability_mask = controllability > 0
+
         plt.figure()
-        plt.plot(self.Xcg, self.Stability(), label="Stability", color="green", linestyle="solid")
-        plt.plot(self.Xcg, self.Stability_NoMargin(), label="Stability (No Margin)", color="green", linestyle="dashed")
-        plt.plot(self.Xcg, self.Controllability(), label="Controllability", color="blue", linestyle="solid")
+
+        plt.plot(
+            self.Xcg[positive_stability_mask],
+            stability[positive_stability_mask],
+            label="Stability",
+            color="green",
+            linestyle="solid",
+        )
+        plt.plot(
+            self.Xcg[positive_stability_no_margin_mask],
+            stability_no_margin[positive_stability_no_margin_mask],
+            label="Stability (No Margin)",
+            color="green",
+            linestyle="dashed",
+        )
+        plt.plot(
+            self.Xcg[positive_controllability_mask],
+            controllability[positive_controllability_mask],
+            label="Controllability",
+            color="blue",
+            linestyle="solid",
+        )
         plt.plot(
             [self.CgFwd, self.CgAft], [self.ShS(), self.ShS()], label="Cg Excursion", color="red", linestyle="solid"
         )
+
         plt.legend()
+        plt.xlabel("Xcg")
+        plt.ylabel("Value")
+        plt.title("Longitudinal Stability Analysis")
+        plt.grid(True)
         plt.show()

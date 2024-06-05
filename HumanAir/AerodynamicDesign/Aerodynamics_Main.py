@@ -38,7 +38,7 @@ def aerodynamic_design(
     CLh = ac_data["Stability"]["C_L_h"]
     CLah = ac_data["Stability"]["C_L_AH"]
     Xcgh = ac_data["Stability"]["X_cg_HS"]
-    XLEMAC = ac_data["Stability"]["XLEMAC_m"]
+    XLEMAC = ac_data["Geometry"]["XLEMAC_m"]
     CgAft = ac_data["Stability"]["Cg_Aft"]
     CgFwd = ac_data["Stability"]["Cg_Front"]
     SM = ac_data["Stability"]["Stability_Margin"]
@@ -52,6 +52,8 @@ def aerodynamic_design(
 
     c_root_wing = WingPlanform.RootChord()
     c_tip_wing = WingPlanform.TipChord()
+    S_Wing = WingPlanform.WingSurfaceArea()
+    b_Wing = WingPlanform.WingSpan()
 
     ISACruise = ISA(CruiseHeight, Temp_offset, TemperatureGradient)
 
@@ -121,8 +123,10 @@ def aerodynamic_design(
 
     mac_wing = WingPlanform.MAC()
     mac_HS = HSPlanform.MAC()
+    S_h = HSPlanform.WingSurfaceArea()
+    b_h = HSPlanform.WingSpan()
 
-    return mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS
+    return mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h
 
 
 if __name__ == "__main__":
