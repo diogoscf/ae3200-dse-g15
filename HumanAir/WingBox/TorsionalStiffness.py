@@ -68,19 +68,19 @@ class TorsionalStiffness:
         return data
 
 
-    def airfoil_division(self):
-        df = self.import_data()
-        for i in range(len(df)):
-            if df['x'][i] == 0:
+    def airfoil_division(self): 
+        df = self.import_data() 
+        for i in range(len(df)): 
+            if df['x'][i] == 0: 
                 idx = i
         df_1 = np.array(df.iloc[:idx,:].values.tolist())
         df_2 = np.array(df.iloc[idx:,:].values.tolist())
         return df_1, df_2
 
     def chord(self):
-        # Cl_DATA = import_data2(self.file_path_y)
+        # Cl_DATA = import_data2(self.file_path_y) 
         # b = Cl_DATA[self.AoA]['y_span'][-1] * 2  
-        # Generate spanwise coordinate points
+        # Generate spanwise coordinate points 
         y = np.linspace(-self.b/2, self.b/2, self.n) 
         # Calculate the chord distribution
         chord_length = 2 * self.Sw / (1 + self.taper_ratio) / self.b * (1 - ((1 - self.taper_ratio)/self.b * np.abs(2 * y)))
@@ -207,7 +207,7 @@ class TorsionalStiffness:
 Sw = 34.56  # [m2]
 taper_ratio = 0.4
 AoA = -6 # [deg]
-n = 3
+n = 500
 t1_spar = 0.010 # [m] thickness at the tip
 t2_spar = 0.025 # [m] thickness at the root
 t_skin = 0.007 # [m] thickness of skin
@@ -223,12 +223,15 @@ torisonal_stiffness = TorsionalStiffness(file_path, file_path_y, Sw, taper_ratio
 
 df = torisonal_stiffness.import_data()
 chord1, y = torisonal_stiffness.chord()
-plt.plot(df['x']*chord1[1], df['y']*chord1[1])
-plt.axis('equal')
-plt.show()
+#plt.plot(df['x']*chord1[1], df['y']*chord1[1])
+#plt.axis('equal')
+#plt.show()
+idx = find_nearest(y, 3.986)
+print(y[idx])
+
 #print(torisonal_stiffness.spars())
 h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
-print(h_s1s2)
+print(h_s1s2[idx])
 
 '''
 plt.plot(df_down[:,0], df_down[:,1])

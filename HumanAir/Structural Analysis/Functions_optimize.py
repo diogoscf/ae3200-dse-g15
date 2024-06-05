@@ -139,8 +139,6 @@ delta_y = L/n
 #Objective function: minimize weight
 percentage = [0.1, 0.15, 0.25, 0.25, 0.15, 0.1]
 no_string = [20, 30, 50, 50, 30, 20]
-# size_t = 40
-
 
 #Initial guess for thickness of spar
 t_spar0 = torisonal_stiffness.t_spar() #array with thickness per segment [m]
