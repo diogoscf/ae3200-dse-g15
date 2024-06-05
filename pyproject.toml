@@ -4,7 +4,7 @@ authors = [
     {name = "Diogo Fernandes", email = "contact@diogoscf.eu"},
 ]
 description = "DSE HumanAir Programming"
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 readme = "README.md"
 license = {file = "LICENSE"}
 dependencies = [
