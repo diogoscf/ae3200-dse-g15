@@ -170,6 +170,16 @@ def plot_cruise_power_setting(acf):
     
 def plot_take_off_performance(acf):
     print(acf.takeoff_ground_run(acf.W_MTO, 0, 0, 0))
+    
+def plot_landing_performance(acf):
+    dist, V_lst, s_lst, s_tot = acf.landing_ground_distance(acf.W_MTO, 0, 0, 0)
+    print(dist)
+    print(s_tot)
+    plt.figure(figsize=(10,7))
+    plt.plot(s_lst, V_lst)
+    plt.xlabel("Ground distance [m]")
+    plt.ylabel("Velocity [m/s]")
+    plt.show()
 
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
@@ -178,4 +188,5 @@ if __name__ == "__main__":
     plot_stall_speed(acf)
     plot_cruise_power_setting(acf)
     plot_take_off_performance(acf)
+    plot_landing_performance(acf)
     

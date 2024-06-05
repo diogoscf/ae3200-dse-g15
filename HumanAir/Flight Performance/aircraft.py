@@ -2,7 +2,7 @@ from helper import density
 import json
 import numpy as np
 from scipy.optimize import root_scalar
-#from scipy.integrate import quad
+from scipy.integrate import quad
 
 class Aircraft:
     def __init__(self, FILE="design.json"):
@@ -31,9 +31,13 @@ class Aircraft:
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
         self.CLmax_land     = dat["Aero"]["CLmax_TO"] # TODO: check if still correct
         
-        #self.CL_ground      = .5 # C_L while on level runway TODO: fill in
+        # TODO: fill in
+        self.CL_ground_TO   = .5 # C_L while on level runway with flaps in TO position 
+        self.CL_ground_land = .7 # C_L while on level runway with flaps in land position
         self.number_of_engines = 1 # TODO: use design.json
         self.propeller_diameter = 2 # TODO: use deisng.json
+        
+        self.retractable_gear = dat["Landing_gear"]["Retractable"]
 
         # weights
         self.W_OE           = dat["Weights"]["OEW_N"]
@@ -42,11 +46,18 @@ class Aircraft:
         self.W_pl_des       = dat["Weights"]["Wpl_des_kg"] * 9.80655
         self.W_pl_max       = dat["Weights"]["Wpl_max_kg"] * 9.80655
         self.W_MTO          = dat["Weights"]["MTOW_N"]
-
+        
+        x_cg = dat["Stability"]["Cg_Front"]*dat["Aero"]["MAC_wing"] + dat["Geometry"]["XLEMAC_m"]
+        x_main, x_nose = dat["Landing_gear"]["Xmw_m"], dat["Landing_gear"]["Xnw_m"]
+        self.weight_on_MLG  = (x_cg - x_nose) / (x_main - x_nose) # fraction of weight on MLG with front most possible CG position
+        print(self.weight_on_MLG)
         # propulsion
-        self.max_cont_power_sealevel  = 250500 # engine power without losses TODO: correct
-        self.takeoff_power_sealevel   = 250500 # engine power without losses TODO: correct
-        self.eff_powertrain = dat["Power_prop"]["eta_powertrain"] # TODO: check definition
+        # TODO: correct
+        self.max_cont_power_sealevel  = 250500 # engine power without losses 
+        # TODO: correct
+        self.takeoff_power_sealevel   = 250500 # engine power without losses
+        # TODO: check definition
+        self.eff_powertrain = dat["Power_prop"]["eta_powertrain"]
         self.eff_prop       = dat["Power_prop"]["eta_p"]
         
         # calculated data
@@ -67,15 +78,16 @@ class Aircraft:
         CD0 = self.CD0_clean
         e = self.e_clean
         
-        if gear == "down":
-            CD0 += 0.005 # TODO: estimate
+        if gear == "down" and self.retractable_gear:
+            CD0 += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
             
         if flaps == "TO":
-            CD0 += 0.005 # TODO: estimate
-            e -= 0.05 # TODO: estimate
+            CD0 += 0.01 # roskam pt1 p127 and nicolai p242
+            e -= 0.05 # roskam pt1 p127
+            
         elif flaps == "land":
-            CD0 += 0.01 # TODO: estimate
-            e -= 0.1 # TODO: estimate
+            # TODO: improve
+            CD0 += 0.03 # guess based on nicolai p242
             
         return CD0 + CL**2 / (np.pi * self.AR * e)
     
@@ -180,7 +192,19 @@ class Aircraft:
         
         s_run = V_LOF**2 / (2*g) / (Tbar/W - mu_quote)
         
-        return s_run
+        
+        # second method, calculate acceleration at 0.707V_LOF
+        # from Fundamental of Aircraft and Airship design: volume 1
+        V = 0.707 * V_LOF
+        T = self.P_to(h, dT) / V
+        D = 0.5 * rho * V**2 * self.S * self.CD(self.CL_ground_TO, gear="down", flaps="TO")
+        L = 0.5 * rho * V**2 * self.S * self.CL_ground_TO
+        a = g/W * (T - D - 0.05*(W - L))
+        s_run2 = 0.5 * V_LOF**2 / a
+        
+        
+        
+        return s_run, s_run2
     
         #CL_G = self.CL_ground
         #CD_G = self.CD(CL_G)
@@ -191,6 +215,46 @@ class Aircraft:
         
         #mu_r = 0.05 # coefficient of rolling friction for short-cut grass, ruijgrok p372 and roskam pt7 p40
         
+    def landing_ground_distance(self, W, h, dT, slope):
         
+        # ruijgrok p 388-393
+        # 
         
+        # constants
+        rho = density(h, dT)
+        g = 9.80665
+        
+        # touchdown velocity 
+        V_T = 1.3 * np.sqrt(W/( 0.5 * rho * self.S * self.CLmax_land)) # TODO: set more accurately
+
+        CL = self.CL_ground_land # TODO: take into account ground effect?
+        CD = self.CD(CL, gear="down", flaps="land") # TODO: take into account ground effect?
+        
+        mu = 0.25 # TODO: set a realistic value
+        D_g_max = 0.2 * W # TODO: set a realistic value
+        
+        def f(V):
+            L = 0.5 * rho * V**2 * self.S * CL
+            D = 0.5 * rho * V**2 * self.S * CD
+            D_g = min(D_g_max, mu*(W-L)*self.weight_on_MLG) # assumes zero pitching moment
+            return (W/g * V) / (-D - D_g) # ruijgrok eq 16.7-9 and 16.7-1 and 16.7-2 combined
+        
+        s_ground = quad(f, V_T, 0)
+        
+        # the following is for testing
+        step = -0.001
+        V_lst = []
+        s_lst = []
+        s_tot = 0
+        V = V_T
+        
+        # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbels
+        
+        while V > 0:
+            s_tot += f(V)*step
+            s_lst.append(s_tot)
+            V_lst.append(V)
+            V += step
+        
+        return s_ground, V_lst, s_lst, s_tot
         
