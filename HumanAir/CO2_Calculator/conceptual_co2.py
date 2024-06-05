@@ -1,15 +1,17 @@
 import numpy as np
 import csv
 import os
-import json
+
+# import json
 import sys
-import time
+
+# import time
 import pandas as pd
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from aircraft_data import aircraft_data, c206_data
-from unit_conversions import m_s_to_kt
+from HumanAir.aircraft_data import aircraft_data, c206_data
+from HumanAir.unit_conversions import m_s_to_kt
 
 MAINTENANCE_CO2_OVERHAUL = 0.2  # 20% of maintenance CO2 is overhaul
 LEGS = 4  # Number of legs per mission
@@ -18,7 +20,11 @@ LEGS = 4  # Number of legs per mission
 a_factor = 68.37332366  # [$/h] at 1 flight hour
 exponent = -0.423
 
-maintenance_cost_per_hour = lambda FT: a_factor * (FT**exponent)
+
+def maintenance_cost_per_hour(FT):
+    return a_factor * (FT**exponent)
+
+
 # maintenance_cost_per_hour = np.vectorize(maintenance_cost_per_hour)
 
 # Allows caching of relevant data for quick iteration
@@ -96,7 +102,8 @@ def calculate_mission_freqs(mission_file):
 # NOTE: OUTDATED
 def _calculate_standard_co2_flight_lengths(mission_freqs, ac_data=c206_data, design_range=600):
     """
-    Calculate the CO2 emissions (per hour) of a standard aircraft based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 emissions (per hour) of a standard aircraft based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -136,7 +143,8 @@ def _calculate_new_co2_flight_lengths(
     mission_freqs, ac_data=aircraft_data, maintenance_standard_co2=None, V_standard_kts=None, standard_ac_data=c206_data
 ):
     """
-    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -190,7 +198,8 @@ def _calculate_new_co2_flight_lengths(
     overhaul_co2 = MAINTENANCE_CO2_OVERHAUL * maintenance_standard_co2 * FT_ratio
 
     relevant_idx = np.where(mission_freqs[:, 0] * LEGS <= ac_data["Performance"]["range_nm"])
-    # Note: the following 2 don't use `relevant_idx` bc the maintenance cost for the 206 only adds up to 96 if it is calculated for the full range
+    # Note: the following 2 don't use `relevant_idx` bc the maintenance cost for the 206
+    # only adds up to 96 if it is calculated for the full range
     # In any case, the influence on the results is minimal
     maintenance_cost_return_standard_avg = np.sum(maintenance_cost_return_standard[:] * mission_freqs[:, 2]) / np.sum(
         mission_freqs[:, 2]
@@ -213,7 +222,8 @@ def _calculate_co2_reduction_flight_lengths(
     mission_file="maf_mission_graph.csv", ac_data=aircraft_data, standard_ac_data=c206_data
 ):
     """
-    Calculate the CO2 reduction of the aircraft based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 reduction of the aircraft based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -294,7 +304,8 @@ def calculate_new_co2_average_flight(
     standard_ac_data=c206_data,
 ):
     """
-    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile, as given by the frequency of flight lengths.
+    Calculate the CO2 emissions (per hour) of a new aircraft design based on the mission profile,
+    as given by the frequency of flight lengths.
 
     Parameters
     ----------
@@ -322,7 +333,8 @@ def calculate_new_co2_average_flight(
     battery_usage_ratio = ac_data["Power_prop"]["E_bat_Wh"] / (
         flight_time_h * ac_data["Power_prop"]["P_req_cruise_W"]
     )  # TODO: Check if E_bat_Wh is before or after efficiency
-    if battery_usage_ratio > 1: battery_usage_ratio = 1
+    if battery_usage_ratio > 1:
+        battery_usage_ratio = 1
     fuel_required_return_kg = (
         flight_time_h
         * ac_data["Power_prop"]["P_req_cruise_W"]

@@ -4,10 +4,10 @@ import matplotlib.pyplot as plt
 import sys
 import warnings
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from isa import isa
-from aircraft_data import aircraft_data
+from HumanAir.isa import isa
+from HumanAir.aircraft_data import aircraft_data
 
 # PLOT_FLAPPED = False
 
@@ -58,7 +58,15 @@ def calc_nmax_nmin_manoeuvre(MTOW_N):
 
 
 def calculate_manoeuvre_velocities(
-    aircraft_data, MTOW_N=None, WS_Nm2=None, CLmax_clean=None, CLmax_land=None, Vc_ms=None, rho=None, h=None, temp_offset=None
+    aircraft_data,
+    MTOW_N=None,
+    WS_Nm2=None,
+    CLmax_clean=None,
+    CLmax_land=None,
+    Vc_ms=None,
+    rho=None,
+    h=None,
+    temp_offset=None,
 ):
     """
     Calculate the applicable velocities for the loading (manoeuvre) diagram.
@@ -241,28 +249,77 @@ def plot_manoeuvre_diagram(
     #     ax.plot(V_IJ, n_IJ, style, linewidth=2, zorder=20)
 
     ax.plot(V_A, nmax, "ro", ms=markersize)
-    # ax.annotate("A", (V_A, nmax), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
+    # ax.annotate(
+    #     "A",
+    #     (V_A, nmax),
+    #     textcoords="offset points",
+    #     xytext=(-2, 8), ha="center",
+    #     fontweight="bold",
+    #     fontsize=FONT_SIZE
+    # )
 
     ax.plot(Vd_ms, nmax, "ro", ms=markersize)
-    # ax.annotate("D", (Vd_ms, nmax), textcoords="offset points", xytext=(2, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
+    # ax.annotate(
+    #     "D",
+    #     (Vd_ms, nmax),
+    #     textcoords="offset points",
+    #     xytext=(2, 8),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=FONT_SIZE,
+    # )
 
     ax.plot(Vd_ms, 0, "ro", ms=markersize)
-    # ax.annotate("E", (Vd_ms, 0), textcoords="offset points", xytext=(8, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE)
+    # ax.annotate(
+    #     "E", (Vd_ms, 0), textcoords="offset points", xytext=(8, 8), ha="center", fontweight="bold", fontsize=FONT_SIZE
+    # )
 
     ax.plot(Vc_ms, nmin, "ro", ms=markersize)
-    # ax.annotate("F", (Vc_ms, nmin), textcoords="offset points", xytext=(2, -20), ha="center", fontweight="bold", fontsize=FONT_SIZE)
+    # ax.annotate(
+    #     "F",
+    #     (Vc_ms, nmin),
+    #     textcoords="offset points",
+    #     xytext=(2, -20),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=FONT_SIZE,
+    # )
 
     ax.plot(V_HH, nmin, "ro", ms=markersize)
-    # ax.annotate("H", (V_H, nmin), textcoords="offset points", xytext=(-2, -20), ha="center", fontweight="bold", fontsize=FONT_SIZE)
+    # ax.annotate(
+    #     "H",
+    #     (V_H, nmin),
+    #     textcoords="offset points",
+    #     xytext=(-2, -20),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=FONT_SIZE,
+    # )
 
     ax.plot(0, 0, "ro", ms=markersize)
 
     # if PLOT_FLAPPED:
     #     ax.plot(V_I, nmax_flap, "ro", ms=markersize)
-    #     # ax.annotate("I", (V_I, nmax_flap), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=15)
+    #     # ax.annotate(
+    #     #     "I",
+    #     #     (V_I, nmax_flap),
+    #     #     textcoords="offset points",
+    #     #     xytext=(-2, 8),
+    #     #     ha="center",
+    #     #     fontweight="bold",
+    #     #     fontsize=15,
+    #     # )
 
     #     ax.plot(V_J, nmax_flap, "ro", ms=markersize)
-    #     # ax.annotate("J", (V_J, nmax_flap), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=15)
+    #     # ax.annotate(
+    #     #     "J",
+    #     #     (V_J, nmax_flap),
+    #     #     textcoords="offset points",
+    #     #     xytext=(-2, 8),
+    #     #     ha="center",
+    #     #     fontweight="bold",
+    #     #     fontsize=15,
+    #     # )
 
     LIGHTCOLOUR = "dimgrey"
 
@@ -362,10 +419,10 @@ def plot_manoeuvre_diagram(
 
 if __name__ == "__main__":
     h = 0  # [m]
-    temp_offset = 0 # [deg C]
+    temp_offset = 0  # [deg C]
 
     nmax, nmin = calc_nmax_nmin_manoeuvre(aircraft_data["Weights"]["MTOW_N"])
-    Vc_ms, Vd_ms, V_A, V_S1, V_HH, V_S0 = calculate_manoeuvre_velocities(aircraft_data, h = h, temp_offset = temp_offset)
+    Vc_ms, Vd_ms, V_A, V_S1, V_HH, V_S0 = calculate_manoeuvre_velocities(aircraft_data, h=h, temp_offset=temp_offset)
 
     plot_manoeuvre_diagram(
         Vc_ms,

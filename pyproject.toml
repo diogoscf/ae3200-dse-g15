@@ -12,8 +12,11 @@ dependencies = [
     "scipy",
     "matplotlib",
     "pandas",
-    "openpyxl",
-    "xlwings",
+    "tabulate",
+    "colorama",
+    "colorlog",
+    "scikit-learn",
+    "tqdm",
 ]
 dynamic = ["version"]
 
@@ -26,6 +29,22 @@ packages = ["HumanAir"]
 
 [tool.setuptools.dynamic]
 version = {attr = "HumanAir.__version__"}
+
+[tool.pytest.ini_options]
+addopts = "--cov=HumanAir --cov-report=term-missing --cov-append"
+testpaths = [
+    "tests",
+]
+
+[tool.coverage.report]
+omit = ["__init__.py"]
+
+[tool.mypy]
+exclude = [
+    'tests',
+    'docs',
+]
+warn_unused_configs = true
 
 [tool.black]
 line-length = 120

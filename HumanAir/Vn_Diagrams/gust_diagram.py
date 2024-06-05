@@ -3,11 +3,11 @@ import os
 import matplotlib.pyplot as plt
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from isa import isa
-from Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities
-from aircraft_data import aircraft_data
+from HumanAir.isa import isa
+from HumanAir.Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities
+from HumanAir.aircraft_data import aircraft_data
 
 COMMUTER = False
 
@@ -23,7 +23,7 @@ G = 9.80665  # [m/s^2]
 FONTSIZE = 40
 
 
-def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=False, h = 0, temp_offset = 0):
+def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=False, h=0, temp_offset=0):
     """
     Calculate the applicable loads and velocities for the gust diagram
 
@@ -107,9 +107,9 @@ def plot_gust_diagram(
     n_cruise_nve,
     n_dive_pve,
     n_dive_nve,
-    V_B = None,
-    n_B_pve = None,
-    n_B_nve = None,
+    V_B=None,
+    n_B_pve=None,
+    n_B_nve=None,
     commuter_ac=False,
     ac_name="aircraft",
     save_plot=True,
@@ -176,19 +176,67 @@ def plot_gust_diagram(
     markersize = 15
     if commuter_ac:
         ax.plot(V_B, n_B_pve, "ro", ms=markersize, zorder=20)
-        # ax.annotate("B'", (V_B, n_B_pve), textcoords="offset points", xytext=(-2, 8), ha="center", fontweight="bold", fontsize=15)
+        # ax.annotate(
+        #     "B'",
+        #     (V_B, n_B_pve),
+        #     textcoords="offset points",
+        #     xytext=(-2, 8),
+        #     ha="center",
+        #     fontweight="bold",
+        #     fontsize=15,
+        # )
         ax.plot(V_B, n_B_nve, "ro", ms=markersize, zorder=20)
-        # ax.annotate("G'", (V_B, n_B_nve), textcoords="offset points", xytext=(-2, -20), ha="center", fontweight="bold", fontsize=15)
+        # ax.annotate(
+        #     "G'",
+        #     (V_B, n_B_nve),
+        #     textcoords="offset points",
+        #     xytext=(-2, -20),
+        #     ha="center",
+        #     fontweight="bold",
+        #     fontsize=15,
+        # )
 
     ax.plot(Vc_ms, n_cruise_pve, "ro", ms=markersize, zorder=20)
-    # ax.annotate("C'", (Vc_ms, n_cruise_pve), textcoords="offset points", xytext=(2, 8), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate(
+    #     "C'",
+    #     (Vc_ms, n_cruise_pve),
+    #     textcoords="offset points",
+    #     xytext=(2, 8),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=15,
+    # )
     ax.plot(Vc_ms, n_cruise_nve, "ro", ms=markersize, zorder=20)
-    # ax.annotate("F'", (Vc_ms, n_cruise_nve), textcoords="offset points", xytext=(2, -20), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate(
+    #     "F'",
+    #     (Vc_ms, n_cruise_nve),
+    #     textcoords="offset points",
+    #     xytext=(2, -20),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=15,
+    # )
 
     ax.plot(Vd_ms, n_dive_pve, "ro", ms=markersize, zorder=20)
-    # ax.annotate("D'", (Vd_ms, n_dive_pve), textcoords="offset points", xytext=(4, 8), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate(
+    #     "D'",
+    #     (Vd_ms, n_dive_pve),
+    #     textcoords="offset points",
+    #     xytext=(4, 8),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=15,
+    # )
     ax.plot(Vd_ms, n_dive_nve, "ro", ms=markersize, zorder=20)
-    # ax.annotate("E'", (Vd_ms, n_dive_nve), textcoords="offset points", xytext=(4, -20), ha="center", fontweight="bold", fontsize=15)
+    # ax.annotate(
+    #     "E'",
+    #     (Vd_ms, n_dive_nve),
+    #     textcoords="offset points",
+    #     xytext=(4, -20),
+    #     ha="center",
+    #     fontweight="bold",
+    #     fontsize=15,
+    # )
 
     ax.plot(0, 1, "ro", ms=markersize, zorder=20)
 
