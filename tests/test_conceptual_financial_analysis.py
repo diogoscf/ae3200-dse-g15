@@ -7,7 +7,7 @@ from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_oper
 
 
 def test_hourly_operating_cost():
-    input = {
+    inp = {
         "mission_file": "maf_mission_graph.csv",
         "standard_aircraft_data": {
             "name": "c206",
@@ -55,6 +55,6 @@ def test_hourly_operating_cost():
 
     assert math.isclose(
         182.7,
-        hourly_operating_cost(input["mission_file"], input["standard_aircraft_data"], input["aircraft_data"]),
+        hourly_operating_cost(inp["mission_file"], inp["standard_aircraft_data"], inp["aircraft_data"]),
         abs_tol=0.05,
     )
