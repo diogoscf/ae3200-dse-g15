@@ -106,9 +106,10 @@ L_cruise, D_cruise = force_distribution(Cl_DATA, Cdi_DATA, AoA, c ,Vcruise, rho)
 W_cruise = weight_distribution(structuralmass, batterymass_w, Cl_DATA, c, AoA)
 M_cruise = moment_distribution(c, Vcruise, rho, Cm_DATA, AoA)
 
-print(c)
 # nl = 3.8
 Vx, Vz, Mx, My, Mz = InternalLoads(nl*L_cruise, T, W_cruise, abs(nl)*D_cruise, nl*M_cruise, n, y_points, Cl_DATA, AoA, sweep)
+
+print('Mx', Mx)
 
 # nl = origin
 Vx1, Vz1, Mx1, My1, Mz1 = InternalLoads(L_cruise, T, W_cruise, D_cruise, M_cruise, n, y_points, Cl_DATA, AoA, sweep)

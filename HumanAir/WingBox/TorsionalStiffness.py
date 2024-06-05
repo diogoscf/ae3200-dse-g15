@@ -228,11 +228,14 @@ chord1, y = torisonal_stiffness.chord()
 #plt.axis('equal')
 #plt.show()
 idx = find_nearest(y, 3.986)
-print(y[idx])
+#print(y[idx])
 
-#print(torisonal_stiffness.spars())
+l_box_up, l_box_down = torisonal_stiffness.d_s1s2()
+
+print(l_box_up.reshape(len(l_box_up), 1))
+
 h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
-print(h_s1s2[idx])
+#print(h_s1s2[idx])
 
 '''
 plt.plot(df_down[:,0], df_down[:,1])
