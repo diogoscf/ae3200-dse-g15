@@ -256,7 +256,7 @@ if __name__ == '__main__':
     run_generate = False
     run_classI = False
     run_classII = True
-    run_fuselage_sizing = True
+    run_fuselage_sizing = False
 
     # initialise the logging
     setup_logging()
@@ -517,20 +517,21 @@ if __name__ == '__main__':
         class_2_dictionary['Power_prop']['E_bat_Wh']=class_2_dictionary['CL2Weight']['Wbat_N']/9.81*class_2_dictionary['Power_prop']["E_bat_Wh/kg"]
 
 
-        # print the co2 reduction with the current battery technology and the future expected battery technology and
-        first_level=round(co2(ac_data=class_2_dictionary), 2)
-        print("Reduction with current battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
+        # print the co2 reduction with the current battery technology
+        first_level = round(co2(ac_data=class_2_dictionary), 2)
+        print("Reduction with current battery technology: " + str(round(first_level * 100, 2)) + "[%]")
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 685 / 350 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
 
-        second_level=round(co2(ac_data=class_2_dictionary), 2)
-        print("Reduction with future expected battery technology: " + str(round(co2(ac_data=class_2_dictionary) * 100, 2)) + "[%]")
+        # print the co2 reduction with the future expected battery technology
+        second_level = round(co2(ac_data=class_2_dictionary), 2)
+        print("Reduction with future expected battery technology: " + str(round(second_level * 100, 2)) + "[%]")
         logging.info(" Class II Weight Groups calculated successfully")
 
         # save the correct energy for current battery technology
         class_2_dictionary["Power_prop"]["E_bat_Wh"] = 350 / 685 * class_2_dictionary["Power_prop"]["E_bat_Wh"]
 
         logging.info(" Yearly prediction of CO2 reduction vs new Battery technology introduction year")
-        improvement_co2(first_level=first_level,second_level=second_level,check_over_time=True)
+        improvement_co2(first_level = first_level,second_level = second_level,check_over_time=True)
 
         # calculate the loading distribution diagrams
         class_2_dictionary['Performance']['n_max'], class_2_dictionary['Performance']['n_min'] = calc_nmax_nmin_manoeuvre(
