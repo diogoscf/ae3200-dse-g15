@@ -2,27 +2,27 @@ import os
 import sys
 import numpy as np
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities, calc_nmax_nmin_manoeuvre
-from Vn_Diagrams.gust_diagram import calculate_gust_diagram_loads
-from aircraft_data import aircraft_data
-from isa import isa
+from HumanAir.Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities, calc_nmax_nmin_manoeuvre
+from HumanAir.Vn_Diagrams.gust_diagram import calculate_gust_diagram_loads
+from HumanAir.aircraft_data import aircraft_data
+from HumanAir.isa import isa
 
 
 def calculate_load_design_values(aircraft_data):
     h_cruise = aircraft_data["Performance"]["Altitude_Cruise_m"]
     h_land = aircraft_data["Performance"]["Altitude_Land_m"]
     temp_offset = aircraft_data["Performance"]["Temp_offset_TO_Land_cruise"]
-    
+
     Vc_ms, Vd_ms, _, V_S1, _, _ = calculate_manoeuvre_velocities(aircraft_data)
     n_max_manoeuvre, _ = calc_nmax_nmin_manoeuvre(aircraft_data["Weights"]["MTOW_N"])
-    n_max_gust_cruise, *_ = (
-        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, h = h_cruise, temp_offset = temp_offset)
+    n_max_gust_cruise, *_ = calculate_gust_diagram_loads(
+        aircraft_data, Vc_ms, Vd_ms, V_S1, h=h_cruise, temp_offset=temp_offset
     )
 
-    n_max_gust_land, *_ = (
-        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, h = h_land, temp_offset = temp_offset)
+    n_max_gust_land, *_ = calculate_gust_diagram_loads(
+        aircraft_data, Vc_ms, Vd_ms, V_S1, h=h_land, temp_offset=temp_offset
     )
 
     n_max_cruise = max(n_max_manoeuvre, n_max_gust_cruise)
@@ -38,6 +38,7 @@ def calculate_load_design_values(aircraft_data):
     M_D = Vd_ms / np.sqrt(gamma * R * T)
 
     return M_D, V_H, n_ult_cruise, n_ult_land
+
 
 def save_to_acdata_dict(aircraft_data, M_D, V_H, n_ult_c, n_ult_l):
     aircraft_data["Performance"]["n_ult"] = n_ult_c
