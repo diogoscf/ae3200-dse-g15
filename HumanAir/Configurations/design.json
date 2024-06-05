@@ -51,9 +51,16 @@
         "fus_width_m": 1.6,
         "MGC_m": 1.93,
         "XLEMAC_m": 3.450526018238223,
-        "tail_length_m": 5.0,
+        "tail_length_m": 5.2,
         "l_f_nonosecone": 9.5,
-        "fuselage_max_perimeter": 6.8
+        "fuselage_max_perimeter": 6.8,
+        "w_engine": 0.85,
+        "h_engine": 0.75,
+        "l_engine": 1.1,
+        "s_engine": 0.1,
+        "h_battery": 0.2286,
+        "h_tail": 2.52,
+        "volume_battery": 0.7
     },
     "Aero": {
         "CLmax_clean": 1.8,
