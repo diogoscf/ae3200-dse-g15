@@ -341,7 +341,7 @@ if __name__ == "__main__":
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = True
+    run_classI = False
     run_classII = True
     run_fuselage_sizing = False
 
@@ -646,10 +646,6 @@ if __name__ == "__main__":
         ac_data["Power_prop"]["P_req_cruise_W"] = old_P_cruise
         ac_data["Power_prop"]["E_bat_Wh"] = old_E_bat
         ac_data["Power_prop"]["P_req_TO_W"] = old_P_TO
-        ac_data['Power_prop']['bat'] = pbat
-        ac_data['Power_prop']['P_req_cruise_W'] = old_P_cruise
-        ac_data['Power_prop']['E_bat_Wh'] = old_E_bat
-        ac_data['Power_prop']["P_req_TO_W"] = old_P_TO
         
 
         # calculate the class 2 weights components and print them
