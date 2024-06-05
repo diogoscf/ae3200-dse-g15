@@ -237,7 +237,7 @@ def test_load_design_json():
 
 def test_generate_function():
     with (
-        # patch("builtins.open", new_callable=unittest.mock.mock_open) as mock_open,
+        patch("builtins.open", new_callable=unittest.mock.mock_open) as _,
         patch("json.dump") as mock_json_dump,
         patch("HumanAir.main.WP_WS") as mock_WP_WS,
         patch("HumanAir.main.WeightEstimation") as mock_WeightEstm,

@@ -234,7 +234,7 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
 
         # save the json file with all possible design options
         data_iterations_json_path = os.path.join(script_dir, "..", "HumanAir", "Configurations", "data_iterations.json")
-        with open(data_iterations_json_path, "w") as f:
+        with open(data_iterations_json_path, "w+") as f:
             json.dump(dict_iterations, f, indent=4)
 
 
