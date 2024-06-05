@@ -36,10 +36,10 @@ class FuselageSizing:
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
-    t_fuse = 0.04  # fuselage structural thickness [m]
+    t_fuse = 0.05  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
     
-    def __init__(self, n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery): 
+    def __init__(self, n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery, w_aisle, h_aisle, w_motor, l_motor): 
         self.n_seat = n_seat  # number of total seats
         self.w_engine = w_engine  # width of engine [m]
         self.h_engine = h_engine  # height of engine [m]
@@ -58,6 +58,10 @@ class FuselageSizing:
         self.l_tailcone = l_tailcone  # length of tailcone
         self.h_tail = h_tail  # height of tail
         self.V_battery = V_battery  # volume of battery [m^3]
+        self.w_aisle = w_aisle
+        self.h_aisle = h_aisle
+        self.w_motor = w_motor
+        self.l_motor = l_motor
         
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
@@ -69,7 +73,7 @@ class FuselageSizing:
         return FuselageSizing.l_pax * self.n_row()
     
     def length_main_strut(self, s_gear):
-        l_lateral_strut = (self.D_main / 2) + s_gear
+        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle/2
         h = self.h_main_strut
         l = self.l_main_lateral - l_lateral_strut
         return np.sqrt(l**2 + h**2) 
@@ -96,7 +100,7 @@ class FuselageSizing:
         if self.check_back(s_gear):
             print('Landing gear folds backward')
             l_end_main_land = self.l_long_main + self.length_main_strut(s_gear) + (self.D_main / 2)
-            w_battery = s_gear * 2 + (self.D_main / 2)
+            w_battery = (self.D_main / 2) + self.w_aisle
             l_battery = self.l_battery(w_battery)
             
             while self.length_main_strut(s_gear) - (self.D_main / 2) - l_battery < 0:
@@ -111,14 +115,17 @@ class FuselageSizing:
                 
         else:
             #print('Landing gear folds forward')
-            w_battery = (self.top_width()-2*FuselageSizing.s)* 2
+            w_battery = (self.top_width()-0.3)
             l_battery = self.l_battery(w_battery)
+            print('battery width', w_battery)
+            print('battery length', l_battery)
+            print('battery height', self.h_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
     
     '''Overall dimensions'''
     def top_width(self):
-        return round((FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2, 3)
+        return round(((FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2) + w_aisle, 3)
     
     @staticmethod
     def bigger_mag(a, b):
@@ -142,7 +149,7 @@ class FuselageSizing:
         return FuselageSizing.t_fuse + FuselageSizing.s_bat_wheel + self.h_main
 
     def length_fus(self):
-        return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock, 3)
+        return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock + self.l_motor, 3)
     
     def fuselage_wetted(self, s_gear):
         # assuming trapezoidal shape 
@@ -213,6 +220,7 @@ class FuselageSizing:
             main_land_strut = patches.Rectangle((self.l_long_main, FuselageSizing.t_fuse + self.h_main/2), -self.length_main_strut(s_gear), 0.01, linewidth=0.5, edgecolor='k', facecolor='none')
             main_land_gear = patches.Rectangle((self.l_long_main-self.length_main_strut(s_gear)-self.D_main/2, FuselageSizing.t_fuse), self.D_main, self.h_main, linewidth=0.5, edgecolor='m', facecolor='none')
             battery = patches.Rectangle((self.l_end_nose_land()+FuselageSizing.t_fuse, FuselageSizing.t_fuse), l_battery, self.h_battery, linewidth=0.5, edgecolor='g', facecolor='none')
+            print('start of battery', self.l_end_nose_land()+FuselageSizing.t_fuse)
             rectangles.append(main_land_strut)
             rectangles.append(main_land_gear)
             rectangles.append(battery)
@@ -304,18 +312,22 @@ l_long_nose = 0.40874
 l_long_main = 4.21989077
 l_tailcone = 5.02 
 h_tail = 2.52 
-V_battery = 0.3
+V_battery = 0.71
+w_aisle = 0.381
+h_aisle = 1.524
+w_motor = 0.54
+l_motor = 0.176
 
-fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery)
+fuselage_size = FuselageSizing(n_seat, w_engine, l_engine, h_engine, s_engine, D_nose, h_nose, D_main, h_main, h_nose_strut, h_main_strut, l_main_lateral, l_long_nose, l_long_main, l_tailcone, h_tail, V_battery, w_aisle=w_aisle, h_aisle=h_aisle, w_motor=w_motor, l_motor=l_motor)
 
 print('top_width', fuselage_size.top_width())
-print('bottom_width',fuselage_size.bottom_width(s_gear=0.2))
+print('bottom_width',fuselage_size.bottom_width(s_gear=0.1))
 print('fuselage height', fuselage_size.height())
 print('fuselage_length without engine', fuselage_size.length_fus()-l_engine-fuselage_size.l_enbu)
 print('fuselage length', fuselage_size.length_fus())
-print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.2))
+print('maximum perimeter', fuselage_size.maximum_perimeter(s_gear=0.1))
 #print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
-print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.2))
+print('main_strut_length',fuselage_size.length_main_strut(s_gear=0.1))
 print('nose_strut_length',h_nose_strut)
 
 fuselage_size.plot_side_drawing(s_gear=0.2)
