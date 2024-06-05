@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import json
 import os
 import matplotlib.pyplot as plt
@@ -7,7 +7,7 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from isa import isa
+# from isa import isa
 
 FILE = "conventional.json"
 COMMUTER = True
@@ -80,8 +80,8 @@ def payload_range_points(filename):
     max_fuel_endurance_h = (E_bat_available_Wh + E_fuel_available_Wh) / P_req_W
     max_fuel_range_km = max_fuel_endurance_h * Vc_kmh
 
-    CD0, AR, e = aircraft_data["CD0"], aircraft_data["AR"], aircraft_data["e"]
-    WS_Nm2 = aircraft_data["W/S_N/m2"]
+    # CD0, AR, e = aircraft_data["CD0"], aircraft_data["AR"], aircraft_data["e"]
+    # WS_Nm2 = aircraft_data["W/S_N/m2"]
     ferry_weight_N = OEW_N + MFW_N
     # ferry_power_req_W = power_required_W(ferry_weight_N, MTOW_N, Vc_ms, WS_Nm2, CD0, AR, e)
     ferry_power_req_W = ferry_weight_N / WP_NW
@@ -169,9 +169,13 @@ if __name__ == "__main__":
     ax.set_xlim(-20, 2200)
 
     fig.set_size_inches(20, 7)
-    # fig.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range-{aircraft_data['name']}.pdf"), bbox_inches="tight", dpi=200)
+    # fig.savefig(
+    #     os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range-{aircraft_data['name']}.pdf"),
+    #     bbox_inches="tight",
+    #     dpi=200,
+    # )
     fig.savefig(
-        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", f"payload-range.pdf"),
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "payload-range.pdf"),
         bbox_inches="tight",
         dpi=200,
     )
