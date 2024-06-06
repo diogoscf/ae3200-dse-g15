@@ -47,6 +47,7 @@ class FuselageSizing:
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
+
     def __init__(self, ac_data=aircraft_data):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
@@ -66,6 +67,7 @@ class FuselageSizing:
         self.l_tailcone = ac_data["Geometry"]["tail_length_m"]  # length of tailcone
         self.h_tail = ac_data["Geometry"]["h_tail"]  # height of tail
         self.V_battery = ac_data["Geometry"]["volume_battery"]  # volume of battery [m^3]
+
 
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
@@ -420,6 +422,21 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
+    
+    def position(self):
+        my_dict = {}
+        my_dict['wall'] = (0, FuselageSizing.t_fuse)
+        my_dict['motor'] = (my_dict['wall'][-1], my_dict['wall'][-1] + self.l_motor)
+        my_dict['engine'] = (my_dict['motor'][-1], my_dict['motor'][-1] + self.l_engine)
+        my_dict['firewall'] = (my_dict['engine'][-1], my_dict['engine'][-1] + FuselageSizing.l_enbu)
+        my_dict['cockpit'] = (my_dict['firewall'][-1], my_dict['firewall'][-1] + self.l_cock)
+        my_dict['row1'] = (my_dict['cockpit'][-1], my_dict['cockpit'][-1] + FuselageSizing.l_pax)
+        my_dict['row2'] = (my_dict['row1'][-1], my_dict['row1'][-1] + FuselageSizing.l_pax)
+        my_dict['row3'] = (my_dict['row2'][-1], my_dict['row2'][-1] + FuselageSizing.l_pax)
+        my_dict['nosecone'] = (my_dict['row3'][-1], my_dict['row3'][-1] + self.l_nosecone)
+        my_dict['wall'] = (my_dict['nosecone'][-1], my_dict['nosecone'][-1] + FuselageSizing.t_fuse)
+        return my_dict
+  
 
 if __name__ == "__main__":
     # # Example usage:
