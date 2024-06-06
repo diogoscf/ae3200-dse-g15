@@ -9,7 +9,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
 
-
 class FuselageSizing:
     """
     Seat specification
@@ -35,18 +34,18 @@ class FuselageSizing:
 
     """
     Landing gear specification
-    """
+    """ 
     s_aft = 0.05  # landing gear clearance [m]
 
     """
     Other specifications
     """
+    
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
-
 
     def __init__(self, ac_data=aircraft_data):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
@@ -68,12 +67,11 @@ class FuselageSizing:
         self.h_tail = ac_data["Geometry"]["h_tail"]  # height of tail
         self.V_battery = ac_data["Geometry"]["volume_battery"]  # volume of battery [m^3]
 
-
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
 
     def l_nosecone(self):
-        return self.l_engine + FuselageSizing.l_enbu
+        return self.l_engine + FuselageSizing.l_enbu + self.l_motor
 
     def l_cabin(self):
         return FuselageSizing.l_pax * self.n_row()
@@ -99,7 +97,6 @@ class FuselageSizing:
     def check_back(self, s_gear):
         l_end_main_land = self.l_end_main_land(s_gear)
         l_end_nose_land = self.l_end_nose_land()
-
         return True if l_end_main_land - l_end_nose_land < 0 else False
 
     def battery_dim(self, s_gear):
@@ -436,7 +433,7 @@ class FuselageSizing:
         my_dict['nosecone'] = (my_dict['row3'][-1], my_dict['row3'][-1] + self.l_nosecone)
         my_dict['wall'] = (my_dict['nosecone'][-1], my_dict['nosecone'][-1] + FuselageSizing.t_fuse)
         return my_dict
-  
+    
 
 if __name__ == "__main__":
     # # Example usage:
@@ -469,6 +466,7 @@ if __name__ == "__main__":
     # print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
     print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.2))
     print("nose_strut_length", fuselage_size.h_nose_strut)
+    print("position", fuselage_size.position())
 
     fuselage_size.plot_side_drawing(s_gear=0.2)
     fuselage_size.plot_front_view(s_gear=0.2)
