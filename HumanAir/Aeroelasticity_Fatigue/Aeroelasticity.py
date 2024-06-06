@@ -156,7 +156,10 @@ def Flutter(K_h, K_theta, rho_arr, V_arr, CL_alpha, b, a, x_theta, m_arr, I_thet
                     "V_max_flight [m/s]": V_arr[-1]*1.15, 
                     "altitude [m]": rho_altitude(rho),
                     "mass_configuration [kg]": m,
-                    "V_flutter [m/s]": V_flut
+                    "V_flutter [m/s]": V_flut, 
+                    "a": a,
+                    "b": b,
+                    "x_theta": x_theta,
                 }
                 results.append(result)
 
@@ -230,7 +233,7 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
     plt.plot(V_arr, real_eigenvalues)
     plt.xlabel("V [m/s]")
     plt.ylabel("Re(p)")
-    plt.title("Flutter diagram")
+    plt.title("Flutter diagram - Real parts of eigenvalues")
     plt.show()
     
     # plot imaginary parts of eigenvalue pairs in p against V
@@ -238,7 +241,7 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
     plt.plot(V_arr, imaginary_eigenvalues)
     plt.xlabel("V [m/s]")
     plt.ylabel("Im(p)")
-    plt.title("Flutter diagram")
+    plt.title("Flutter diagram - Imaginary parts of eigenvalues")
     plt.show()
 
     return None
