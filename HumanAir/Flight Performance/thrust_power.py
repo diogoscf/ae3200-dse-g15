@@ -12,8 +12,11 @@ def P_shaft(acf, h, dT, use_takeoff_power=False):
     efficiency) for either continuous operation or short operation.
     
     It is assumed that shaft power decreases with air density but is constant
-    with velocity. The decrease with altitude is computed using the Gagg and
+    with velocity. This is a good assumption according to Ruijgrok p132-p133
+    and Gudmundson. The decrease with altitude is computed using the Gagg and
     Ferrar model (sourced from Gudmundseo).
+        
+    TODO: incorporate effect of temperature
     
     Parameters
     ----------
@@ -46,6 +49,9 @@ def P_a(acf, h, dT, use_takeoff_power=False, V=None):
     Max continuous power available for given conditions. If no airspeed is
     given then the maximum propeller efficiency is used instead of the speed
     dependent one.
+    
+    Constant propeller efficiency at max value is a good assumption for high
+    velocities according to Ruijgrok p176.
 
     Parameters
     ----------
