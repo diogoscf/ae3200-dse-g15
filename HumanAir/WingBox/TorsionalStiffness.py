@@ -13,13 +13,15 @@ def spars(chord, x_pos):
         print(chord)
     return array
 
+
 def MOI(y, chord, spars):
     return
+
 
 ########## input ###########
 Sw = 39  # [m2]
 taper_ratio = 0.4
-Cl_DATA = import_data2('HumanAir\WingBox\Cl_DATA.txt')
+Cl_DATA = import_data2("HumanAir\WingBox\Cl_DATA.txt")
 AoA = -6
 n = 5
 
@@ -30,4 +32,4 @@ chord_length = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
 # Calculate the spars positions based on the chord length
 spars_positions = spars(chord_length, x_pos)
 
-#print(spars_positions)
+# print(spars_positions)

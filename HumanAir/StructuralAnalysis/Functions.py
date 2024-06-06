@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 import re
 import pandas as pd
 import os
@@ -72,3 +72,12 @@ def import_data2(file_name):
                 data[angle]["y_span"].append(y_positions)
                 data[angle]["coefficient"].append(lift_distribution)
     return data
+
+
+def chord(Sw, taper_ratio, Cl_DATA, AoA, n):
+    b = Cl_DATA[AoA]["y_span"][-1] * 2
+    # Generate spanwise coordinate points
+    y = np.linspace(Cl_DATA[AoA]["y_span"][0], Cl_DATA[AoA]["y_span"][-1], n)  # n is the number of nodes
+    # Calculate the chord distribution
+    chord_length = 2 * Sw / (1 + taper_ratio) / b * (1 - (1 - taper_ratio) * np.abs(2 * y / b))
+    return chord_length.reshape(len(chord_length), 1), y

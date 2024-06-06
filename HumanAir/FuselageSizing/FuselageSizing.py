@@ -81,7 +81,7 @@ class FuselageSizing:
         return FuselageSizing.l_pax * self.n_row()
 
     def length_main_strut(self, s_gear):
-        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle/2
+        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle / 2
         h = self.h_main_strut
         l_lateral = self.l_main_lateral - l_lateral_strut
         return np.sqrt(l_lateral**2 + h**2)
@@ -119,15 +119,15 @@ class FuselageSizing:
             l_fus = self.length_fus()
 
             if l_fus - self.l_tailcone < l_end_main_land:
-                print("Landing gear cannot be folded backward or forward")
+                raise ValueError("Landing gear cannot be folded backward or forward")
 
         else:
             # print('Landing gear folds forward')
-            w_battery = (self.top_width() - 2 * FuselageSizing.s)
+            w_battery = self.top_width() - 2 * FuselageSizing.s
             l_battery = self.l_battery(w_battery)
-            print('battery width', w_battery)
-            print('battery length', l_battery)
-            print('battery height', self.h_battery)
+            # print("battery width", w_battery)
+            # print("battery length", l_battery)
+            # print("battery height", self.h_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
 
@@ -135,7 +135,7 @@ class FuselageSizing:
 
     def top_width(self):
         return round(((FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2) + self.w_aisle, 3)
-    
+
     @staticmethod
     def bigger_mag(a, b):
         return a if a > b else b
@@ -167,7 +167,7 @@ class FuselageSizing:
 
     def length_fus(self):
         return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock + self.l_motor, 3)
-    
+
     def fuselage_wetted(self, s_gear):
         # assuming trapezoidal shape
         h_fus = self.height()
