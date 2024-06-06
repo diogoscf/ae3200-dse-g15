@@ -44,7 +44,7 @@ def save_to_acdata_dict(aircraft_data, M_D, V_H, n_ult_c, n_ult_l):
     aircraft_data["Performance"]["n_ult"] = n_ult_c
     aircraft_data["Performance"]["n_ult_l"] = n_ult_l
     aircraft_data["Performance"]["M_D"] = M_D
-    aircraft_data["Performance"]["VH_m/s"] = V_H
+    aircraft_data["Performance"]["Vh_m/s"] = V_H
 
 
 if __name__ == "__main__":
