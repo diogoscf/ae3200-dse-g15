@@ -1,11 +1,15 @@
 import numpy as np
 from scipy.optimize import minimize
 from scipy.integrate import cumulative_trapezoid
-from LoadDistributions import Mx
-from TorsionalStiffness import TorsionalStiffness
-from Functions import import_data2
-
+import sys
+import os
 import matplotlib.pyplot as plt
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from HumanAir.StructuralAnalysis.WingStructure import WingStructure
+from Functions import import_data2
+from LoadDistributions import Mx
 
 
 def calculate_sizes(percentage, total_size):
@@ -83,12 +87,12 @@ n_halfspan = n_fullspan // 2
 max_deflect = 2  # [m]
 
 # Initialize Torsional Stiffness Class
-torsional_stiffness = TorsionalStiffness(
+torsional_stiffness = WingStructure(
     file_path, file_path_y, Sw, taper_ratio, AoA, n_fullspan, t1_spar, t2_spar, t_skin, x_pos, A_str, Cr, b
 )
 h_mid, h_s1s2 = torsional_stiffness.h_s1s2()
 l_box_up, l_box_down = torsional_stiffness.d_s1s2()
-c, y = torsional_stiffness.chord()
+c, y = torsional_stiffness.chord_distribution()
 h_mid, h_s1s2 = h_mid[h_mid.shape[0] // 2 :], h_s1s2[h_s1s2.shape[0] // 2 :]
 l_box_up, l_box_down = l_box_up[l_box_up.shape[0] // 2 :], l_box_down[l_box_down.shape[0] // 2 :]
 c, y = c[c.shape[0] // 2 :], y[y.shape[0] // 2 :]

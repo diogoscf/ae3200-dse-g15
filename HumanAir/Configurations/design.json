@@ -62,7 +62,14 @@
         "w_aisle": 0.381,
         "h_aisle": 1.524,
         "w_motor": 0.54,
-        "l_motor": 0.176
+        "l_motor": 0.176,
+        "t_spar_tip": 0.010,
+        "t_spar_root": 0.025,
+        "t_skin_wing": 0.007,
+        "spar_pos": [0.15, 0.5],
+        "wing_stringer_area": 0.02,
+        "strut_loc_b/2": 0.4,
+        "strut_loc_MAC": 0.25
     },
     "Aero": {
         "CLmax_clean": 1.8,
