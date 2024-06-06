@@ -50,7 +50,7 @@ class Class_II_Weight:
         self.t_root_max_h = m_to_ft(ac_data["Aero"]["t_root_max_h"])
         self.t_root_max_v = m_to_ft(ac_data["Aero"]["t_root_max_v"])
 
-        self.V_H = m_s_to_kt(ac_data["Performance"]["VH_m/s"])
+        self.V_H = m_s_to_kt(ac_data["Performance"]["Vh_m/s"])
         self.V_c = m_s_to_kt(ac_data["Performance"]["Vc_m/s"])
         self.M_D = ac_data["Performance"]["M_D"]
         self.QCW_to_QCh = m_to_ft(ac_data["Stability"]["QCW_to_QCh"])
