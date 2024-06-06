@@ -341,9 +341,9 @@ if __name__ == "__main__":
 
     # set up the conditions to run the program
     run_generate = False
-    run_classI = True
-    run_classII = False
-    run_fuselage_sizing = True
+    run_classI = False
+    run_classII = True
+    run_fuselage_sizing = False
 
     # initialise the logging
     setup_logging()
