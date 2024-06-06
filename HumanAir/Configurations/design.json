@@ -42,7 +42,7 @@
         "N_e": 1,
         "N_t": 2,
         "P_req_TO_W": 258489.67078387988,
-        "Dp_m": 2.2
+        "Dp_m": 2.286
     },
     "Geometry": {
         "fus_height_m": 1.8,
@@ -196,6 +196,9 @@
         "Wpl": 705.6,
         "Engine Weight": 3988.3536,
         "Propeller Weight": 988.848,
-        "Electric Motor Weight": 384.552
+        "Electric Motor Weight": 384.552,
+        "Pilot Weight": 988.848,
+        "Passenger Mass": 84,
+        "Luggage Mass": 16.8
     }
 }
