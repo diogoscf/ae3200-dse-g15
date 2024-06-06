@@ -58,7 +58,12 @@
         "s_engine": 0.1,
         "h_battery": 0.2286,
         "h_tail": 2.52,
-        "volume_battery": 0.7
+        "volume_battery": 0.7,
+        "w_aisle": 0.381,
+        "h_aisle": 1.524,
+        "w_motor": 0.54,
+        "l_motor": 0.176,
+        "l_empty": 0.32
     },
     "Aero": {
         "CLmax_clean": 1.8,
