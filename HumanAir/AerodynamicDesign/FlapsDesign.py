@@ -1,9 +1,16 @@
 import os
 import sys
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from HumanAir.aircraft_data import aircraft_data
+
+def chord(data=aircraft_data, location=1.9):
+    result = 2 * data["Aero"]["S_Wing"] / (
+        1 + data["Aero"]["Taper_Wing"]) / data["Aero"]["b_Wing"] * (1 - (
+            1 - data["Aero"]["Taper_Wing"]) / data["Aero"]["b_Wing"] * 2 * location)
+    return result
 
 def flaps_design(ac_data=aircraft_data):
     CLmax_clean = ac_data["Aero"]["CLmax_clean"]
@@ -18,6 +25,22 @@ def flaps_design(ac_data=aircraft_data):
     if Swf> 0.8 * ac_data["Aero"]["S_Wing"]:
         raise Exception("Not enough space for flaps")
     
+    # find location of flap over wing
+    flap_start = ac_data["Geometry"]["fus_width_m"] / 2 + 0.1 * ac_data["Aero"]["b_Wing"] / 2
+    
+    # binary search to find the end point of the flap
+    start = 1.9
+
+    flap_end_lst=np.arange(start+0.1, ac_data["Aero"]["b_Wing"]/2, 0.01)
+
+    for flap_end in flap_end_lst:
+        Area = 0.5 * (flap_end - flap_start) * (chord(data=ac_data,location=flap_start) + chord(data=ac_data,location=flap_end))
+        if abs(2*Area-Swf) < 0.1:
+            break
+
+    ac_data["Flaps"]["flap_start"] = flap_start / (ac_data["Aero"]["b_Wing"]/2)
+    ac_data["Flaps"]["flap_end"] = flap_end / (ac_data["Aero"]["b_Wing"]/2)
+
     cf_c = 0.25 # value valid only for plain flap
 
     ac_data["Flaps"]["Swf"]=Swf # update dictionary
