@@ -180,6 +180,34 @@ def plot_landing_performance(acf):
     plt.xlabel("Ground distance [m]")
     plt.ylabel("Velocity [m/s]")
     plt.show()
+    
+    
+def plot_thrust(acf):
+    v_lst = np.arange(0, acf.V_max(acf.W_OE, 0, 0), 1)
+    T_lst = []
+    for V in v_lst:
+        T_lst.append(acf.T(V, 0, 0, use_takeoff_power=True))
+    plt.figure(figsize=(10,7))
+    plt.plot(v_lst, T_lst)
+    plt.xlabel("Velocity [m/s]")
+    plt.ylabel("Thrust [N]")
+    plt.show()
+    
+    print(f"Max thrust: {T_lst[0]:.2f}")
+    print(f"Min thrust: {T_lst[-1]:.2f}")
+
+    
+    v_lst = np.arange(0, acf.V_max(acf.W_OE, 0, 0), 1)
+    T_lst = []
+    for V in v_lst:
+        T_lst.append(acf.prop_eff(V, 0, 0, use_takeoff_power=True))
+    plt.figure(figsize=(10,7))
+    plt.plot(v_lst, T_lst)
+    plt.xlabel("Velocity [m/s]")
+    plt.ylabel("Thrust [N]")
+    plt.show()
+    
+    print(f"Max eff: {T_lst[-1]:.2f}")
 
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
@@ -189,4 +217,4 @@ if __name__ == "__main__":
     plot_cruise_power_setting(acf)
     plot_take_off_performance(acf)
     plot_landing_performance(acf)
-    
+    plot_thrust(acf)

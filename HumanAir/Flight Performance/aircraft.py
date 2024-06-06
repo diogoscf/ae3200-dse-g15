@@ -1,8 +1,11 @@
-from helper import density
 import json
 import numpy as np
 from scipy.optimize import root_scalar
 from scipy.integrate import quad
+import inspect
+
+from helper import density
+import thrust_power
 
 class Aircraft:
     def __init__(self, FILE="design.json"):
@@ -36,6 +39,8 @@ class Aircraft:
         self.CL_ground_land = .7 # C_L while on level runway with flaps in land position
         self.number_of_engines = 1 # TODO: use design.json
         self.propeller_diameter = 2 # TODO: use deisng.json
+        self.spinner_diameter = 0.3 # TODO: use deisng.json
+
         
         self.retractable_gear = dat["Landing_gear"]["Retractable"]
 
@@ -58,7 +63,7 @@ class Aircraft:
         self.takeoff_power_sealevel   = 250500 # engine power without losses
         # TODO: check definition
         self.eff_powertrain = dat["Power_prop"]["eta_powertrain"]
-        self.eff_prop       = dat["Power_prop"]["eta_p"]
+        self.max_eff_prop       = dat["Power_prop"]["eta_p"] # max eff prop
         
         # calculated data
         self.LDmax = 0.5 * np.sqrt(np.pi*self.AR*self.e_clean/self.CD0_clean) # ruijgrok p107
@@ -91,6 +96,18 @@ class Aircraft:
             
         return CD0 + CL**2 / (np.pi * self.AR * e)
     
+    def P_shaft(self, h, dT, use_takeoff_power=False):
+        return thrust_power.P_shaft(self, h, dT, use_takeoff_power=use_takeoff_power)
+    
+    def P_a(self, h, dT, use_takeoff_power=False, V=None):
+        return thrust_power.P_a(self, h, dT, use_takeoff_power=use_takeoff_power, V=V)
+        
+    def T(self, V_ms, h, dT, use_takeoff_power=False):
+        return thrust_power.T(self, V_ms, h, dT, use_takeoff_power=use_takeoff_power)
+    
+    def prop_eff(acf, V, h, dT, use_takeoff_power=False):
+        return thrust_power.prop_eff(acf, V, h, dT, use_takeoff_power=use_takeoff_power)
+        
     def V_Dmin(self, W, h, dT):
         """ Calculates velocity corresponding with minimum drag in clean configuration """
         a = 1 / (self.CD0_clean * np.pi * self.AR * self.e_clean)
@@ -100,21 +117,6 @@ class Aircraft:
         """ Minimum drag (in Newtons) for given weight in clean configuration. Corresponds to V_Dmin """
         return W / self.LDmax
     
-    def P_a(self, h, dT):
-        """ Max continuous power for given conditions
-        TODO: temporary placeholder implementation
-        NOTE: RC_max() assumes constant P_a with velocity, if this changes here
-        then the implementation of that function must be changed too """
-        alt_correction = (density(h, dT)/1.225)**0.7
-        return alt_correction * self.eff_powertrain * self.eff_prop * self.max_cont_power_sealevel
-    
-    def P_to(self, h, dT):
-        """ Available takeoff power for given conditions
-        TODO: temporary placeholder implementation
-        NOTE: RC_max() assumes constant P_a with velocity, if this changes here
-        then the implementation of that function must be changed too """
-        alt_correction = (density(h, dT)/1.225)**0.7
-        return alt_correction * self.eff_powertrain * self.eff_prop * self.takeoff_power_sealevel
 
         
     def P_r_min(self, W, h, dT):
@@ -124,10 +126,12 @@ class Aircraft:
         
     def RC_max(self, W, h, dT):
         """ Maximum possible climb rate for given conditions in clean configuration"""
+        # TODO: take into account effect of low airspeed on thrust or P_a ?
         return (self.P_a(h, dT) - self.P_r_min(W, h, dT)) / W
     
     def climb_angle_max(self, W, h, dT, gear="up", flaps="up"):
         """ Maximum possible climb slope (RC/V) for given conditions in given config (default clean) """
+        # TODO: take into account effect of low airspeed on thrust or P_a ?
         # adsee I q3 lecture 3 slide 93
         if flaps == "up":
             CL = self.CLmax_clean / self.CL_climb_safetyfactor
@@ -148,14 +152,42 @@ class Aircraft:
         return np.sqrt(W / (0.5 * density(h, dT) * self.S * CL))
     
     def V_max(self, W, h, dT):
-        """ Calculates the maximum true airspeed for given conditions in clean config """
-        P_a = self.P_a(h, dT)
+        """
+        Calculates the maximum true airspeed in clean configuration.
+        
+        It does so by finding the point where P_a() equals the drag force times
+        velocity.
+                
+        Note that the maximum possible P_a() is used. this means that the
+        calculated value is inaccurate for high altitudes.
+        
+        TODO: fix this
+        
+        This is because the calculation of power available for low speeds
+        needs V_max, causing an infinite loop.
+        
+
+        Parameters
+        ----------
+        W : float
+            Aircraft weight [N].
+        h : float
+            Geopotential altitude [m].
+        dT : float
+            ISA temperature offset [deg C].
+
+        Returns
+        -------
+        float
+            The maximum true airspeed in m/s.
+        """
+
         rho = density(h, dT)
-        def diff(V):
+        def diff(V): # returns difference between power available and power required
             CL = W / (0.5 * rho * self.S * V**2)
             CD = self.CD(CL)
             D = 0.5 * rho * self.S * CD * V**2
-            return P_a - D*V
+            return self.P_a(h, dT) - D*V
         return root_scalar(diff, x0=75).root
     
     def power_setting(self, W, V, h, dT):
@@ -166,45 +198,96 @@ class Aircraft:
         return V * D / self.P_a(h, dT)
 
     def takeoff_ground_run(self, W, h, dT, slope):
-
-        # this uses the torenbeek method, torenbeek p167-168
-        # however it really is not accurate enough
+        """
+        Calculates the take-off ground run for given conditions using three
+        different methods: Ruijgrok, Torenbeek and Nicolai. It is not done and 
+        relies on inaccurate CL and CD estimations.
         
-        # also ground effect should be taken into account
+        Assumes constant speed propeller for Torenbeek method.
+
+        Parameters
+        ----------
+        W : float
+            Gross aircraft weight at takeoff [N].
+        h : float
+            Elevation of airstrip [m].
+        dT : float
+            ISA temperature offset at airstrip [deg C].
+        slope : float
+            Slope of runway as fraction (vertical/horizontal), 
+            positive = sloped upwards at takeoff.
+
+        Returns
+        -------
+        s_run1 : float
+            Ruijgrok method.
+        s_run2 : float
+            Torenbeek method.
+        s_run3 : float
+            Nicolai method.
+
+        """
+
+        
+        # TODO: also ground effect should be taken into account
+        # there is a good discussion on ground effect in  
+        # Fundamentals of Aircraft and Airship Design: Volume 1 by nicolai
+        # pages 257-260
+
+        #
+        # constants common for all moethods
+        #
         
         rho = density(h, dT)
         sigma = rho/1.225
         g = 9.80665
         
-        CLmax = self.CLmax_TO
-        V_S_TO = np.sqrt(W / (0.5 * rho * self.S * CLmax)) # TODO: ground effect should be taken into account here
+        CL_ground = self.CL_ground_TO # C_L during ground run
+        CD_ground = self.CD(CL_ground, gear="down", flaps="TO") # C_D during ground run
+        
+        CL_max = self.CLmax_TO
+        V_S_TO = np.sqrt(W / (0.5 * rho * self.S * CL_max))
         V_LOF = 1.2 * V_S_TO # lift off speed approximation according to torenbeek
-        #CL_LOF = W / (0.5 * rho * V_LOF**2 * self.S)
+        # TODO: check CS23 requirements on V_R that may affect this
+
+        P_to = self.P_a(h, dT, use_takeoff_power=True)
+
+        
+        #
+        # Torenbeek method, torenbeek p167-168
+        # Note that Torenbeek uses kg for weights, not newton
+        # however it really is not accurate enough
+        #
+        
         CD0 = self.CD(0, gear="down", flaps="TO")
+        P_to_kg = P_to / g # formula requires kgm/s
+        W_kg = W / g # torenbeek uses kg
         
-        P_to = self.P_to(h, dT) / g # in kgm/s
+        # adjusted friction coefficient
+        mu_quote = 0.05 + .72 * CD0/CL_max # 0.04-0.05 for short grass and 0.02 for concrete, if a fixed pitch prop is used use 0.576
         
-        mu_quote = 0.05 + .72 * CD0/CLmax # 0.04-0.05 for short grass and 0.02 for concrete, if a fixed pitch prop is used use 0.576
+        # avg thrust in kg
+        Tbar_kg = .321 * P_to_kg * (sigma / self.number_of_engines * self.propeller_diameter**2 / P_to_kg)**(1/3)
         
-        # avg thrust in kgm/s
-        Tbar = .321 * P_to * (sigma / self.number_of_engines * self.propeller_diameter**2 / P_to)**(1/3)
-        Tbar *= g # convert to W
-        
-        s_run = V_LOF**2 / (2*g) / (Tbar/W - mu_quote)
-        
-        
-        # second method, calculate acceleration at 0.707V_LOF
-        # from Fundamental of Aircraft and Airship design: volume 1
-        V = 0.707 * V_LOF
-        T = self.P_to(h, dT) / V
-        D = 0.5 * rho * V**2 * self.S * self.CD(self.CL_ground_TO, gear="down", flaps="TO")
-        L = 0.5 * rho * V**2 * self.S * self.CL_ground_TO
-        a = g/W * (T - D - 0.05*(W - L))
-        s_run2 = 0.5 * V_LOF**2 / a
+        # now calculate ground run
+        s_run2 = V_LOF**2 / (2*g) / (Tbar_kg/W_kg - mu_quote)
         
         
+        #
+        # Nicolai method, calculate acceleration at average speed 0.707V_LOF
+        # and assume this remains constant.
+        # from Fundamental of Aircraft and Airship design: volume 1 pages 257-260
+        #
         
-        return s_run, s_run2
+        V = 0.707 * V_LOF # 0.707 to get the average velocity
+        T = P_to / V
+        D = 0.5 * rho * V**2 * self.S * CD_ground
+        L = 0.5 * rho * V**2 * self.S * CL_ground
+        a = g/W * (T - D - 0.05*(W - L)) # avg acceleration - nicolai has no friction coefficient for dry grass su using ruijgrok's value
+        s_run3 = 0.5 * V_LOF**2 / a
+        
+        
+        return s_run2, s_run3
     
         #CL_G = self.CL_ground
         #CD_G = self.CD(CL_G)
@@ -248,7 +331,7 @@ class Aircraft:
         s_tot = 0
         V = V_T
         
-        # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbels
+        # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbel
         
         while V > 0:
             s_tot += f(V)*step
