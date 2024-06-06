@@ -98,7 +98,7 @@ def MomentCoefficient(l_H, acd = aircraft_data):
     # Flap Contribution
     ClaH, CLaAH, CLH, CLAH = Liftrate(l_H, acd)
     Xac = Xacplane(l_H, acd)
-    Cmacflap = acd["Flaps"]["mu2"]*(-acd["Flaps"]["mu1"]*acd["Flaps"]["DeltaClmax"]*acd["Flaps"]["cprime_c"]-(CLAH+acd["Flaps"]["DeltaClmax"]*(1-acd["Flaps"]["Swf"]/acd["Aero"]["S_Wing"]))*1/8*acd["Flaps"]["cprime_c"]*(acd["Flaps"]["cprime_c"]-1))-acd["Aero"]["CLmax_Land"]*(0.25-Xac/acd["Aero"]["MAC_wing"])
+    Cmacflap = acd["Flaps"]["mu2"]*(-acd["Flaps"]["mu1"]*acd["Flaps"]["DeltaClmax"]*acd["Flaps"]["cprime_c_landing"]-(CLAH+acd["Flaps"]["DeltaClmax"]*(1-acd["Flaps"]["Swf"]/acd["Aero"]["S_Wing"]))*1/8*acd["Flaps"]["cprime_c_landing"]*(acd["Flaps"]["cprime_c_landing"]-1))-acd["Aero"]["CLmax_Land"]*(0.25-Xac/acd["Aero"]["MAC_wing"])
 
     # Fuselage contribution
     Cmacfus = -1.8*(1-2.5*acd["Geometry"]["fus_width_m"]/acd["Geometry"]["fus_length_m"])*(pi*acd["Geometry"]["fus_width_m"]*acd["Geometry"]["fus_height_m"]*acd["Geometry"]["fus_length_m"])/(4*acd["Aero"]["S_Wing"]*acd["Aero"]["MAC_wing"])*acd["Flaps"]["CL0"]/CLaAH
