@@ -1,12 +1,13 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import json
+
+# import matplotlib.pyplot as plt
+# import json
 import os
 import sys
 
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from aircraft_data import aircraft_data
+from HumanAir.aircraft_data import aircraft_data
 
 
 class WeightEstm:
@@ -14,29 +15,62 @@ class WeightEstm:
         self.dict = dict
 
     def OEW_prime(self):
-        return self.dict["Iterations Class I"]["A"] * self.dict["Iterations Class I"]["MTOW_kg"] + self.dict["Iterations Class I"]["B"]
+        return (
+            self.dict["Iterations Class I"]["A"] * self.dict["Iterations Class I"]["MTOW_kg"]
+            + self.dict["Iterations Class I"]["B"]
+        )
 
     def PowertrainWeight(self, bat):
-        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / 1000 / self.dict["Performance"]["W/P_N/W"] / self.dict["Power_prop"]["eta_powertrain"] * (
-                    1 - bat) / self.dict["Power_prop"]["P_ptr_kW/kg"]
+        return (
+            9.81
+            * self.dict["Iterations Class I"]["MTOW_kg"]
+            / 1000
+            / self.dict["Performance"]["W/P_N/W"]
+            / self.dict["Power_prop"]["eta_powertrain"]
+            * (1 - bat)
+            / self.dict["Power_prop"]["P_ptr_kW/kg"]
+        )
 
     def BatteryWeight(self, bat):
-        return 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * self.dict["Performance"]["endurance"] * bat / self.dict["Power_prop"][
-            "E_bat_Wh/kg"] / self.dict["Power_prop"]["eta_bat"] / self.dict["Power_prop"]["DoD_bat"] / self.dict["Power_prop"]["eta_electricmotor"]
+        return (
+            9.81
+            * self.dict["Iterations Class I"]["MTOW_kg"]
+            / self.dict["Performance"]["W/P_N/W"]
+            * self.dict["Performance"]["endurance"]
+            * bat
+            / self.dict["Power_prop"]["E_bat_Wh/kg"]
+            / self.dict["Power_prop"]["eta_bat"]
+            / self.dict["Power_prop"]["DoD_bat"]
+            / self.dict["Power_prop"]["eta_electricmotor"]
+        )
 
     def FuelWeight(self, bat):
-        return 1.15 * 9.81 * self.dict["Iterations Class I"]["MTOW_kg"] / self.dict["Performance"]["W/P_N/W"] * (1 - bat) * self.dict["Performance"]["endurance"] / self.dict["Power_prop"][
-            "E_fuel_Wh/kg"] / self.dict["Power_prop"]["eta_generator"]
+        return (
+            1.15
+            * 9.81
+            * self.dict["Iterations Class I"]["MTOW_kg"]
+            / self.dict["Performance"]["W/P_N/W"]
+            * (1 - bat)
+            * self.dict["Performance"]["endurance"]
+            / self.dict["Power_prop"]["E_fuel_Wh/kg"]
+            / self.dict["Power_prop"]["eta_generator"]
+        )
 
     def WingWeight(self):
-        return self.dict["Iterations Class I"]["Aw"] * self.dict["Iterations Class I"]["MTOW_kg"] + self.dict["Iterations Class I"]["Bw"]
+        return (
+            self.dict["Iterations Class I"]["Aw"] * self.dict["Iterations Class I"]["MTOW_kg"]
+            + self.dict["Iterations Class I"]["Bw"]
+        )
 
     def Iterations(self, bat):
         MTOW_new = 0
         MTOW_old = self.dict["Iterations Class I"]["MTOW_kg"]
         ok = False
 
-        while np.abs((MTOW_new - self.dict["Iterations Class I"]["MTOW_kg"]) / self.dict["Iterations Class I"]["MTOW_kg"]) > 0.02:
+        while (
+            np.abs((MTOW_new - self.dict["Iterations Class I"]["MTOW_kg"]) / self.dict["Iterations Class I"]["MTOW_kg"])
+            > 0.02
+        ):
             if ok:
                 self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_new
 
@@ -46,9 +80,14 @@ class WeightEstm:
             FuelWeight = self.FuelWeight(bat)
             WingWeight = self.WingWeight()
 
-           
-
-            MTOW_new = OEW_prime + PowertrainWeight + BatteryWeight + FuelWeight + WingWeight + self.dict["Iterations Class I"]["Wpl_des_kg"]
+            MTOW_new = (
+                OEW_prime
+                + PowertrainWeight
+                + BatteryWeight
+                + FuelWeight
+                + WingWeight
+                + self.dict["Iterations Class I"]["Wpl_des_kg"]
+            )
 
             if MTOW_new > 8000:
                 break
@@ -65,7 +104,7 @@ class WeightEstm:
                 self.dict["Contingency"] * BatteryWeight,
                 self.dict["Contingency"] * FuelWeight,
                 self.dict["Contingency"] * WingWeight,
-                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
+                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
             )
         else:
             self.dict["Iterations Class I"]["MTOW_kg"] = MTOW_old
@@ -77,7 +116,7 @@ class WeightEstm:
                 self.dict["Contingency"] * BatteryWeight,
                 self.dict["Contingency"] * FuelWeight,
                 self.dict["Contingency"] * WingWeight,
-                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
+                self.dict["Contingency"] * self.dict["Iterations Class I"]["Wpl_des_kg"],
             )
 
     def PolynomialRegression(self, bat):
@@ -99,27 +138,24 @@ class WeightEstm:
         lst_P = lst_P[valid_indices]
 
         if len(lst_P) == 0:
-            return np.array([20,20]), np.array([20,20])
+            return np.array([20, 20]), np.array([20, 20])
 
         coeff_exp = np.polyfit(lst_bat, np.log(lst_P), 1)
         coeff_pol = np.polyfit(lst_bat, lst_P, 2)
 
-        y_pol = coeff_pol[0] * lst_bat ** 2 + coeff_pol[1] * lst_bat + coeff_pol[2]
-        y_exp = np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * lst_bat)
+        # y_pol = coeff_pol[0] * lst_bat**2 + coeff_pol[1] * lst_bat + coeff_pol[2]
+        # y_exp = np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * lst_bat)
 
         return coeff_exp, coeff_pol
 
 
 if __name__ == "__main__":
 
-    data=WeightEstm(aircraft_data)
+    data = WeightEstm(aircraft_data)
 
-    bat=0.11
-    row=data.Iterations(bat)
+    bat = 0.11
+    row = data.Iterations(bat)
 
     bat_lst = np.arange(0, 0.15, 0.001)
-    coeff_exp,coeff_pol=data.PolynomialRegression(bat_lst)
+    coeff_exp, coeff_pol = data.PolynomialRegression(bat_lst)
     print(coeff_exp)
-
-
-            
