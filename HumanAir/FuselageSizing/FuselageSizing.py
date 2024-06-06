@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import os
 import sys
+import time
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -420,6 +421,31 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
+    def above_position(self):
+        my_dict = {}
+        my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
+        my_dict['empty_space'] = (my_dict['frontwall'][-1], my_dict['frontwall'][-1] + self.l_empty)
+        my_dict['motor'] = (my_dict['empty_space'][-1], my_dict['empty_space'][-1] + self.l_motor)
+        my_dict['engine'] = (my_dict['motor'][-1], my_dict['motor'][-1] + self.l_engine)
+        my_dict['firewall'] = (my_dict['engine'][-1], my_dict['engine'][-1] + FuselageSizing.l_enbu)
+        my_dict['cockpit'] = (my_dict['firewall'][-1], my_dict['firewall'][-1] + self.l_cock)
+        my_dict['row1'] = (my_dict['cockpit'][-1], my_dict['cockpit'][-1] + FuselageSizing.l_pax)
+        my_dict['row2'] = (my_dict['row1'][-1], my_dict['row1'][-1] + FuselageSizing.l_pax)
+        my_dict['row3'] = (my_dict['row2'][-1], my_dict['row2'][-1] + FuselageSizing.l_pax)
+        my_dict['tailcone'] = (my_dict['row3'][-1], my_dict['row3'][-1] + self.l_tailcone)
+        my_dict['backwall'] = (my_dict['tailcone'][-1], my_dict['tailcone'][-1] + FuselageSizing.t_fuse)
+        return my_dict
+
+    def below_position(self, s_gear):
+        l_battery, w_battery, s_gear = self.battery_dim(s_gear)
+        print('w_battery', w_battery)
+        print('s_gear', s_gear)
+        my_dict = {}
+        my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
+        my_dict['nose landing gear'] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut)
+        my_dict['main landing gear'] = (self.l_long_main - self.length_main_strut(s_gear=s_gear), self.l_long_main)
+        my_dict['battery'] = (self.l_long_main + FuselageSizing.s, self.l_long_main + FuselageSizing.s + l_battery)
+        return my_dict
 
 if __name__ == "__main__":
     # # Example usage:
@@ -440,6 +466,7 @@ if __name__ == "__main__":
     # l_tailcone = 5.02
     # h_tail = 2.52
     # V_battery = 0.3
+    init = time.process_time()
 
     fuselage_size = FuselageSizing(ac_data=aircraft_data)
 
@@ -452,6 +479,10 @@ if __name__ == "__main__":
     # print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
     print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.2))
     print("nose_strut_length", fuselage_size.h_nose_strut)
-
+    print(fuselage_size.below_position(s_gear=0.2))
     fuselage_size.plot_side_drawing(s_gear=0.2)
-    fuselage_size.plot_front_view(s_gear=0.2)
+    #fuselage_size.plot_front_view(s_gear=0.2)
+
+    # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
+    total = time.process_time() - init
+    print(total)
