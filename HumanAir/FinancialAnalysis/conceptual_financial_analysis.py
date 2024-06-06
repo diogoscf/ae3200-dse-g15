@@ -51,7 +51,7 @@ def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, aircra
 
     endurance = nm_to_m(aircraft_data["Performance"]["range_nm"]) / aircraft_data["Performance"]["Vc_m/s"] / 3600
 
-    fuel_burn = aircraft_data["Weights"]["MFW_N"] / 9.80665 / endurance
+    fuel_burn = aircraft_data["Weights"]["Wfuel_N"] / 9.80665 / endurance
     fuel_cost = fuel_burn * vol_jet_a1_price / jet_a1_dens
 
     return overhaul_cost + maintenance_cost + fuel_cost

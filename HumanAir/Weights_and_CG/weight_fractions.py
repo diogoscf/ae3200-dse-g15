@@ -116,7 +116,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
 
     # Get fractions, weights, cg
     wcg = component_mass(ac_datafile)
-    WF_cont = ac_datafile["Weights"]["WF_N"] / 9.81
+    WF_cont = ac_datafile["Weights"]["Wfuel_N"] / 9.81
     WPL_cont = ac_datafile["Weights"]["Wpl_des_kg"]
 
     # Get preliminary moving CG locations from the nose

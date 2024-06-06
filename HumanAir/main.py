@@ -477,7 +477,7 @@ if __name__ == "__main__":
                     ac_data,
                     checkwingplanform=False,
                     checkflowparameters=False,
-                    checkstability=True,
+                    checkstability=False,
                     checkhsplanform=False,
                 )[0]
 
