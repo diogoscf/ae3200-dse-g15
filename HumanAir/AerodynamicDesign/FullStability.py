@@ -128,6 +128,7 @@ def MomentCoefficient(l_H, acd=aircraft_data):
         data = json.load(WingAirfoil)
         Cm_0_Wing = data["Cm_0"]
 
+    Cmacw = Cm_0_Wing*(acd["Aero"]["AR"]*np.cos(acd["Aero"]["QuarterChordSweep_Wing_deg"])**2/(acd["Aero"]["AR"]+2*np.cos(acd["Aero"]["QuarterChordSweep_Wing_deg"])))
     Cmacw = Cm_0_Wing * (
         acd["Aero"]["AR"]
         * np.cos(acd["Aero"]["QuarterChordSweep_Wing_deg"]) ** 2
@@ -137,6 +138,7 @@ def MomentCoefficient(l_H, acd=aircraft_data):
     # Flap Contribution
     ClaH, CLaAH, CLH, CLAH = Liftrate(l_H, acd)
     Xac = Xacplane(l_H, acd)
+    Cmacflap = acd["Flaps"]["mu2_land"]*(-acd["Flaps"]["mu1_land"]*acd["Flaps"]["deltaCLmax_land"]*acd["Flaps"]["cprime_c_landing"]-(CLAH+acd["Flaps"]["deltaCLmax_land"]*(1-acd["Flaps"]["Swf"]/acd["Aero"]["S_Wing"]))*1/8*acd["Flaps"]["cprime_c_landing"]*(acd["Flaps"]["cprime_c_landing"]-1))-acd["Aero"]["CLmax_Land"]*(0.25-Xac/acd["Aero"]["MAC_wing"])
     Cmacflap = acd["Flaps"]["mu2"] * (
         -acd["Flaps"]["mu1"] * acd["Flaps"]["DeltaClmax"] * acd["Flaps"]["cprime_c_landing"]
         - (CLAH + acd["Flaps"]["DeltaClmax"] * (1 - acd["Flaps"]["Swf"] / acd["Aero"]["S_Wing"]))
@@ -174,7 +176,6 @@ def StabControl(acd=aircraft_data):
     ClaH, CLaAH, CLH, CLAH = Liftrate(l_H, acd)
     VhVcorr, deda = TailAero(l_H, acd)
     Cmac = MomentCoefficient(l_H, acd)
-    # TODO: Fix Cmac, now positive
 
     # Stability Sh/S
     StabSM = (Xcg - Xac + 0.05) / ((ClaH / CLaAH) * (1 - deda) * l_H / acd["Aero"]["MAC_wing"] * VhVcorr**2)

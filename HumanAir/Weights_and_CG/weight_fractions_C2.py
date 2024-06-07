@@ -5,78 +5,16 @@ from math import tan, sqrt, floor, ceil
 import time
 import os
 import matplotlib.pyplot as plt
+import json
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+script_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(script_dir, ".."))
+sys.path.append(project_root)
 
 from aircraft_data import aircraft_data
+from isa import isa
 from HumanAir.FuselageSizing.FuselageSizing import FuselageSizing
-
-
-def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
-    # Import tyre database
-    tyre_file = os.path.join(os.path.dirname(__file__), "tiredata.csv")
-    tyres = pd.read_csv(tyre_file, index_col=0).to_numpy()
-
-    # Choose smallest available tyre
-    nose_loading = nose_loading
-    Pmw = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (2 * 9.81)
-    Pnw = nose_loading * ac_datafile["CL2Weight"]["MTOW_N"] / 9.81  # accounts for additional load from front CG
-    Pmg = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (9.81)
-    for tyre in range(len(tyres[:, 0])):
-        Wt_m = tyres[tyre, 0]
-        Dw_m = tyres[tyre, 1]
-        if tyres[tyre, 2] >= Pmw:
-            break
-
-    for tyre in range(len(tyres[:, 0])):
-        Wt_n = tyres[tyre, 0]
-        Dw_n = tyres[tyre, 1]
-        if tyres[tyre, 2] >= Pnw:
-            break
-
-    if Pmw > tyres[-1, 2]:
-        print("WARNING: NO TYRE AVAILABLE")
-        con = input("Continue? (y/n): ")
-        if con == "n":
-            sys.exit("Too heavy for landing gear")
-
-    # Calculate landing gear geometry
-    Hcg = 0.5 * ac_datafile["Geometry"]["fus_height_m"]
-    H_s = 1.5 * Dw_m  # initial guess
-    l_m = tan(np.radians(16)) * (Hcg + H_s + 0.5 * Dw_m)
-    H_strike = (
-        ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
-    ) * np.tan(np.radians(18))
-    iter = 1.0
-    while iter > 0.0001:
-        H_s = H_strike
-        l_m = tan(np.radians(16)) * (Hcg + H_s + 0.5 * Dw_m)
-        H_strike = (
-            ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
-        ) * np.tan(np.radians(18))
-        iter = abs(H_s / H_strike - 1)
-        if H_strike < 0.6 * Dw_m:
-            H_strike = 0.6 * Dw_m
-            iter = 0
-
-    H_s = H_strike
-    l_n = l_m * Pmg / Pnw
-    ymin = (l_m + l_n) / (sqrt(l_n**2 * tan(np.radians(55)) ** 2 / (Hcg + H_s + 0.5 * Dw_m) ** 2 - 1))
-
-    # Write values to dict
-    ac_datafile["Landing_gear"]["lm_m"] = l_m
-    ac_datafile["Landing_gear"]["ln_m"] = l_n
-    ac_datafile["Landing_gear"]["ymin_m"] = ymin
-    ac_datafile["Landing_gear"]["Hs_m"] = H_s
-    ac_datafile["Landing_gear"]["Dwm_m"] = Dw_m
-    ac_datafile["Landing_gear"]["Dwn_m"] = Dw_n
-    ac_datafile["Landing_gear"]["Wtm_m"] = Wt_m
-    ac_datafile["Landing_gear"]["Wtn_m"] = Wt_n
-    ac_datafile["Landing_gear"]["PMW_N"] = Pmw * 9.81
-    ac_datafile["Landing_gear"]["PNW_N"] = Pnw * 9.81
-
-    return l_m, l_n, Pmg, Pnw, H_s, Pmw, ymin, Dw_m, Wt_m, Dw_n, Wt_n
-
 
 def component_mass(ac_datafile=aircraft_data):
     # Import statistical weight fraction data
@@ -103,8 +41,8 @@ def component_mass(ac_datafile=aircraft_data):
 
     # Check whether fractions make sense
     fracsum = np.sum(wcg[0, 0:-1])
-    if abs(fracsum / wcg[0, -1] - 1) > 0.05:
-        print("WARNING: WEIGHT FRACTIONS DIFFER MORE THAN 5%")
+    if abs(fracsum / wcg[0, -1] - 1) > 0.03:
+        print("WARNING: WEIGHT FRACTIONS DIFFER MORE THAN 3%")
         print("Expected OEW/MTOW:", wcg[0, -1])
         print("Summed OEW/MTOW:", fracsum)
         con = input("Continue? (y/n): ")
@@ -115,22 +53,96 @@ def component_mass(ac_datafile=aircraft_data):
     # Return fractions and masses of each component: Wing, MLG, pwtr, NLG, fus, emp, FE, bat, EW
     return wcg
 
+def find_lg(nose_loading, aftcg, wcg, ac_datafile=aircraft_data, max_load_nose=None):
+    # Import tyre database
+    tyre_file = os.path.join(os.path.dirname(__file__), "tiredata.csv")
+    tyres = pd.read_csv(tyre_file, index_col=0).to_numpy()
 
-def potato_diagrams(ftb_list, btf_list, Xcg_OEW, xlemac, name, ac_datafile=aircraft_data, plot=False):
+    # Choose smallest available tyre
+    Pmw = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (2 * 9.81)
+    Pnw = nose_loading * ac_datafile["CL2Weight"]["MTOW_N"] / 9.81  # accounts for additional load from front CG
+    print(Pnw)
+    if max_load_nose:
+        Pnw = max_load_nose
+        print(Pnw)
+    Pmg = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (9.81)
+    for tyre in range(len(tyres[:, 0])):
+        Wt_m = tyres[tyre, 0]
+        Dw_m = tyres[tyre, 1]
+        if tyres[tyre, 2] >= Pmw:
+            break
+
+    for tyre in range(len(tyres[:, 0])):
+        Wt_n = tyres[tyre, 0]
+        Dw_n = tyres[tyre, 1]
+        if tyres[tyre, 2] >= Pnw:
+            break
+
+    if Pmw > tyres[-1, 2]:
+        print("WARNING: NO TYRE AVAILABLE")
+        con = input("Continue? (y/n): ")
+        if con == "n":
+            sys.exit("Too heavy for landing gear")
+
+    # Find CG height w.r.t fuselage bottom
+    h_f = ac_datafile["Geometry"]["fus_height_m"]
+    Hcg_wing = 1.0 * h_f
+    Hcg_gear = 0*h_f
+    Hcg_pwtr = 0.5 * h_f
+    Hcg_fus = 0.5*h_f
+    Hcg_emp = 1.1*h_f
+    Hcg_FE = 0.5*h_f
+    Hcg_bat = 0.1*h_f
+    Hcg_OEW = (Hcg_wing*wcg[1, 0]+Hcg_gear*ac_datafile["CL2Weight"]["Landing Gear Weight"]+Hcg_pwtr*wcg[1, 2]+
+               Hcg_fus*wcg[1, 4]+Hcg_emp*wcg[1, 5]+Hcg_bat*wcg[1, 6]+Hcg_bat*wcg[1,7])/np.sum(wcg[1, 0:8])
+
+    # Calculate landing gear geometry
+    H_s = 1.5 * Dw_m  # initial guess
+    l_m = tan(np.radians(15)) * (Hcg_OEW + H_s + 0.5 * Dw_m)
+    H_strike = (
+        ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
+    ) * np.tan(np.radians(15))
+    iter = 1.0
+    while iter > 0.0001:
+        H_s = H_strike
+        l_m = tan(np.radians(15)) * (Hcg_OEW + H_s + 0.5 * Dw_m)
+        H_strike = (
+            ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
+        ) * np.tan(np.radians(15))
+        iter = abs(H_s / H_strike - 1)
+        if H_strike < 0.6 * Dw_m:
+            H_strike = 0.6 * Dw_m
+            iter = 0
+
+    H_s = H_strike
+    l_n = l_m * Pmg / Pnw
+    ymin = (l_m + l_n) / (sqrt(l_n**2 * tan(np.radians(55)) ** 2 / (Hcg_OEW + H_s + 0.5 * Dw_m) ** 2 - 1))
+
+    # Write values to dict
+    ac_datafile["Landing_gear"]["lm_m"] = l_m
+    ac_datafile["Landing_gear"]["ln_m"] = l_n
+    ac_datafile["Landing_gear"]["ymin_m"] = ymin
+    ac_datafile["Landing_gear"]["Hs_m"] = H_s
+    ac_datafile["Landing_gear"]["Dwm_m"] = Dw_m
+    ac_datafile["Landing_gear"]["Dwn_m"] = Dw_n
+    ac_datafile["Landing_gear"]["Wtm_m"] = Wt_m
+    ac_datafile["Landing_gear"]["Wtn_m"] = Wt_n
+    ac_datafile["Landing_gear"]["PMW_N"] = Pmw * 9.81
+    ac_datafile["Landing_gear"]["PNW_N"] = Pnw * 9.81
+
+    return l_m, l_n, Pmg, Pnw, H_s, Pmw, ymin, Dw_m, Wt_m, Dw_n, Wt_n
+
+def potato_diagrams(ftb_list, btf_list, Xcg_OEW, xlemac, name, ac_datafile=aircraft_data, plot = False):
     masslist_1 = [ac_datafile["CL2Weight"]["OEW"] / 9.81 - ac_datafile["CL2Weight"]["W_pilot"] / 9.81]
     CGlist_1 = [Xcg_OEW]
     for i in range(ftb_list.shape[1]):
-        CGlist_1.append(
-            (masslist_1[i] * CGlist_1[i] + ftb_list[0, i] * ftb_list[1, i]) / (masslist_1[i] + ftb_list[1, i])
-        )
-        masslist_1.append(masslist_1[i] + ftb_list[1, i])
+        CGlist_1.append((masslist_1[i]*CGlist_1[i]+ftb_list[0, i]*ftb_list[1, i])/(masslist_1[i]+ftb_list[1, i]))
+        masslist_1.append(masslist_1[i]+ftb_list[1, i])
 
     masslist_2 = [ac_datafile["CL2Weight"]["OEW"] / 9.81 - ac_datafile["CL2Weight"]["W_pilot"] / 9.81]
     CGlist_2 = [Xcg_OEW]
     for i in range(btf_list.shape[1]):
-        CGlist_2.append(
-            (masslist_2[i] * CGlist_2[i] + btf_list[0, i] * btf_list[1, i]) / (masslist_2[i] + btf_list[1, i])
-        )
+        CGlist_2.append((masslist_2[i] * CGlist_2[i] + btf_list[0, i] * btf_list[1, i]) / (masslist_2[i] + btf_list[1, i]))
         masslist_2.append(masslist_2[i] + btf_list[1, i])
 
     CGfwd = min(CGlist_1 + CGlist_2) - 0.02 * ac_datafile["Aero"]["MAC_wing"]
@@ -139,22 +151,10 @@ def potato_diagrams(ftb_list, btf_list, Xcg_OEW, xlemac, name, ac_datafile=aircr
     CGaftMAC = (CGaft - xlemac) / ac_datafile["Aero"]["MAC_wing"]
 
     if plot == True:
-        plt.plot(
-            ((np.array(CGlist_1) - xlemac) / ac_datafile["Aero"]["MAC_wing"]),
-            masslist_1,
-            marker="o",
-            color="red",
-            markersize=4,
-        )
-        plt.plot(
-            ((np.array(CGlist_2) - xlemac) / ac_datafile["Aero"]["MAC_wing"]),
-            masslist_2,
-            marker="o",
-            color="blue",
-            markersize=4,
-        )
-        plt.plot([CGfwdMAC, CGfwdMAC], [0, max(masslist_1)], color="dimgrey", linewidth=1, linestyle="dashdot")
-        plt.plot([CGaftMAC, CGaftMAC], [0, max(masslist_1)], color="dimgrey", linewidth=1, linestyle="dashdot")
+        plt.plot(((np.array(CGlist_1) - xlemac)/ac_datafile["Aero"]["MAC_wing"]), masslist_1, marker='o', color='red', markersize=4)
+        plt.plot(((np.array(CGlist_2) - xlemac)/ac_datafile["Aero"]["MAC_wing"]), masslist_2, marker='o', color='blue', markersize=4)
+        plt.plot([CGfwdMAC, CGfwdMAC], [0, max(masslist_1)], color='dimgrey', linewidth=1, linestyle='dashdot')
+        plt.plot([CGaftMAC, CGaftMAC], [0, max(masslist_1)], color='dimgrey', linewidth=1, linestyle='dashdot')
         plt.ylabel(r"Mass [kg]")
         plt.xlabel(r"$X_{cg}$ [MAC]")
         plt.title(name)
@@ -163,8 +163,7 @@ def potato_diagrams(ftb_list, btf_list, Xcg_OEW, xlemac, name, ac_datafile=aircr
         plt.tight_layout()
         plt.show()
 
-    return [CGfwd, CGaft]
-
+    return [CGfwd, CGaft], (masslist_1 + masslist_2), (CGlist_1 + CGlist_2)
 
 def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
     # TODO: Update Xcg with fuselage sizing values
@@ -176,7 +175,7 @@ def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
     # Define pilot/cargo/fuel Xcg
     Xcg_pilot = 2.8
     Xcg_luggage = 7
-    Xcg_cargomax = 6.5  # Maximum aft position of full cargo load -> dangerous goods
+    Xcg_cargomax = 6.5 # Maximum aft position of full cargo load -> dangerous goods
     Xcg_fuel = xlemac + 0.4 * ac_datafile["Aero"]["MAC_wing"]
 
     # Define loading dict
@@ -185,14 +184,10 @@ def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
     m_pil = ac_datafile["CL2Weight"]["W_pilot"] / 9.81
     m_pl = ac_datafile["CL2Weight"]["Wpl_w/o_pilot"] / 9.81
     m_f = ac_datafile["CL2Weight"]["Wfuel_N"] / 9.81
-    Pax_ftb = np.array(
-        [[Xcg_row1, Xcg_row1, Xcg_row2, Xcg_row2, Xcg_row3, Xcg_row3], [m_pax, m_pax, m_pax, m_pax, m_pax, m_pax]]
-    )
-    Pax_btf = np.array(
-        [[Xcg_row3, Xcg_row3, Xcg_row2, Xcg_row2, Xcg_row1, Xcg_row1], [m_pax, m_pax, m_pax, m_pax, m_pax, m_pax]]
-    )
+    Pax_ftb = np.array([[Xcg_row1, Xcg_row1, Xcg_row2, Xcg_row2, Xcg_row3, Xcg_row3], [m_pax, m_pax, m_pax, m_pax, m_pax, m_pax]])
+    Pax_btf = np.array([[Xcg_row3, Xcg_row3, Xcg_row2, Xcg_row2, Xcg_row1, Xcg_row1], [m_pax, m_pax, m_pax, m_pax, m_pax, m_pax]])
     pil = np.array([[Xcg_pilot], [m_pil]])
-    lug = np.vstack((Xcg_luggage * np.ones(6), m_lug * np.ones(6)))
+    lug = np.vstack((Xcg_luggage*np.ones(6), m_lug*np.ones(6)))
     pl = np.array([[Xcg_cargomax], [m_pl]])
     fl = np.array([[Xcg_fuel], [m_f]])
 
@@ -219,16 +214,62 @@ def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
     pmpl_2 = np.hstack((pl, pil))
 
     # Get CG excursion
-    CGlist_fcp = potato_diagrams(fcp_1, fcp_2, Xcg_OEW, xlemac, "Fuel/Luggage/Passengers", ac_datafile, plot)
-    CGlist_fpc = potato_diagrams(fpc_1, fpc_2, Xcg_OEW, xlemac, "Fuel/Passengers/Luggage", ac_datafile, plot)
-    CGlist_cpf = potato_diagrams(cpf_1, cpf_2, Xcg_OEW, xlemac, "Luggage/Passengers/Fuel", ac_datafile, plot)
-    CGlist_cfp = potato_diagrams(cfp_1, cfp_2, Xcg_OEW, xlemac, "Luggage/Fuel/Passengers", ac_datafile, plot)
-    CGlist_pcf = potato_diagrams(pcf_1, pcf_2, Xcg_OEW, xlemac, "Passengers/Luggage/Fuel", ac_datafile, plot)
-    CGlist_pfc = potato_diagrams(pfc_1, pfc_2, Xcg_OEW, xlemac, "Passengers/Fuel/Luggage", ac_datafile, plot)
-    CGlist_pmpl = potato_diagrams(pmpl_1, pmpl_2, Xcg_OEW, xlemac, "Full Cargo Load", ac_datafile, plot)
+    CGlist_fcp, masslist1, fullCG1 = potato_diagrams(fcp_1, fcp_2, Xcg_OEW, xlemac, "Fuel/Luggage/Passengers", ac_datafile, plot)
+    CGlist_fpc, masslist2, fullCG2 = potato_diagrams(fpc_1, fpc_2, Xcg_OEW, xlemac, "Fuel/Passengers/Luggage", ac_datafile, plot)
+    CGlist_cpf, masslist3, fullCG3 = potato_diagrams(cpf_1, cpf_2, Xcg_OEW, xlemac, "Luggage/Passengers/Fuel", ac_datafile, plot)
+    CGlist_cfp, masslist4, fullCG4 = potato_diagrams(cfp_1, cfp_2, Xcg_OEW, xlemac, "Luggage/Fuel/Passengers", ac_datafile, plot)
+    CGlist_pcf, masslist5, fullCG5 = potato_diagrams(pcf_1, pcf_2, Xcg_OEW, xlemac, "Passengers/Luggage/Fuel", ac_datafile, plot)
+    CGlist_pfc, masslist6, fullCG6 = potato_diagrams(pfc_1, pfc_2, Xcg_OEW, xlemac, "Passengers/Fuel/Luggage", ac_datafile, plot)
+    CGlist_pmpl, masslist7, fullCG7 = potato_diagrams(pmpl_1, pmpl_2, Xcg_OEW, xlemac, "Full Cargo Load", ac_datafile, plot)
 
-    return CGlist_fcp + CGlist_fpc + CGlist_cpf + CGlist_cfp + CGlist_pcf + CGlist_pfc + CGlist_pmpl
+    # Combine lists
+    Combined_CG = CGlist_fcp + CGlist_fpc + CGlist_cpf + CGlist_cfp + CGlist_pcf + CGlist_pfc + CGlist_pmpl
+    Combined_mass = masslist1 + masslist2 + masslist3 + masslist4 + masslist5 + masslist6 + masslist7
+    Combined_FullCG = fullCG1 + fullCG2 + fullCG3 + fullCG4 + fullCG5 + fullCG6 + fullCG7
 
+    return Combined_CG, Combined_mass, Combined_FullCG
+
+def nosewheel_loading(Weightlist, wcg, xlemac, acd=aircraft_data):
+    # Get air density at 750m take-off altitude
+    rho = isa(acd["Performance"]["Altitude_TO_m"], acd["Performance"]["Temp_offset_TO_Land_cruise"])[2]
+    # Get required values for magic formula that is 100% verified correct, trust me
+    Vto = acd["Performance"]["V_takeoff_m/s"] # Take-off rotation velocity
+    S = acd["Aero"]["S_Wing"] # Wing surface area
+    Sh = acd["Aero"]["S_h"] # Tail surface area
+    l_g = wcg[2, 1] - wcg[2, 3] # Distance between landing gear legs
+    l_w = wcg[2, 1] - (xlemac + 1/4*acd["Aero"]["MAC_wing"]) # Wing C.P. distance to aft gear
+    lH_lg = acd["Stability"]["QCW_to_QCh"] - l_w # Stabiliser distance to aft gear
+    CLH = -0.35 * acd["Aero"]["AR_HS"] ** (1 / 3) # Achievable tail downforce
+
+    # Find tail effectiveness
+    taper_h = acd["Aero"]["Taper_HS"]
+    Cr_h = 3 / 2 * acd["Aero"]["MAC_HS"] * ((1 + taper_h) / (1 + taper_h * taper_h ** 2))
+    Cpw = Cr_h * (1 - (1 - taper_h) * acd["Power_prop"]["Dp_m"] / acd["Aero"]["b_h"])
+    Shslip = (Cr_h + Cpw) * acd["Power_prop"]["Dp_m"] / 2 * 10.7639104
+    Sh_ft = acd["Aero"]["S_h"] * 10.7639104
+    U1 = acd["Performance"]["Vc_m/s"] * 3.2808399
+    Pav = 0.98 * 400 * acd["Power_prop"]["eta_p"]
+    Dp = acd["Power_prop"]["Dp_m"] / 0.3048
+    qbar = (0.5 * isa(acd["Performance"]["Altitude_Cruise_m"], acd["Performance"]["Temp_offset_TO_Land_cruise"])[2] *
+            acd["Performance"]["Vc_m/s"] ** 2) * 0.020885
+    eta_H = 1 + (Shslip / Sh_ft) * (2200 * Pav / (qbar * U1 * np.pi * Dp ** 2))
+    VhVcorr = acd["Aero"]["VhV"] * eta_H
+
+    # Find moment coefficient
+    Cmacw = acd["Aero"]["Cm_0_wing"]*(acd["Aero"]["AR"]*np.cos(acd["Aero"]["QuarterChordSweep_Wing_deg"])**2/(acd["Aero"]["AR"]+2*np.cos(acd["Aero"]["QuarterChordSweep_Wing_deg"])))
+    Cmacflap = acd["Flaps"]["mu2_takeoff"] * (
+                -acd["Flaps"]["mu1_takeoff"] * acd["Flaps"]["deltaCLmax_takeoff"] * acd["Flaps"]["cprime_c_takeoff"] - (
+                    acd["Flaps"]["CL_AoA0_takeoff"] + acd["Flaps"]["deltaCLmax_takeoff"] * (
+                        1 - acd["Flaps"]["Swf"] / acd["Aero"]["S_Wing"])) * 1 / 8 * acd["Flaps"]["cprime_c_takeoff"] * (
+                            acd["Flaps"]["cprime_c_takeoff"] - 1))
+    Cmw_TO = Cmacw + Cmacflap
+
+    # Magic formula that is 100% correct, I pray to Roskam: outputs maximum allowable nose loading for weight conditions
+    load_list = []
+    for i in range(len(Weightlist)):
+        load_list.append(1/2*(rho*Vto**2 * S)/(l_g*Weightlist[i]*9.81)*(l_w*acd["Flaps"]["CL_AoA0_takeoff"]-lH_lg*CLH*VhVcorr**2 * Sh/S + Cmw_TO*acd["Aero"]["MAC_wing"]))
+
+    return load_list
 
 def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False):
     # Set distance of nosewheel from nose [m]
@@ -254,7 +295,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
     ) / (Weng + Wprop + Wmotor)
 
     wcg[2, 4] = 0.4 * ac_datafile["Geometry"]["fus_length_m"]  # Fuselage distance from tip
-    wcg[2, 5] = 0.95 * ac_datafile["Geometry"]["fus_length_m"]  # Empennage distance from tip
+    wcg[2, 5] = 0.9 * ac_datafile["Geometry"]["fus_length_m"]  # Empennage distance from tip
     wcg[2, 6] = 0.4 * ac_datafile["Geometry"]["fus_length_m"]  # Fixed equipment distance from tip
     wcg[2, 7] = bat_xcg * ac_datafile["Geometry"]["fus_length_m"]  # Battery distance from tip
 
@@ -265,9 +306,9 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
     # Get preliminary moving CG locations from the nose
     xlemac = ac_datafile["Geometry"]["XLEMAC_m"]
-    aftcg = max(cg_excursion(Xcg_OEW, xlemac))
+    aftcg = max(cg_excursion(Xcg_OEW, xlemac)[0])
 
-    l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]  # Nose loading of 8% initially
+    l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, wcg, ac_datafile)[0:5]  # Nose loading of 8% initially
     wcg[2, 1] = aftcg + l_m
     wcg[2, 3] = aftcg - l_n
     wcg[2, -1] = Xcg_OEW
@@ -281,21 +322,18 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
         xlemacold = xlemac
         Xcg_OEW = np.average(wcg[2, 0:8], weights=wcg[1, 0:8])
 
-        aftcg = max(cg_excursion(Xcg_OEW, xlemac))
+        CGlist = cg_excursion(Xcg_OEW, xlemac)[0]
+        aftcg = max(CGlist)
+        fwdcg = min(CGlist)
 
         # Revise nosewheel loading in case wheel is too far forward
         if wcg[2, 3] < nose_distance:
             wcg[2, 3] = nose_distance
             l_n = aftcg - wcg[2, 3]
             nose_loading = 1 / (l_n / l_m + 1)
-            # if nose_loading > 0.15:
-            #     print("WARNING: TOO MUCH LOAD ON NOSE WHEEL")
-            #     con = input("Continue? (y/n): ")
-            #     if con == "n":
-            #         sys.exit("Nose wheel could not be placed")
 
-        # Place nosewheel
-        l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]
+        # Place nosewheel at set distance from nose
+        l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, wcg, ac_datafile)[0:5]
         wcg[2, 1] = aftcg + l_m
         wcg[2, 3] = aftcg - l_n
         if wcg[2, 3] > nose_distance:
@@ -315,11 +353,23 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
         wcg[2, 0] = CGw_MAC + xlemac
         iter = abs(xlemacold / xlemac - 1)
 
+    # Check nose wheel loading for forward CG location (not larger than rotation maximum)
+    CGlist, masslist, FullCGlist = cg_excursion(Xcg_OEW, xlemac, ac_datafile, plot=plot)
+
+    # TODO: Check nose loading and pass nose loading to wheels
+    nose_list = np.array(nosewheel_loading(masslist, wcg, xlemac))
+    nose_combined = np.vstack((np.array(FullCGlist), np.array(masslist), nose_list))
+    print(nose_combined)
+
+    fwd_loading = 0.1
+    if nose_loading > 0.15 or fwd_loading > 0.15:
+        print("WARNING: TOO MUCH LOAD ON NOSE WHEEL IN THIS CONFIGURATION")
+        print("Nose wheel loading: ", nose_loading, "| Forward CG nose wheel loading: ",fwd_loading , "| Xcg percentage: ", PERCENTAGE, "| Battery Xcg: ", bat_xcg, "| X LEMAC: ", xlemac)
+
+    # Update dictionary values
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
-
-    CGlist = cg_excursion(Xcg_OEW, xlemac, ac_datafile, plot=plot)
 
     return wcg, CGlist, xlemac
 
@@ -409,9 +459,6 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage= 3 / 4):
 
 if __name__ == "__main__":
     init = time.process_time()
-    # iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, plot=True)
-    #
-    # calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3/4)
-    optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.4, bat_xcg_init=0.1)
+    print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=True))
     total = time.process_time() - init
     print(total)
