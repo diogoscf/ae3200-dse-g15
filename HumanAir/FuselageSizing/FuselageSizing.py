@@ -10,7 +10,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
 
-
 class FuselageSizing:
     """
     Seat specification
@@ -19,7 +18,7 @@ class FuselageSizing:
     w_pax = 0.56  # seat width [m]
     l_pax = 1.09  # seat length [m]
     h_pax = 1.40  # seat height [m]
-    s = 0.01  # clearance [m]
+    s = 0.03  # clearance [m]
     n_row_seat = 2  # seats per row [-]
 
     """
@@ -42,6 +41,7 @@ class FuselageSizing:
     """
     Other specifications
     """
+
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
@@ -67,18 +67,24 @@ class FuselageSizing:
         self.l_tailcone = ac_data["Geometry"]["tail_length_m"]  # length of tailcone
         self.h_tail = ac_data["Geometry"]["h_tail"]  # height of tail
         self.V_battery = ac_data["Geometry"]["volume_battery"]  # volume of battery [m^3]
+        self.l_empty = ac_data["Geometry"]["l_empty"]
+        self.w_aisle = ac_data["Geometry"]["w_aisle"]
+        self.h_aisle = ac_data["Geometry"]["h_aisle"]
+        self.w_motor = ac_data["Geometry"]["w_motor"]
+        self.l_motor = ac_data["Geometry"]["l_motor"]
+        self.l_empty = ac_data["Geometry"]["l_empty"]
 
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
 
     def l_nosecone(self):
-        return self.l_engine + FuselageSizing.l_enbu
+        return self.l_engine + FuselageSizing.l_enbu + self.l_motor
 
     def l_cabin(self):
         return FuselageSizing.l_pax * self.n_row()
 
     def length_main_strut(self, s_gear):
-        l_lateral_strut = (self.D_main / 2) + s_gear
+        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle/2
         h = self.h_main_strut
         l_lateral = self.l_main_lateral - l_lateral_strut
         return np.sqrt(l_lateral**2 + h**2)
@@ -98,7 +104,6 @@ class FuselageSizing:
     def check_back(self, s_gear):
         l_end_main_land = self.l_end_main_land(s_gear)
         l_end_nose_land = self.l_end_nose_land()
-
         return True if l_end_main_land - l_end_nose_land < 0 else False
 
     def battery_dim(self, s_gear):
@@ -120,7 +125,7 @@ class FuselageSizing:
 
         else:
             # print('Landing gear folds forward')
-            w_battery = (self.top_width() - 2 * FuselageSizing.s) * 2
+            w_battery = (self.top_width() - 2 * FuselageSizing.s)
             l_battery = self.l_battery(w_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
@@ -128,7 +133,7 @@ class FuselageSizing:
     """Overall dimensions"""
 
     def top_width(self):
-        return round((FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2, 3)
+        return round((FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2 + self.w_aisle, 3)
 
     @staticmethod
     def bigger_mag(a, b):
@@ -138,10 +143,10 @@ class FuselageSizing:
         # s_gear is the distance between the two areas
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # bottom width from seats:
-        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2
+        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2  + self.w_aisle
 
         # bottom width from landing gear:
-        bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft + FuselageSizing.s)
+        bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft)
 
         return round(FuselageSizing.bigger_mag(bw1, bw2), 3)
 
@@ -421,10 +426,11 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
+
     def above_position(self):
         my_dict = {}
         my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
-        my_dict['empty_space'] = (my_dict['frontwall'][-1], my_dict['frontwall'][-1] + self.l_empty)
+        my_dict['empty_space'] =  (my_dict['frontwall'][-1], my_dict['frontwall'][-1] + self.l_empty)
         my_dict['motor'] = (my_dict['empty_space'][-1], my_dict['empty_space'][-1] + self.l_motor)
         my_dict['engine'] = (my_dict['motor'][-1], my_dict['motor'][-1] + self.l_engine)
         my_dict['firewall'] = (my_dict['engine'][-1], my_dict['engine'][-1] + FuselageSizing.l_enbu)
@@ -443,8 +449,8 @@ class FuselageSizing:
         my_dict = {}
         my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
         my_dict['nose landing gear'] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut)
-        my_dict['main landing gear'] = (self.l_long_main - self.length_main_strut(s_gear=s_gear), self.l_long_main)
-        my_dict['battery'] = (self.l_long_main + FuselageSizing.s, self.l_long_main + FuselageSizing.s + l_battery)
+        my_dict['main landing gear'] = (self.l_long_main - self.length_main_strut(s_gear=0.1), self.l_long_main)
+        my_dict['battery'] = (self.l_long_main + FuselageSizing.s, self.l_long_main + FuselageSizing.s + l_battery )
         return my_dict
 
 if __name__ == "__main__":
@@ -469,19 +475,27 @@ if __name__ == "__main__":
     init = time.process_time()
 
     fuselage_size = FuselageSizing(ac_data=aircraft_data)
+    print(fuselage_size.above_position())
+    print(fuselage_size.below_position(0.1))
+    print(fuselage_size.bottom_width(0.1))
+    #fuselage_size.plot_side_drawing(s_gear=0.1)
+    #fuselage_size.plot_front_view(s_gear=0.1)
 
+
+
+
+'''
     print("top_width", fuselage_size.top_width())
-    print("bottom_width", fuselage_size.bottom_width(s_gear=0.2))
+    print("bottom_width", fuselage_size.bottom_width(s_gear=0.1))
     print("fuselage height", fuselage_size.height())
     print("fuselage_length without engine", fuselage_size.length_fus() - fuselage_size.l_engine - fuselage_size.l_enbu)
     print("fuselage length", fuselage_size.length_fus())
-    print("maximum perimeter", fuselage_size.maximum_perimeter(s_gear=0.2))
+    print("maximum perimeter", fuselage_size.maximum_perimeter(s_gear=0.1))
     # print('fuselage wetted area', fuselage_size.fuselage_wetted(s_gear=0.2))
-    print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.2))
+    print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.1))
     print("nose_strut_length", fuselage_size.h_nose_strut)
-    print(fuselage_size.below_position(s_gear=0.2))
-    fuselage_size.plot_side_drawing(s_gear=0.2)
-    #fuselage_size.plot_front_view(s_gear=0.2)
+    print("position", fuselage_size.position())
+'''
 
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init
