@@ -1,1 +1,2 @@
-plt.plot(V_arr, real_eigenvalues_4, label="Real part 4")
+plt.plot(V_flut, 0, 'ro')
+    plt.text(V_flut, 0, f"V_flut = {V_flut}", fontsize=12)

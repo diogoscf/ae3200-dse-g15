@@ -265,20 +265,33 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
         # solution = fsolve(equation, p0)
         eigenvalues_lst.append(eigenvalues)
         print("Eigenvalues: ", eigenvalues)
+    
+    # # Cycle through all eigenvalue vectors, and find the index of the vector when the real value turns positive, this happens at the flutter speed for the current configuration.
+    # for i in range(len(eigenvalues_lst)-2):
+    #     i+2
+    #     if eigenvalues_lst[i][0].real > 0:
+    #         V_flut = V_arr[i]
+    #         break
+    #     else:
+    #         pass
+    V_flut = 122.5
 
     # Plot real parts of eigenvalue pairs in p against V
-    real_eigenvalues_1 = [eigenvalue[0].real for eigenvalue in eigenvalues_lst]
-    real_eigenvalues_2 = [eigenvalue[1].real for eigenvalue in eigenvalues_lst]
-    # real_eigenvalues_3 = [eigenvalue[2].real for eigenvalue in eigenvalues_lst]
-    # real_eigenvalues_4 = [eigenvalue[3].real for eigenvalue in eigenvalues_lst]
-    plt.plot(V_arr, real_eigenvalues_1, label="Real part 1")
-    plt.plot(V_arr, real_eigenvalues_2, label="Real part 2")
-    # plt.plot(V_arr, real_eigenvalues_3, label="Real part 3")
-    # plt.plot(V_arr, real_eigenvalues_4, label="Real part 4")
+    # real_eigenvalues_1 = [eigenvalue[0].real for eigenvalue in eigenvalues_lst]
+    # real_eigenvalues_2 = [eigenvalue[1].real for eigenvalue in eigenvalues_lst]
+    real_eigenvalues_3 = [eigenvalue[2].real for eigenvalue in eigenvalues_lst]
+    real_eigenvalues_4 = [eigenvalue[3].real for eigenvalue in eigenvalues_lst]
+    # plt.plot(V_arr, real_eigenvalues_1, label="Real part 1")
+    # plt.plot(V_arr, real_eigenvalues_2, label="Real part 2")
+    plt.plot(V_arr, real_eigenvalues_3, label="Real part 3")
+    plt.plot(V_arr, real_eigenvalues_4, label="Real part 4")
     plt.legend()
     plt.xlabel("V [m/s]")
     plt.ylabel("Re(p)")
     plt.title("Flutter diagram - Real parts of eigenvalues")
+    #highlight the point where the real part of the eigenvalue becomes positive with a red dot and text V_flut
+    plt.plot(V_flut, 0, 'ro')
+    plt.text(V_flut, 0, f"V_flut = {V_flut}", fontsize=12)
     plt.show()
     
     # plot imaginary parts of eigenvalue pairs in p against V
@@ -316,8 +329,8 @@ if __name__ == "__main__":
     S       = c*1
 
     # Stiffness parameters
-    K_h     = 2818.8
-    K_theta = 37.3
+    K_h     = 2818.8*0.3
+    K_theta = 37.3*0.3
     I_theta = ma*(x_theta*b)**2+mf*(c-a+x_beta)**2*b**2+Icg_theta+Icg_beta
     rho       = 1.225
     V         = 23
