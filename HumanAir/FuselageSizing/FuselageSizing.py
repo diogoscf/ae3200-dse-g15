@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 import os
 import sys
 import time
-#position update v1
+#position update
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
