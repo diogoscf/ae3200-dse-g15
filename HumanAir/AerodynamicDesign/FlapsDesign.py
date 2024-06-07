@@ -17,10 +17,11 @@ def flaps_design(ac_data=aircraft_data):
     CLmax_Land = ac_data["Aero"]["CLmax_Land"]
     CLmax_TO=ac_data["Aero"]["CLmax_TO"]
     
-    deltaCLmax = CLmax_Land-CLmax_clean
-    CLalpha_clean=0.1096 # update this if available after CFD simulations
+    deltaCLmax_land = CLmax_Land - CLmax_clean
+    deltaCLmax_takeoff = CLmax_TO - CLmax_clean
+    CLalpha_clean = 0.1096 # update this if available after CFD simulations
 
-    Swf = ac_data["Aero"]["S_Wing"] * deltaCLmax / 0.9 / 0.9 # plain flap has a deltaClmax=0.9
+    Swf = ac_data["Aero"]["S_Wing"] * deltaCLmax_land / 0.9 / 0.9 # plain flap has a deltaCLmax_land=0.9
 
     if Swf> 0.8 * ac_data["Aero"]["S_Wing"]:
         raise Exception("Not enough space for flaps")
@@ -74,8 +75,8 @@ def flaps_design(ac_data=aircraft_data):
     CLalpha_flapped_takeoff = Sprime_S_takeoff * CLalpha_clean
 
     # calculate required AoA in order to land and take-off
-    AoA_landing = (CLmax_clean + deltaCLmax)/CLalpha_flapped_landing - abs(alphaL0_airfoil + delta_alphaL0_landing)
-    AoA_takeoff = (CLmax_clean - CLmax_Land + CLmax_TO + deltaCLmax)/CLalpha_flapped_takeoff - abs(alphaL0_airfoil + delta_alphaL0_takeoff)
+    AoA_landing = (CLmax_clean + deltaCLmax_land)/CLalpha_flapped_landing - abs(alphaL0_airfoil + delta_alphaL0_landing)
+    AoA_takeoff = (CLmax_clean - CLmax_Land + CLmax_TO + deltaCLmax_land)/CLalpha_flapped_takeoff - abs(alphaL0_airfoil + delta_alphaL0_takeoff)
 
     # Calculate 
     CL_AoA0_landing = abs(alphaL0_airfoil + delta_alphaL0_landing) * CLalpha_flapped_landing
@@ -87,8 +88,10 @@ def flaps_design(ac_data=aircraft_data):
         raise Exception("AoA for take-off is higher than the scrap angle. Try changing the deflection in design.json")
 
     # updating the dictionary with the remainign calculated values
-    ac_data["Flaps"]["cprime_c_landing"]=cprime_c_landing
-    ac_data["Flaps"]["cprime_c_takeoff"]=cprime_c_takeoff
+    ac_data["Flaps"]["deltaCLmax_land"] = deltaCLmax_land
+    ac_data["Flaps"]["deltaCLmax_takeoff"] = deltaCLmax_takeoff
+    ac_data["Flaps"]["cprime_c_landing"] = cprime_c_landing
+    ac_data["Flaps"]["cprime_c_takeoff"] = cprime_c_takeoff
     ac_data["Flaps"]["AoA_landing"] = AoA_landing
     ac_data["Flaps"]["AoA_takeoff"] = AoA_takeoff
     ac_data["Flaps"]["CL_AoA0_landing"] = CL_AoA0_landing
