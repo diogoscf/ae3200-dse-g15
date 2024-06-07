@@ -96,6 +96,8 @@ def flaps_design(ac_data=aircraft_data):
     ac_data["Flaps"]["AoA_takeoff"] = AoA_takeoff
     ac_data["Flaps"]["CL_AoA0_landing"] = CL_AoA0_landing
     ac_data["Flaps"]["CL_AoA0_takeoff"] = CL_AoA0_takeoff
+    ac_data["Flaps"]["Sprime_S_landing"] = Sprime_S_landing
+    ac_data["Flaps"]["Sprime_S_takeoff"] = Sprime_S_takeoff
     return ac_data
 
 if __name__ == "__main__":

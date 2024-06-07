@@ -121,7 +121,9 @@
         "CL_AoA0_landing": 1.6917095209063666,
         "CL_AoA0_takeoff": 1.408131497298854,
         "deltaCLmax_land": 0.40000000000000036,
-        "deltaCLmax_takeoff": 0.20000000000000018
+        "deltaCLmax_takeoff": 0.20000000000000018,
+        "Sprime_S_landing": 1.0116598079561043,
+        "Sprime_S_takeoff": 1.0046639231824417
     },
     "Performance": {
         "W/S_N/m2": 859.8001,
