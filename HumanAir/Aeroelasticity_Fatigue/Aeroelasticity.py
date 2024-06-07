@@ -1,4 +1,7 @@
 import numpy as np
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from HumanAir.aircraft_data import aircraft_data
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
@@ -209,9 +212,11 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
         S_theta = m * x_theta * b
         K_s = np.array([[K_h, 0], [0, K_theta]])
         K_a = np.array([[0, -q * (2 * b) * CL_alpha], [0, -q * (2 * b) * CL_alpha * (1/2 + a)]])
-        C_a = np.array([[q * (2 * b) * CL_alpha * 1/V, q * (2 * b) * CL_alpha_dot * b/V], [q * (2 * b) * CL_alpha * 1/V (1/2 + a) * b, q * (2 * b) * b/V * b * CL_alpha * a * (1/2 - a)]])
+        C_a = np.array([[q * (2 * b) * CL_alpha * 1/V, q * (2 * b) * CL_alpha_dot * b/V], [q * (2 * b) * CL_alpha * 1/V * (1/2 + a) * b, q * (2 * b) * b/V * b * CL_alpha * a * (1/2 - a)]])
         M_s = np.array([[m, S_theta], [S_theta, I_theta]])
 
+        print(K_a)
+        
         # Define the function representing the equation M_s * p^2 - C_a * p + (K_s - K_a) = 0
         def equation(p):
             p = np.reshape(p, (2, 1))
@@ -249,4 +254,29 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
 
 
 if __name__ == "__main__":
-    pass
+    # Mass parameters
+    ma        = 1.567
+    mf        = 0
+    Icg_theta = 1
+    Icg_beta = .01
+
+    # Geometric parameters
+    b       = 0.127
+    a       = -0.5
+    c       = .5
+    x_theta = -.5
+    x_beta = .1
+    S       = c*1
+
+    # Stiffness parameters
+    K_h     = 2818.8
+    K_theta = 37.3
+    I_theta = ma*(x_theta*b)**2+mf*(c-a+x_beta)**2*b**2+Icg_theta+Icg_beta
+    rho       = 1.225
+    V         = 23
+    alpha0    = 5*np.pi/180
+    C_M_AC    = 0
+    C_L_alpha = 2*np.pi
+
+
+    flutter_diagram(K_h, K_theta, rho, np.linspace(0, 150, 100), C_L_alpha, b, a, x_theta, ma+mf, I_theta)
