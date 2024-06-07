@@ -1,6 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import integrate
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cm_data_wing, Cdi_data_wing
 from HumanAir.StructuralAnalysis.WingStructure import WingStructure
@@ -52,7 +56,7 @@ def weight_distribution(c, ac_data=aircraft_data):
     W_fuel = W_avg_fuel * c_between_struts**2 / (np.mean(c_between_struts**2))
     diff = c.shape[0] - c_between_struts.shape[0]
     W_fuel = np.pad(W_fuel, pad_width=diff // 2, mode="constant")
-    print(np.sum(W_fuel))
+    # print(np.sum(W_fuel))
 
     return (
         W_structure + W_fuel,
@@ -103,15 +107,15 @@ def strut_shear_result():
 
 
 def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data, load_factor=1):
+    nodes_half_wing = nodes // 2
     b_half = ac_data["Aero"]["b_Wing"] / 2
     sweep = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
-    Dtot = -(D * (load_factor**2))  # drag and thrust act on the x axis (thrust = 0)
-    Vx = integrate.cumulative_trapezoid(np.flip((Dtot * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :])
-    Vz = integrate.cumulative_trapezoid(
-        np.flip(((-L * load_factor + W) * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :]
-    )
-    Vx = np.append(Vx[::-1], [0])
-    Vz = np.append(Vz[::-1], [0])
+    X_forces = -(D * (load_factor**2)) * b_half / (nodes_half_wing)  # drag and thrust act on the x axis (thrust = 0)
+    Vx = integrate.cumulative_trapezoid(np.flip(X_forces[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0)
+    Vx = Vx[::-1]
+    Z_forces = -(L * (b_half / (nodes_half_wing))) * load_factor + W
+    Vz = integrate.cumulative_trapezoid(np.flip(Z_forces[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0)
+    Vz = Vz[::-1]
 
     # Vy - axial force diagram because of the strut
     Ax_total_flight = axial_distribution_flight(
@@ -122,32 +126,41 @@ def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data, load_facto
 
     # Vz - shear force because of the strut
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
-    nodes_half_wing = nodes // 2
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
     Vz[:n_before_strut] += strut_shear_result()  # [N]
 
     # add the moment about x
     # print(b, Vz.shape, n, y_points.shape, M.shape)
-    Mx = -integrate.cumulative_trapezoid(Vz * b_half / (nodes / 2), y_points[nodes // 2 :])
-    Mx = np.append(Mx[::-1], [0])
-    Mz = -integrate.cumulative_trapezoid(Vx * b_half / (nodes / 2), y_points[nodes // 2 :])
-    Mz = np.append(Mz[::-1], [0])
+    Mx = -integrate.cumulative_trapezoid(
+        np.flip(Vz * y_points[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0
+    )
+    Mx = Mx[::-1]
+    Mz = -integrate.cumulative_trapezoid(
+        np.flip(Vx * y_points[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0
+    )
+    Mz = Mz[::-1]
 
-    # due to lift and weight moment arm
-    Ml = integrate.cumulative_trapezoid(
-        np.flip((-L * load_factor * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep)), y_points[nodes // 2 :]
+    # plt.plot(y_points[nodes_half_wing:], Z_forces[nodes_half_wing:], label="W-L")
+    # plt.plot(y_points[nodes_half_wing:], Vz, label="Vz")
+    # plt.plot(y_points[nodes_half_wing:], Mx, label="Mx")
+    # plt.legend()
+    # plt.show()
+
+    # due to lift and weight moment arm (assume both are at c/4)
+    My_lw = integrate.cumulative_trapezoid(
+        np.flip(Z_forces[nodes_half_wing:] * np.tan(sweep)), y_points[nodes_half_wing:], initial=0
     )
-    Mw = integrate.cumulative_trapezoid(
-        np.flip((W * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep)), y_points[nodes // 2 :]
-    )
-    Mym = integrate.cumulative_trapezoid(
-        np.flip((M * load_factor * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :]
+    # Mw = integrate.cumulative_trapezoid(
+    #     np.flip((W * b_half / (nodes_half_wing))[nodes_half_wing:] * np.tan(sweep)), y_points[nodes_half_wing:], initial=0
+    # )
+    My_m = integrate.cumulative_trapezoid(
+        np.flip((M * load_factor * b_half / (nodes_half_wing))[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0
     )
 
-    My = (np.array(Ml) + np.array(Mw) + np.array(Mym))[::-1]
-    My = np.append(My, [0])
+    My = (My_lw + My_m)[::-1]
 
     return Vx, Vy, Vz, Mx, My, Mz
+
 
 def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
 
@@ -164,6 +177,7 @@ def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
         Cdi_data[angle]["y_span"] = y_points
 
     return Cl_data, Cdi_data, Cm_data
+
 
 if __name__ == "__main__":
     # Data
@@ -199,14 +213,14 @@ if __name__ == "__main__":
         aircraft_data["Performance"]["Vc_m/s"], altitude, Cm_DATA, AoA, ac_data=aircraft_data
     )
 
-    # nl = 3.8
-    Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
-        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nl
-    )
-
     # nl = origin
     Vx1, Vy1, Vz1, Mx1, My1, Mz1 = InternalLoads(
         L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=1
+    )
+
+    # nl = 3.8
+    Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
+        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nl
     )
 
     # nl = -1

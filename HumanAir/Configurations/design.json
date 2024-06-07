@@ -67,7 +67,7 @@
         "t_spar_root": 0.025,
         "t_skin_wing": 0.007,
         "spar_pos": [0.15, 0.5],
-        "wing_stringer_area": 0.02,
+        "wing_stringer_area_m": 1e-4,
         "strut_loc_b/2": 0.4,
         "strut_loc_MAC": 0.25,
         "wingbox_material": "Aluminium"

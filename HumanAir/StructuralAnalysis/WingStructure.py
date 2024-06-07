@@ -44,7 +44,7 @@ class WingStructure:
         self.t2_spar = ac_data["Geometry"]["t_spar_root"]  # [m] thickness at the root
         self.t_skin = ac_data["Geometry"]["t_skin_wing"]  # [m] thickness of skin
         self.spar_pos = np.array(ac_data["Geometry"]["spar_pos"])  # position of spars
-        self.stringer_area = ac_data["Geometry"]["wing_stringer_area"]  # [m2] area of stringers
+        self.stringer_area = ac_data["Geometry"]["wing_stringer_area_m"]  # [m2] area of stringers
         self.cr = ac_data["Aero"]["c_root_wing"]
         self.ct = self.cr * self.taper_ratio
         self.b = ac_data["Aero"]["b_Wing"]
