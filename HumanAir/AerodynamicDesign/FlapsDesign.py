@@ -77,6 +77,10 @@ def flaps_design(ac_data=aircraft_data):
     AoA_landing = (CLmax_clean + deltaCLmax)/CLalpha_flapped_landing - abs(alphaL0_airfoil + delta_alphaL0_landing)
     AoA_takeoff = (CLmax_clean - CLmax_Land + CLmax_TO + deltaCLmax)/CLalpha_flapped_takeoff - abs(alphaL0_airfoil + delta_alphaL0_takeoff)
 
+    # Calculate 
+    CL_AoA0_landing = abs(alphaL0_airfoil + delta_alphaL0_landing) * CLalpha_flapped_landing
+    CL_AoA0_takeoff = abs(alphaL0_airfoil + delta_alphaL0_takeoff) * CLalpha_flapped_takeoff
+
     if AoA_landing > 15:
         raise Exception("AoA for landing is higher than the scrap angle. Try changing the deflection in design.json")
     if AoA_takeoff > 15:
@@ -87,6 +91,8 @@ def flaps_design(ac_data=aircraft_data):
     ac_data["Flaps"]["cprime_c_takeoff"]=cprime_c_takeoff
     ac_data["Flaps"]["AoA_landing"] = AoA_landing
     ac_data["Flaps"]["AoA_takeoff"] = AoA_takeoff
+    ac_data["Flaps"]["CL_AoA0_landing"] = CL_AoA0_landing
+    ac_data["Flaps"]["CL_AoA0_takeoff"] = CL_AoA0_takeoff
     return ac_data
 
 if __name__ == "__main__":
