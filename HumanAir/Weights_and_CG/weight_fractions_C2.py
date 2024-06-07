@@ -61,10 +61,9 @@ def find_lg(nose_loading, aftcg, wcg, ac_datafile=aircraft_data, max_load_nose=N
     # Choose smallest available tyre
     Pmw = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (2 * 9.81)
     Pnw = nose_loading * ac_datafile["CL2Weight"]["MTOW_N"] / 9.81  # accounts for additional load from front CG
-    print(Pnw)
     if max_load_nose:
         Pnw = max_load_nose
-        print(Pnw)
+
     Pmg = (1 - nose_loading) * ac_datafile["CL2Weight"]["MTOW_N"] / (9.81)
     for tyre in range(len(tyres[:, 0])):
         Wt_m = tyres[tyre, 0]
@@ -324,7 +323,6 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
         CGlist = cg_excursion(Xcg_OEW, xlemac)[0]
         aftcg = max(CGlist)
-        fwdcg = min(CGlist)
 
         # Revise nosewheel loading in case wheel is too far forward
         if wcg[2, 3] < nose_distance:
@@ -359,19 +357,25 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
     # TODO: Check nose loading and pass nose loading to wheels
     nose_list = np.array(nosewheel_loading(masslist, wcg, xlemac))
     nose_combined = np.vstack((np.array(FullCGlist), np.array(masslist), nose_list))
-    print(nose_combined)
+    nose_check = True
+    Pressure_list = []
+    for i in range(nose_combined.shape[1]):
+        l_mfwd = wcg[2, 1] - nose_combined[0, i]
+        l_nfwd = nose_combined[0, i] - wcg[2, 3]
+        nose_load_fwd = 1 / (l_nfwd/l_mfwd+1)
+        Pressure_list.append(nose_load_fwd*nose_combined[1, i])
+        if nose_load_fwd > nose_combined[2, i]:
+            nose_check = False
 
-    fwd_loading = 0.1
-    if nose_loading > 0.15 or fwd_loading > 0.15:
-        print("WARNING: TOO MUCH LOAD ON NOSE WHEEL IN THIS CONFIGURATION")
-        print("Nose wheel loading: ", nose_loading, "| Forward CG nose wheel loading: ",fwd_loading , "| Xcg percentage: ", PERCENTAGE, "| Battery Xcg: ", bat_xcg, "| X LEMAC: ", xlemac)
+    Wheel_pressure = max(Pressure_list)
+    find_lg(nose_loading, max(CGlist), wcg, ac_datafile, max_load_nose=Wheel_pressure)[0:5]
 
     # Update dictionary values
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
 
-    return wcg, CGlist, xlemac
+    return wcg, CGlist, xlemac, nose_check
 
 
 # iterate though lemac such that the x_lemac is larger than 3.2m and that the landing gear can fit with the batteries
