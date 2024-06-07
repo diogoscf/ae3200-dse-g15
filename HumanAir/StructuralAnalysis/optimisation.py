@@ -37,10 +37,11 @@ def get_stringers_at_nodes(stringer_sections, no_stringers, nodes_halfspan, cent
     return stringers
 
 
-def objective(variables, htot, wtot, rho, len_nodes, nodes, A_stringer):
-    t_spar = variables[:nodes].flatten()
-    t_skin = variables[nodes : 2 * nodes].flatten()
-    no_stringers = variables[2 * nodes :].flatten()
+def objective(variables, htot, wtot, rho, len_nodes, A_stringer):
+    variables = variables.reshape(3, -1)
+    t_spar = variables[0, :].flatten()
+    t_skin = variables[1, :].flatten()
+    no_stringers = variables[2, :].flatten()
 
     W_spar = np.sum(rho * t_spar * htot * len_nodes)
     W_skin = np.sum(rho * t_skin * wtot * len_nodes)
@@ -50,14 +51,14 @@ def objective(variables, htot, wtot, rho, len_nodes, nodes, A_stringer):
 
 
 def get_deflection(I, y, M, E):
-    # print(np.max(I), np.max(M), E)
     integrand = M / I
+    # print(np.sum(I), np.sum(M), np.sum(integrand))
     theta = -1 / E * cumulative_trapezoid(integrand, y, initial=0)
     v = -cumulative_trapezoid(theta, y, initial=0)
-    return np.max(v)
+    return v
 
 
-def get_I(t_spar, t_skin, no_stringers, A_stringer):
+def get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c):
     I_skin = t_skin * (w_top + w_bottom) * h_avemax**2
     I_spar = 1 / 12 * t_spar * (h_15c**3 + h_50c**3)
     I_stringers = A_stringer * no_stringers * h_avemax**2
@@ -65,12 +66,15 @@ def get_I(t_spar, t_skin, no_stringers, A_stringer):
     return I
 
 
-def deflection_constraint(variables, y, Mx, A_stringer, max_deflect, E):
-    t_spar = variables[:n_halfspan].flatten()
-    t_skin = variables[n_halfspan : 2 * n_halfspan].flatten()
-    no_stringers = variables[2 * n_halfspan :].flatten()
-    I = get_I(t_spar, t_skin, no_stringers, A_stringer)
-    deflection = get_deflection(I, y, Mx, E)
+def deflection_constraint(
+    variables, y, Mx, A_stringer, max_deflect, E, w_top, w_bottom, h_avemax, h_15c, h_50c, n_halfspan
+):
+    variables = variables.reshape(3, -1)
+    t_spar = variables[0, :].flatten()
+    t_skin = variables[1, :].flatten()
+    no_stringers = variables[2, :].flatten()
+    I = get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c)
+    deflection = np.max(get_deflection(I, y, Mx, E))
     return max_deflect - deflection
 
 
@@ -91,7 +95,7 @@ if __name__ == "__main__":
     # Cr = 2.5  # [m] root chord length
     # b = 19.93
     # x_pos = np.array([0.15, 0.5])
-    nodes = 500
+    nodes = 401
 
     n_halfspan = nodes // 2
 
@@ -153,7 +157,7 @@ if __name__ == "__main__":
     )
 
     Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
-        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nlim
+        L_cruise, D_cruise, M_cruise, wing_structure, ac_data=aircraft_data, load_factor=1
     )
 
     material = aircraft_data["Geometry"]["wingbox_material"]
@@ -163,13 +167,25 @@ if __name__ == "__main__":
         {
             "type": "ineq",
             "fun": deflection_constraint,
-            "args": (y_points_halfspan, Mx, wing_structure.stringer_area, max_deflect, aircraft_data["Materials"][material]["E"]),
+            "args": (
+                y_points_halfspan,
+                Mx,
+                wing_structure.stringer_area,
+                max_deflect,
+                aircraft_data["Materials"][material]["E"],
+                w_top,
+                w_bottom,
+                h_avemax,
+                h_15c,
+                h_50c,
+                n_halfspan,
+            ),
         }
     ]
 
     # Perform the optimization
     len_node_segment = wing_structure.b / (2 * n_halfspan)
-    
+
     solution = minimize(
         objective,
         t0,
@@ -178,7 +194,6 @@ if __name__ == "__main__":
             wtot,
             aircraft_data["Materials"][material]["rho"],
             len_node_segment,
-            n_halfspan,
             wing_structure.stringer_area,
         ),
         method="SLSQP",
@@ -187,10 +202,12 @@ if __name__ == "__main__":
     )
 
     # Optimized thickness values
-    optimized_thickness = solution.x
-    optimized_t_spar = optimized_thickness[:n_halfspan]
-    optimized_t_skin = optimized_thickness[n_halfspan : 2 * n_halfspan]
-    optimized_no_stringers = optimized_thickness[2 * n_halfspan :]
+    optimized_thickness = solution.x.reshape(3, -1)
+    optimized_t_spar = optimized_thickness[0, :]
+    optimized_t_skin = optimized_thickness[1, :]
+    optimized_no_stringers = optimized_thickness[2, :]
+    # I = get_I(optimized_t_spar, optimized_t_skin, optimized_no_stringers, wing_structure.stringer_area)
+    # deflection = get_deflection(I, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
 
     # Print the results
     print("Optimized thickness for spar:", optimized_t_spar)

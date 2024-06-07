@@ -33,6 +33,7 @@ def interp(x, x_given, y_given):
 
 
 class WingStructure:
+    # TODO: Make it so we can choose between wing and HT
     def __init__(self, ac_data, airfoil_data, nodes=501):
         self.airfoil_data = airfoil_data
         # self.file_path_y = file_path_y  # file path to span
@@ -54,7 +55,10 @@ class WingStructure:
         self.spars = self.chord_distribution.reshape(len(self.chord_distribution), 1) * self.spar_pos
 
         # Assume spar thickness is uniformly decreasing from root to tip
-        self.t_spar_dist = self.t1_spar + (self.t2_spar - self.t1_spar) / (self.cr - self.ct) * (self.chord_distribution - self.ct)
+        self.t_spar_dist = self.calc_spar_dist()
+
+        self.airfoil_division = self.calc_airfoil_division()
+        self.y_up, self.y_down = self.y_updown()
 
     # def import_data(self):
     #     df = pd.read_csv(self.file_path, sep="\s+", header=None, names=["x", "y"], skiprows=1)
@@ -83,7 +87,10 @@ class WingStructure:
     #                 data[angle]["coefficient"].append(lift_distribution)
     #     return data
 
-    def airfoil_division(self):
+    def calc_spar_dist(self):
+        return self.t1_spar + (self.t2_spar - self.t1_spar) / (self.cr - self.ct) * (self.chord_distribution - self.ct)
+
+    def calc_airfoil_division(self):
         df = copy.deepcopy(self.airfoil_data)
         for i in range(len(df)):
             if df["x"][i] == 0:
@@ -122,7 +129,7 @@ class WingStructure:
         return y_spar.reshape((len(x_spar), 2))
 
     def y_updown(self):
-        df_up, df_down = self.airfoil_division()
+        df_up, df_down = self.airfoil_division
         y_up = self.y_spar(df_up)
         y_down = self.y_spar(df_down)
         return y_up, y_down
@@ -150,11 +157,9 @@ class WingStructure:
         return np.array(dx)
 
     def d_s1s2(self):
-        y_up, y_down = self.y_updown()
-        x_spar = self.spars
-        dx = self.diff(x_spar)
-        dy_up = self.diff(y_up)
-        dy_down = self.diff(y_down)
+        dx = self.diff(self.spars)
+        dy_up = self.diff(self.y_up)
+        dy_down = self.diff(self.y_down)
         l_box_up = []
         l_box_down = []
         for i in range(len(dx)):
@@ -163,13 +168,12 @@ class WingStructure:
         return np.array(l_box_up), np.array(l_box_down)
 
     def h_s1s2(self):
-        y_up, y_down = self.y_updown()
-        h_mid = np.empty((len(y_up), len(y_up.T)))
-        h_emp = np.empty((len(y_up), len(y_up.T)))
-        for i in range(len(y_up)):
-            for j in range(len(y_up[i])):
-                h_mid[i, j] = (y_up[i][j] + y_down[i][j]) / 2
-                h_emp[i, j] = y_up[i][j] - y_down[i][j]
+        h_mid = np.empty((len(self.y_up), len(self.y_up.T)))
+        h_emp = np.empty((len(self.y_up), len(self.y_up.T)))
+        for i in range(len(self.y_up)):
+            for j in range(len(self.y_up[i])):
+                h_mid[i, j] = (self.y_up[i][j] + self.y_down[i][j]) / 2
+                h_emp[i, j] = self.y_up[i][j] - self.y_down[i][j]
         return h_mid, h_emp
 
     def centroid(self):
