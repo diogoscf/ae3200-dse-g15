@@ -1,9 +1,9 @@
 import numpy as np
-from scipy.optimize import minimize
-from scipy.integrate import cumulative_trapezoid
+from scipy.optimize import minimize  # type: ignore[import-untyped]
+from scipy.integrate import cumulative_trapezoid  # type: ignore[import-untyped]
 import sys
 import os
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: F401
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -50,8 +50,8 @@ def objective(variables, htot, wtot, rho, len_nodes, A_stringer):
     return weight
 
 
-def get_deflection(I, y, M, E):
-    integrand = M / I
+def get_deflection(MOI, y, M, E):
+    integrand = M / MOI
     # print(np.sum(I), np.sum(M), np.sum(integrand))
     theta = -1 / E * cumulative_trapezoid(integrand, y, initial=0)
     v = -cumulative_trapezoid(theta, y, initial=0)
@@ -62,8 +62,8 @@ def get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h
     I_skin = t_skin * (w_top + w_bottom) * h_avemax**2
     I_spar = 1 / 12 * t_spar * (h_15c**3 + h_50c**3)
     I_stringers = A_stringer * no_stringers * h_avemax**2
-    I = I_skin + I_spar + I_stringers
-    return I
+    MOI = I_skin + I_spar + I_stringers
+    return MOI
 
 
 def deflection_constraint(
@@ -73,13 +73,13 @@ def deflection_constraint(
     t_spar = variables[0, :].flatten()
     t_skin = variables[1, :].flatten()
     no_stringers = variables[2, :].flatten()
-    I = get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c)
-    deflection = np.max(get_deflection(I, y, Mx, E))
+    MOI = get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c)
+    deflection = np.max(get_deflection(MOI, y, Mx, E))
     return max_deflect - deflection
 
 
 if __name__ == "__main__":
-    ########## Input ###########
+    # INPUT
     # Sw = 34.56  # [m^2]
     # taper_ratio = 0.4
     AoA = -6  # [deg]
@@ -104,11 +104,11 @@ if __name__ == "__main__":
     h_mid, h_s1s2 = wing_structure.h_s1s2()
     l_box_up, l_box_down = wing_structure.d_s1s2()
 
-    h_mid, h_s1s2 = h_mid[h_mid.shape[0] // 2 :], h_s1s2[h_s1s2.shape[0] // 2 :]
-    l_box_up, l_box_down = l_box_up[l_box_up.shape[0] // 2 :], l_box_down[l_box_down.shape[0] // 2 :]
+    h_mid, h_s1s2 = h_mid[(h_mid.shape[0] // 2) :], h_s1s2[(h_s1s2.shape[0] // 2) :]
+    l_box_up, l_box_down = l_box_up[(l_box_up.shape[0] // 2) :], l_box_down[(l_box_down.shape[0] // 2) :]
     chord_dist = wing_structure.chord_distribution
     y_points = wing_structure.ypts
-    chord_halfspan, y_points_halfspan = chord_dist[chord_dist.shape[0] // 2 :], y_points[y_points.shape[0] // 2 :]
+    chord_halfspan, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
 
     # Parameters
     # rho = 2710  # density of aluminium (kg/m^3)

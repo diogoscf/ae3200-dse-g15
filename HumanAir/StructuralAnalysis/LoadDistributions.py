@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import integrate
+from scipy import integrate  # type: ignore[import-untyped]
 import os
 import sys
 
@@ -9,7 +9,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cm_data_wing, Cdi_data_wing
 from HumanAir.StructuralAnalysis.WingStructure import WingStructure
 from HumanAir.isa import isa
-from HumanAir.unit_conversions import G
+
+# from HumanAir.unit_conversions import G
 
 
 # Define the forces along half span
@@ -44,7 +45,7 @@ def weight_distribution(c, ac_data=aircraft_data):
     nodes_half_wing = c.shape[0] // 2
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
     extra = 0 if c.shape[0] % 2 == 0 else 1
-    c_between_struts = c[nodes_half_wing - n_before_strut : nodes_half_wing + n_before_strut + extra]
+    c_between_struts = c[(nodes_half_wing - n_before_strut) : (nodes_half_wing + n_before_strut + extra)]
 
     # Assume structure weight is distributed with chord
     # This is not a very good assumption, but it should be conservative
@@ -132,30 +133,30 @@ def strut_force(
     we = e - c
     wf0 = f - e
 
-    """compatibility equation: 
-            vmax = vA + vB - vC - vD - vE - v_strut """
+    # compatibility equation:
+    #        vmax = vA + vB - vC - vD - vE - v_strut
 
     # inertia
     havg_spar_MAC = (h_spar1_MAC + h_spar2_MAC) / 2
-    I = (
+    MOI = (
         1 / 12 * (x_spar2_MAC - x_spar1_MAC) * havg_spar_MAC**3
         - 1 / 12 * (x_spar2_MAC - x_spar1_MAC - 2 * t_skin) * (havg_spar_MAC - 2 * t_skin) ** 3
     )
     # I = I*10e-12 #[m^4] if arguments are given in mm
 
     # deflections
-    vA = wa0 * halfspan**4 / (30 * E * I)
-    vB = wb * halfspan**4 / (8 * E * I)
-    vC = wc * halfspan**4 / (8 * E * I)
-    vD = wd0 * (0.6 * halfspan) ** 4 / (30 * E * I) + (0.4 * halfspan) * (0.6 * halfspan) ** 3 / (24 * E * I)
-    vE = we * (0.4 * halfspan) ** 4 / (8 * E * I) + (0.6 * halfspan) * we * (0.4 * halfspan) ** 3 / (6 * E * I)
-    vF = wf0 * (0.4 * halfspan) ** 4 / (30 * E * I) + (0.6 * halfspan) * wf0 * (0.4 * halfspan) ** 3 / (24 * E * I)
-    v_strut_factor = (0.4 * halfspan) ** 3 / (3 * E * I) + (0.6 * halfspan) * (0.4 * halfspan) ** 2 / (2 * E * I)
+    vA = wa0 * halfspan**4 / (30 * E * MOI)
+    vB = wb * halfspan**4 / (8 * E * MOI)
+    vC = wc * halfspan**4 / (8 * E * MOI)
+    vD = wd0 * (0.6 * halfspan) ** 4 / (30 * E * MOI) + (0.4 * halfspan) * (0.6 * halfspan) ** 3 / (24 * E * MOI)
+    vE = we * (0.4 * halfspan) ** 4 / (8 * E * MOI) + (0.6 * halfspan) * we * (0.4 * halfspan) ** 3 / (6 * E * MOI)
+    vF = wf0 * (0.4 * halfspan) ** 4 / (30 * E * MOI) + (0.6 * halfspan) * wf0 * (0.4 * halfspan) ** 3 / (24 * E * MOI)
+    v_strut_factor = (0.4 * halfspan) ** 3 / (3 * E * MOI) + (0.6 * halfspan) * (0.4 * halfspan) ** 2 / (2 * E * MOI)
 
     # Strut Force
     Vz_strut = (v_max - vA - vB + vC + vD + vE + vF) / v_strut_factor
     angle = np.arctan(h_fuselage / (0.4 * halfspan))
-    Vy_strut = Vz_strut / np.tan(angle)
+    Vy_strut = Vz_strut / np.tan(angle)  # noqa: F841
 
     # return Vz_strut, Vy_strut
     return 0, 0
@@ -179,8 +180,8 @@ def strut_force_from_ac_data(
     _, h_s1s2 = wing_structure.h_s1s2()
     h_15c, h_50c = h_s1s2[:, 0], h_s1s2[:, 1]
 
-    h_spar1_MAC = h_15c[wing_structure.nodes // 2 :][MAC_y_idx]  # TODO
-    h_spar2_MAC = h_50c[wing_structure.nodes // 2 :][MAC_y_idx]  # TODO
+    h_spar1_MAC = h_15c[(wing_structure.nodes // 2) :][MAC_y_idx]  # TODO
+    h_spar2_MAC = h_50c[(wing_structure.nodes // 2) :][MAC_y_idx]  # TODO
 
     x_spar1_MAC = 0.15 * MAC  # x_spar1_MAC = ac_data["Geometry"]["x_spar1_MAC"]
     x_spar2_MAC = 0.5 * MAC  # x_spar2_MAC = ac_data["Geometry"]["x_spar2_MAC"]
@@ -275,9 +276,6 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1,
     My_lw = integrate.cumulative_trapezoid(
         np.flip(Z_force_distribution[nodes_half_wing:] * np.tan(sweep)), y_points[nodes_half_wing:], initial=0
     )
-    # Mw = integrate.cumulative_trapezoid(
-    #     np.flip((W * b_half / (nodes_half_wing))[nodes_half_wing:] * np.tan(sweep)), y_points[nodes_half_wing:], initial=0
-    # )
     My_m = integrate.cumulative_trapezoid(
         np.flip((M * load_factor)[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0
     )
@@ -355,7 +353,7 @@ if __name__ == "__main__":
     )
 
     # extra = 1 if nodes % 2 == 0 else 0
-    y_points_plot = y_points[nodes // 2 :]
+    y_points_plot = y_points[(nodes // 2) :]
 
     # plt.subplot(2, 2, 1)
     # plt.plot(y_points, nl*L_cruise, label='Lift')

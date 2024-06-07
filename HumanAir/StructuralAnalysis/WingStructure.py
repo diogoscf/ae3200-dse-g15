@@ -215,7 +215,7 @@ class WingStructure:
 
 
 if __name__ == "__main__":
-    ########## input ###########
+    # INPUT
     # Sw = 34.56  # [m2]
     # taper_ratio = 0.4
     # AoA = -6  # [deg]
@@ -230,13 +230,11 @@ if __name__ == "__main__":
     # b = 19.93
     # x_pos = np.array([0.15, 0.5])
 
-    ######## Execution ########
+    wing_structure_data = WingStructure(aircraft_data, airfoil_shape, nodes=501)
 
-    torisonal_stiffness = WingStructure(aircraft_data, airfoil_shape, nodes=501)
-
-    df = torisonal_stiffness.airfoil_data
-    chord1 = torisonal_stiffness.chord_distribution
-    y = torisonal_stiffness.ypts
+    df = wing_structure_data.airfoil_data
+    chord1 = wing_structure_data.chord_distribution
+    y = wing_structure_data.ypts
     # plt.plot(df['x']*chord1[1], df['y']*chord1[1])
     # plt.axis('equal')
     # plt.show()
@@ -244,7 +242,7 @@ if __name__ == "__main__":
     print(y[idx])
 
     # print(torisonal_stiffness.spars())
-    h_mid, h_s1s2 = torisonal_stiffness.h_s1s2()
+    h_mid, h_s1s2 = wing_structure_data.h_s1s2()
     print(h_s1s2[idx])
 
     # plt.plot(df_down[:,0], df_down[:,1])
