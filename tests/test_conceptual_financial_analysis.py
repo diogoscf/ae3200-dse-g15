@@ -41,7 +41,7 @@ def test_hourly_operating_cost():
             "AR": 9.38,
             "e": 0.82,
             "Performance": {"Vc_m/s": 60, "range_nm": 600, "CO2_emissions_kg/kg": 3.16},
-            "Weights": {"MFW_N": 1390},
+            "Weights": {"Wfuel_N": 1390},
             "Power_prop": {
                 "E_bat_Wh": 186451,
                 "P_req_cruise_W": 217309,

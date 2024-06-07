@@ -14,6 +14,7 @@ sys.path.append(project_root)
 
 from HumanAir.StructuralAnalysis.Functions import import_data2
 from HumanAir.aircraft_data import aircraft_data
+from isa import isa
 
 
 # Define the forces along half span
@@ -106,7 +107,7 @@ def load_distribution_diagram(ac_data=aircraft_data):
     Sw = ac_data["Aero"]["S_Wing"]
     taper_ratio = ac_data["Aero"]["Taper_Wing"]
     Vcruise = ac_data["Performance"]["Vc_m/s"]  # [m/s]
-    rho = ac_data["Performance"]["rho_kg/m3"]  # [kg/m3]
+    rho = isa(ac_data["Performance"]["Altitude_Cruise_m"])[2]
     structuralmass = ac_data["CL2Weight"]["Wing Weight"] / 9.81
     batterymass_w = 0
     T = 0
