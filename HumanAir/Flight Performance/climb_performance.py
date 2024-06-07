@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pprint import pprint
 
-import helper
 import aircraft
 
 h_max = 9900
@@ -169,16 +167,20 @@ def plot_cruise_power_setting(acf):
     plt.show()
     
 def plot_take_off_performance(acf):
-    print(acf.takeoff_ground_run(acf.W_MTO, 0, 0, 0))
+    res = acf.takeoff_ground_run(acf.W_MTO, 0, 0, 0, "grass")
+    print(f"Takeoff performance: {res[0]:.2f} with precision {res[1]}")
+    res2 = acf.takeoff_ground_run(acf.W_MTO, 0, 0, -5, "grass")
+    print(f"Takeoff performance: {res2[0]:.2f} with precision {res2[1]}")
+
     
 def plot_landing_performance(acf):
-    dist, V_lst, s_lst, s_tot = acf.landing_ground_distance(acf.W_MTO, 0, 0, 0)
-    print(dist)
-    print(s_tot)
+    dist, V_lst, s_lst, s_tot = acf.landing_ground_distance(acf.W_MTO, 0, 0, 0, "grass")
+    print(f"Landing distance using quad: {dist[0]:.2f} with precision {dist[1]}\n using loop: {s_tot:.2f}")
     plt.figure(figsize=(10,7))
     plt.plot(s_lst, V_lst)
     plt.xlabel("Ground distance [m]")
     plt.ylabel("Velocity [m/s]")
+    plt.savefig("plots/landing_speed_distance.svg")
     plt.show()
     
     
@@ -189,8 +191,11 @@ def plot_thrust(acf):
         T_lst.append(acf.T(V, 0, 0, use_takeoff_power=True))
     plt.figure(figsize=(10,7))
     plt.plot(v_lst, T_lst)
+    plt.ylim(0, T_lst[0]*1.1)
+    plt.xlim(0, v_lst[-1]*1.1)
     plt.xlabel("Velocity [m/s]")
     plt.ylabel("Thrust [N]")
+    plt.savefig("plots/thrust_speed.svg")
     plt.show()
     
     print(f"Max thrust: {T_lst[0]:.2f}")
@@ -203,8 +208,11 @@ def plot_thrust(acf):
         T_lst.append(acf.prop_eff(V, 0, 0, use_takeoff_power=True))
     plt.figure(figsize=(10,7))
     plt.plot(v_lst, T_lst)
+    plt.ylim(0, T_lst[-1]*1.1)
+    plt.xlim(0, v_lst[-1]*1.1)
     plt.xlabel("Velocity [m/s]")
-    plt.ylabel("Thrust [N]")
+    plt.ylabel("Prop efficiency [-]")
+    plt.savefig("plots/prop_eff.svg")
     plt.show()
     
     print(f"Max eff: {T_lst[-1]:.2f}")

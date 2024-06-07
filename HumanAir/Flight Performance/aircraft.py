@@ -1,13 +1,20 @@
 import json
 import numpy as np
 from scipy.optimize import root_scalar
-from scipy.integrate import quad
-import inspect
 
 from helper import density
 import thrust_power
+import takeoff_landing
 
 class Aircraft:
+    """
+    Aircraft object for evaluating performance.
+    
+    IMPORTANT: the thrust function stores intermediate values for faster
+    calculations. If aircraft parameters change it should be ensured that
+    these intermediate calculations are ereased.
+    """
+    
     def __init__(self, FILE="design.json"):
         with open("../Configurations/" + FILE,'r') as f:
             dat = json.load(f)
@@ -29,6 +36,7 @@ class Aircraft:
         self.AR             = dat["Aero"]["AR"]
         self.e_clean        = dat["Aero"]["e"]
         self.S              = dat["Aero"]["S_Wing"]
+        self.b              = dat["Aero"]["b_Wing"]
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
@@ -41,6 +49,8 @@ class Aircraft:
         self.propeller_diameter = 2 # TODO: use deisng.json
         self.spinner_diameter = 0.3 # TODO: use deisng.json
 
+        self.wing_h_above_ground = dat["Geometry"]["fus_height_m"] + \
+            dat["Landing_gear"]["Hs_m"] + dat["Landing_gear"]["Dwm_m"]/2
         
         self.retractable_gear = dat["Landing_gear"]["Retractable"]
 
@@ -75,7 +85,7 @@ class Aircraft:
         self.CD_L3D2max = 4 * self.CD0_clean # ruijgrok p107
         self.CL_L3D2max = (self.L3D2max * self.CD_L3D2max**2)**(1/3)
                 
-    def CD(self, CL, gear="up", flaps="up"): # this parabolic approximation is about accurate until CL=1 (ruijgrok p226)
+    def CD(self, CL, gear="up", flaps="up", ground_effect_h=None): # this parabolic approximation is about accurate until CL=1 (ruijgrok p226)
         """ Parabolic estimation of C_D for given C_L for given gear/flaps conditions (default=clean) """
         
         # TODO: replace by more accurate representation for high-alpha CD estimation
@@ -94,7 +104,16 @@ class Aircraft:
             # TODO: improve
             CD0 += 0.03 # guess based on nicolai p242
             
-        return CD0 + CL**2 / (np.pi * self.AR * e)
+        # ground effect reduces induced drag, using nicolai section 10.2
+        # (credit to Wieselberger for the equation), according to gudmundson
+        # a good approximation for 0.033 < h_b < 0.25
+        sigma = 0
+        if ground_effect_h is not None:
+            h_b = (self.wing_h_above_ground + ground_effect_h) / self.b
+            sigma = (1 - 1.32 * h_b)/(1.05 + 7.4*h_b)
+            sigma = max(sigma,0) # for around h_b > .75 sigma will become negative
+            
+        return CD0 + CL**2 / (np.pi * self.AR * e) * (1-sigma)
     
     def P_shaft(self, h, dT, use_takeoff_power=False):
         return thrust_power.P_shaft(self, h, dT, use_takeoff_power=use_takeoff_power)
@@ -196,148 +215,14 @@ class Aircraft:
         D = 0.5 * density(h, dT) * self.S * self.CD(CL) * V**2
         if CL > 1: return 0
         return V * D / self.P_a(h, dT)
-
-    def takeoff_ground_run(self, W, h, dT, slope):
-        """
-        Calculates the take-off ground run for given conditions using three
-        different methods: Ruijgrok, Torenbeek and Nicolai. It is not done and 
-        relies on inaccurate CL and CD estimations.
-        
-        Assumes constant speed propeller for Torenbeek method.
-
-        Parameters
-        ----------
-        W : float
-            Gross aircraft weight at takeoff [N].
-        h : float
-            Elevation of airstrip [m].
-        dT : float
-            ISA temperature offset at airstrip [deg C].
-        slope : float
-            Slope of runway as fraction (vertical/horizontal), 
-            positive = sloped upwards at takeoff.
-
-        Returns
-        -------
-        s_run1 : float
-            Ruijgrok method.
-        s_run2 : float
-            Torenbeek method.
-        s_run3 : float
-            Nicolai method.
-
-        """
-
-        
-        # TODO: also ground effect should be taken into account
-        # there is a good discussion on ground effect in  
-        # Fundamentals of Aircraft and Airship Design: Volume 1 by nicolai
-        # pages 257-260
-
-        #
-        # constants common for all moethods
-        #
-        
-        rho = density(h, dT)
-        sigma = rho/1.225
-        g = 9.80665
-        
-        CL_ground = self.CL_ground_TO # C_L during ground run
-        CD_ground = self.CD(CL_ground, gear="down", flaps="TO") # C_D during ground run
-        
-        CL_max = self.CLmax_TO
-        V_S_TO = np.sqrt(W / (0.5 * rho * self.S * CL_max))
-        V_LOF = 1.2 * V_S_TO # lift off speed approximation according to torenbeek
-        # TODO: check CS23 requirements on V_R that may affect this
-
-        P_to = self.P_a(h, dT, use_takeoff_power=True)
-
-        
-        #
-        # Torenbeek method, torenbeek p167-168
-        # Note that Torenbeek uses kg for weights, not newton
-        # however it really is not accurate enough
-        #
-        
-        CD0 = self.CD(0, gear="down", flaps="TO")
-        P_to_kg = P_to / g # formula requires kgm/s
-        W_kg = W / g # torenbeek uses kg
-        
-        # adjusted friction coefficient
-        mu_quote = 0.05 + .72 * CD0/CL_max # 0.04-0.05 for short grass and 0.02 for concrete, if a fixed pitch prop is used use 0.576
-        
-        # avg thrust in kg
-        Tbar_kg = .321 * P_to_kg * (sigma / self.number_of_engines * self.propeller_diameter**2 / P_to_kg)**(1/3)
-        
-        # now calculate ground run
-        s_run2 = V_LOF**2 / (2*g) / (Tbar_kg/W_kg - mu_quote)
-        
-        
-        #
-        # Nicolai method, calculate acceleration at average speed 0.707V_LOF
-        # and assume this remains constant.
-        # from Fundamental of Aircraft and Airship design: volume 1 pages 257-260
-        #
-        
-        V = 0.707 * V_LOF # 0.707 to get the average velocity
-        T = P_to / V
-        D = 0.5 * rho * V**2 * self.S * CD_ground
-        L = 0.5 * rho * V**2 * self.S * CL_ground
-        a = g/W * (T - D - 0.05*(W - L)) # avg acceleration - nicolai has no friction coefficient for dry grass su using ruijgrok's value
-        s_run3 = 0.5 * V_LOF**2 / a
-        
-        
-        return s_run2, s_run3
     
-        #CL_G = self.CL_ground
-        #CD_G = self.CD(CL_G)
-        
-        #def s_g(V):
-           # return V / (g * (P_a(h, dT)))
-        
-        
-        #mu_r = 0.05 # coefficient of rolling friction for short-cut grass, ruijgrok p372 and roskam pt7 p40
-        
-    def landing_ground_distance(self, W, h, dT, slope):
-        
-        # ruijgrok p 388-393
-        # 
-        
-        # constants
-        rho = density(h, dT)
-        g = 9.80665
-        
-        # touchdown velocity 
-        V_T = 1.3 * np.sqrt(W/( 0.5 * rho * self.S * self.CLmax_land)) # TODO: set more accurately
+    
+    #
+    # Take-off and landing
+    #
 
-        CL = self.CL_ground_land # TODO: take into account ground effect?
-        CD = self.CD(CL, gear="down", flaps="land") # TODO: take into account ground effect?
-        
-        mu = 0.25 # TODO: set a realistic value
-        D_g_max = 0.2 * W # TODO: set a realistic value
-        
-        def f(V):
-            L = 0.5 * rho * V**2 * self.S * CL
-            D = 0.5 * rho * V**2 * self.S * CD
-            D_g = min(D_g_max, mu*(W-L)*self.weight_on_MLG) # assumes zero pitching moment
-            return (W/g * V) / (-D - D_g) # ruijgrok eq 16.7-9 and 16.7-1 and 16.7-2 combined
-        
-        s_ground = quad(f, V_T, 0)
-        
-        # the following is for testing
-        step = -0.001
-        V_lst = []
-        s_lst = []
-        s_tot = 0
-        V = V_T
-        
-        # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbel
-        
-        while V > 0:
-            s_tot += f(V)*step
-            s_lst.append(s_tot)
-            V_lst.append(V)
-            V += step
-        
-        return s_ground, V_lst, s_lst, s_tot
-        
+    def takeoff_ground_run(self, W, h, dT, slope, surface):
+        return takeoff_landing.takeoff_ground_run(self, W, h, dT, slope, surface)
+       
+    def landing_ground_distance(self, W, h, dT, slope, surface):
+        return takeoff_landing.landing_ground_distance(self, W, h, dT, slope, surface)
