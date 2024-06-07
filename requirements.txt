@@ -5,3 +5,5 @@ pandas
 tabulate
 colorama
 colorlog
+scikit-learn
+tqdm

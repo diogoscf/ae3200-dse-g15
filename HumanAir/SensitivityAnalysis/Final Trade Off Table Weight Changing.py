@@ -14,21 +14,17 @@ plt.rcParams["legend.fontsize"] = 24
 # Define the trade off table
 criteria = ["Ground Clearance", "Emission reduction", "Development Risk", "Cost", "Operability"]
 initial_weights = np.array([0.1, 0.3, 0.2, 0.3, 0.1])
-concepts = ['Flying Wing', 'Canard', 'Conventional']
+concepts = ["Flying Wing", "Canard", "Conventional"]
 
 # Define importance
-initial_importance = np.array([
-    [3, 1, 1, 2, 1],
-    [3, 4, 4, 4, 3],
-    [4, 3, 5, 5, 5]
-])
+initial_importance = np.array([[3, 1, 1, 2, 1], [3, 4, 4, 4, 3], [4, 3, 5, 5, 5]])
 
 
 # Perform sensitivity analysis
 weight_ranges = np.linspace(0, 1, 22)  # From 0 to 1 in steps of 0.05
 
 # To store results for each criteria being varied
-sensitivity_results = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}
+sensitivity_results = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}  # type: ignore[var-annotated]   # noqa: E501
 
 
 # Iterate through each criteria weight
@@ -51,10 +47,10 @@ for i, criterion in enumerate(criteria):
         label = concept if i == last else None
         ax.plot(weight_ranges, sensitivity_results[concept][criterion], label=label, color=colours[j])
     if i == last:
-        ax.set_xlabel('Weight Value')
+        ax.set_xlabel("Weight Value")
         # ax.legend(loc = 'lower right', bbox_to_anchor=(1.0, 0.05))
-    ax.set_ylabel('Final Score')
-    ax.set_title(f'{criterion}')
+    ax.set_ylabel("Final Score")
+    ax.set_title(f"{criterion}")
     ax.grid()
 
     ax.set_yticks(np.arange(0, 10, 1))
@@ -77,10 +73,9 @@ plt.savefig("Figures/Sensitivity Analysis of Weight.pdf")
 # plt.show()
 
 
-
 # Perform sensitivity analysis for importance
 importance_ranges = range(1, 6)  # From 1 to 5
-sensitivity_results_importance = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}
+sensitivity_results_importance = {concept: {criteria[i]: [] for i in range(len(criteria))} for concept in concepts}  # type: ignore[var-annotated]  # noqa: E501
 
 for i in range(initial_importance.shape[1]):
     for imp in importance_ranges:
@@ -99,11 +94,11 @@ for i, criterion in enumerate(criteria):
     for j, concept in enumerate(concepts):
         label = concept if i == last else None
         ax.plot(importance_ranges, sensitivity_results_importance[concept][criterion], label=label, color=colours[j])
-    ax.set_ylabel('Final Score')
+    ax.set_ylabel("Final Score")
     if i == last:
-        ax.set_xlabel('Criterion Score')
+        ax.set_xlabel("Criterion Score")
 
-    ax.set_title(f'{criterion}')
+    ax.set_title(f"{criterion}")
     # ax.legend(loc = 'lower right')
     ax.grid()
 

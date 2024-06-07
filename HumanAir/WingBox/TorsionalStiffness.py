@@ -1,7 +1,13 @@
 import numpy as np
-from Functions import chord, import_data2
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from HumanAir.WingBox.Functions import chord, import_data2
 
 x_pos = np.array([0.15, 0.5])
+
 
 def spars(chord, x_pos):
     # x_pos = position of spars in list
@@ -12,13 +18,15 @@ def spars(chord, x_pos):
         print(chord)
     return array
 
+
 def MOI(y, chord, spars):
     return
 
-########## input ###########
+
+# ######### input ###########
 Sw = 39  # [m2]
 taper_ratio = 0.4
-Cl_DATA = import_data2('HumanAir\WingBox\Cl_DATA.txt')
+Cl_DATA = import_data2("HumanAir\\WingBox\\Cl_DATA.txt")
 AoA = -6
 n = 5
 
@@ -29,4 +37,4 @@ chord_length = chord(Sw, taper_ratio, Cl_DATA, AoA, n)
 # Calculate the spars positions based on the chord length
 spars_positions = spars(chord_length, x_pos)
 
-#print(spars_positions)
+# print(spars_positions)
