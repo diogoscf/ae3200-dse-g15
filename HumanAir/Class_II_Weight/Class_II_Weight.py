@@ -469,7 +469,7 @@ class Class_II_Weight:
         MTOW_new = 0
 
         # initialise the class 2 weight subdictionary
-        self.dict["CL2Weight"] = {}
+        #self.dict["CL2Weight"] = {}
         self.dict["CL2Weight"]["MTOW_N"] = (
             self.dict["Weights"]["MTOW_N"] / self.dict["Contingency"]
         )  # the first value shall be the one returned from the class 1 weight estimation

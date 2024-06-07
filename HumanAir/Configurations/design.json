@@ -45,7 +45,7 @@
         "Dp_m": 2.286
     },
     "Geometry": {
-        "fus_height_m": 1.8,
+        "fus_height_m": 2.2,
         "fus_length_m": 12.05,
         "fus_width_m": 1.6,
         "XLEMAC_m": 3.25596819153751,
@@ -76,6 +76,7 @@
         "e": 0.82,
         "Taper_Wing": 0.4,
         "Taper_HS": 0.4,
+        "Taper_v": 0.45,
         "QuarterChordSweep_Wing_deg": 0,
         "QuarterChordSweep_HS_deg": 30,
         "QuarterChordSweep_v_deg": 25,
@@ -164,8 +165,8 @@
         "Xmw_m": 4.833142048850664
     },
     "Stability": {
-        "Cg_Aft": 0.546956634266024,
-        "Cg_Front": 0.28749737038296047,
+        "Cg_Aft": 0.35,
+        "Cg_Front": 0.1,
         "Stability_Margin": 0.05,
         "X_cg_HS": 0.95,
         "C_L_h": -0.5,
