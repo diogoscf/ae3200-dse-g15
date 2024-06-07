@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from aircraft_data import aircraft_data
+from HumanAir.Weights_and_CG.weight_fractions_C2 import calculate_lh, optimised_xlemac_landing_gears
 from isa import isa
 
 def Geometry(acd = aircraft_data):
@@ -111,6 +112,8 @@ def StabControl(acd = aircraft_data):
 
     # l_H iteration/calculation, XLEMAC placement
     # TODO: add this
+    # TODO: done
+    calculate_lh(ac_data = aircraft_data, hinge_chord_percentage = 3/4)
     l_H = acd["Stability"]["QCW_to_QCh"]
 
     # Get necessary values from functions
@@ -129,14 +132,52 @@ def StabControl(acd = aircraft_data):
 
     return StabSM, StabNeutral, Control, Xcg
 
-def TailSizing(acd):
-    Sh = 1
+def TailSizing(acd = aircraft_data, begin_value = -1, end_value = 8, step = 1):
+
+    for x_percentage in range(begin_value, end_value, step):
+
+        optimised_xlemac_landing_gears(ac_data = acd, percentage = x_percentage / 10, bat_xcg_init = 0.1)
+        StabSM, _, Control, Xcg = StabControl(acd = acd)
+        Xcg_excursion = np.array([0,0,0]) # TODO:potatoplot()
+
+        optimisation = False
+        S_h = acd["Aero"]["S_h"]
+        S = acd["Aero"]["S_Wing"]
+
+        while not optimisation:
+
+            Sh_S = S_h / S
+
+            if round(Sh_S, 4) in [round(i, 4) for i in StabSM] and round(Sh_S, 4) in [round(i, 4) for i in Control]:
+
+                end_idx = np.where(round(Sh_S,4) == np.round(Control, 4))[0][0]
+                begin_idx = np.where(round(Sh_S,4) == np.round(StabSM, 4))[0][0]
+
+                if end_idx - begin_idx == np.shape(Xcg_excursion):
+                    optimisation = True
+
+            else:
+                S_h -= 0.01
+
+        Plotting(acd = acd, show = False)
+        Sh_S_list = np.ones(np.shape(Xcg_excursion)[0]) * Sh_S
+
+        plt.plot(Xcg_excursion, Sh_S_list, label = "Optimised Xcg for Landing Gear")
+
+        answer = input("Do you want to continue? [Y/N]")
+
+        if answer.lower() == "n":
+
+            # saving all of the updated horizontal tail values
+            acd["Aero"]["S_h"] = S_h
+            break
+
     # TODO: Make this
 
-def Plotting(acd = aircraft_data):
+def Plotting(acd = aircraft_data, show = True):
     # Get data to plot from previous functions
     StabSM, StabNeutral, Control, Xcg = StabControl(acd)
-
+    TailSizing(acd = aircraft_data)
     # Actual plotting
     plt.plot(Xcg, StabSM, label="Stability with Safety Margin", color="limegreen", linewidth=2.2)
     plt.plot(Xcg, StabNeutral, label="Neutral Stability", linestyle="--", color="red")
@@ -146,7 +187,10 @@ def Plotting(acd = aircraft_data):
     plt.xlim(-0.2, 1.2)
     plt.ylim(0, 0.5)
     plt.legend()
-    plt.show()
+
+    if show:
+        plt.show()
 
 if __name__ == "__main__":
-    print(Plotting())
+    #Plotting()
+    TailSizing(acd=aircraft_data)
