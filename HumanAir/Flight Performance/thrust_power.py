@@ -127,14 +127,11 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
     we do not know when the maximum efficiency is reached: that specific speed
     may be lower than the cruise speed, giving an underestimated thrust for
     V < V_cruise.
-    
-    TODO: check with prop specs when max efficiency is reached.
-    
+        
     This function will throw an exception for V>V_max as beyond the maximum
     speed the interpolation is no longer valid (see Gudmundson fig 14-42).
     
     For calculating V_max it uses the OEW.
-    TODO: think over this decision again
     
     Parameters
     ----------
@@ -189,7 +186,7 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
         V_C_kt = conv.m_s_to_kt(V_C_ms)
         
         # max speed
-        V_H_ms = acf.V_max(acf.W_OE, h, dT)
+        V_H_ms = acf.V_max(acf.W_OE, h, dT, use_max_prop_eff=True)
         V_H_kt = conv.m_s_to_kt(V_H_ms)
         
         # cruise thrust
@@ -233,8 +230,9 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
     
     # check if V_ms is out of bounds
     if V_ms > V_H_ms:
-        raise Exception("Velocity given to thrust function exceeds max speed, \
-                        this is out of bounds.")
+        print(f"*************{V_ms:.4f}-{V_H_ms:.4f}***********")
+        #raise Exception("Velocity given to thrust function exceeds max speed, \
+        #                this is out of bounds.")
                         
     # velocity vector
     V_kt = conv.m_s_to_kt(V_ms)

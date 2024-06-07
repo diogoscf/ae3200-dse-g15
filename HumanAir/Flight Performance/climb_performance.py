@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 
 import aircraft
 
-h_max = 9900
+h_max = 6000
 
 def plot_climb_rate(acf):
    
     W = acf.W_MTO
     dT = 0    
     
-    h_list = np.arange(0, h_max, 10)
+    h_list = np.arange(0, h_max, 100)
     RC_max = np.zeros(len(h_list))
     P_a = np.zeros(len(h_list))
     P_r_min = np.zeros(len(h_list))
@@ -39,7 +39,7 @@ def plot_climb_rate(acf):
     plt.xlabel(r"Climb Rate (m/s)")
     plt.ylabel("Altitude (m)")
     plt.ylim(0,h_max)
-    plt.xlim(0,RC_max[0]*1.05)
+    #plt.xlim(0,RC_max[0]*1.05)
     plt.legend()
     plt.text(0, h_max+100, "Not accurate for high altitudes with C_L > 1")
     #plt.subplots_adjust(right=0.75)
@@ -220,9 +220,9 @@ def plot_thrust(acf):
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
     plot_climb_rate(acf)
-    plot_climb_gradient(acf)
-    plot_stall_speed(acf)
-    plot_cruise_power_setting(acf)
-    plot_take_off_performance(acf)
-    plot_landing_performance(acf)
-    plot_thrust(acf)
+    # plot_climb_gradient(acf)
+    # plot_stall_speed(acf)
+    # plot_cruise_power_setting(acf)
+    # plot_take_off_performance(acf)
+    # plot_landing_performance(acf)
+    # plot_thrust(acf)

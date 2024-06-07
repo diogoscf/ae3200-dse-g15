@@ -42,7 +42,9 @@
         "N_e": 1,
         "N_t": 2,
         "P_req_TO_W": 291942.69516208547,
-        "Dp_m": 2.286
+        "Dp_m": 2.286,
+        "Fuel_engine_P_TO_W": 368000,
+        "Fuel_engine_P_max_cont_W": 338000
     },
     "Geometry": {
         "fus_height_m": 1.8,

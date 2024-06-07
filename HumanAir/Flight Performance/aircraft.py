@@ -1,6 +1,6 @@
 import json
 import numpy as np
-from scipy.optimize import root_scalar
+from scipy.optimize import root_scalar, minimize_scalar
 
 from helper import density
 import thrust_power
@@ -9,6 +9,8 @@ import takeoff_landing
 class Aircraft:
     """
     Aircraft object for evaluating performance.
+    
+    Currently it only uses only the fuel engine.
     
     IMPORTANT: the thrust function stores intermediate values for faster
     calculations. If aircraft parameters change it should be ensured that
@@ -40,14 +42,13 @@ class Aircraft:
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
-        self.CLmax_land     = dat["Aero"]["CLmax_TO"] # TODO: check if still correct
+        self.CLmax_land     = dat["Aero"]["CLmax_Land"]
         
-        # TODO: fill in
-        self.CL_ground_TO   = .5 # C_L while on level runway with flaps in TO position 
-        self.CL_ground_land = .7 # C_L while on level runway with flaps in land position
-        self.number_of_engines = 1 # TODO: use design.json
-        self.propeller_diameter = 2 # TODO: use deisng.json
-        self.spinner_diameter = 0.3 # TODO: use deisng.json
+        self.CL_ground_TO   = dat["Flaps"]["CL_AoA0_landing"] 
+        self.CL_ground_land = dat["Flaps"]["CL_AoA0_takeoff"]
+        self.number_of_engines = 1
+        self.propeller_diameter = dat["Power_prop"]["Dp_m"]
+        self.spinner_diameter = 0.3
 
         self.wing_h_above_ground = dat["Geometry"]["fus_height_m"] + \
             dat["Landing_gear"]["Hs_m"] + dat["Landing_gear"]["Dwm_m"]/2
@@ -56,7 +57,7 @@ class Aircraft:
 
         # weights
         self.W_OE           = dat["Weights"]["OEW_N"]
-        self.W_F            = dat["Weights"]["WF_N"]
+        self.W_MF           = dat["Weights"]["MFW_N"] # max fuel weight
         self.W_bat          = dat["Weights"]["Wbat_N"]
         self.W_pl_des       = dat["Weights"]["Wpl_des_kg"] * 9.80655
         self.W_pl_max       = dat["Weights"]["Wpl_max_kg"] * 9.80655
@@ -65,15 +66,12 @@ class Aircraft:
         x_cg = dat["Stability"]["Cg_Front"]*dat["Aero"]["MAC_wing"] + dat["Geometry"]["XLEMAC_m"]
         x_main, x_nose = dat["Landing_gear"]["Xmw_m"], dat["Landing_gear"]["Xnw_m"]
         self.weight_on_MLG  = (x_cg - x_nose) / (x_main - x_nose) # fraction of weight on MLG with front most possible CG position
-        print(self.weight_on_MLG)
+        
         # propulsion
-        # TODO: correct
-        self.max_cont_power_sealevel  = 250500 # engine power without losses 
-        # TODO: correct
-        self.takeoff_power_sealevel   = 250500 # engine power without losses
-        # TODO: check definition
-        self.eff_powertrain = dat["Power_prop"]["eta_powertrain"]
-        self.max_eff_prop       = dat["Power_prop"]["eta_p"] # max eff prop
+        self.max_cont_power_sealevel  = dat["Power_prop"]["Fuel_engine_P_TO_W"]
+        self.takeoff_power_sealevel   = dat["Power_prop"]["Fuel_engine_P_max_cont_W"]
+        self.eff_powertrain     = dat["Power_prop"]["eta_powertrain"]
+        self.max_eff_prop       = dat["Power_prop"]["eta_p"]
         
         # calculated data
         self.LDmax = 0.5 * np.sqrt(np.pi*self.AR*self.e_clean/self.CD0_clean) # ruijgrok p107
@@ -88,7 +86,7 @@ class Aircraft:
     def CD(self, CL, gear="up", flaps="up", ground_effect_h=None): # this parabolic approximation is about accurate until CL=1 (ruijgrok p226)
         """ Parabolic estimation of C_D for given C_L for given gear/flaps conditions (default=clean) """
         
-        # TODO: replace by more accurate representation for high-alpha CD estimation
+        # TODO: replace by more accurate representation for high-alpha CD and flap estimation
         
         CD0 = self.CD0_clean
         e = self.e_clean
@@ -97,12 +95,10 @@ class Aircraft:
             CD0 += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
             
         if flaps == "TO":
-            CD0 += 0.01 # roskam pt1 p127 and nicolai p242
-            e -= 0.05 # roskam pt1 p127
+            CD0 += 0.003 # guess based on figure 9.25 nicolai p242
             
         elif flaps == "land":
-            # TODO: improve
-            CD0 += 0.03 # guess based on nicolai p242
+            CD0 += 0.0175 # guess based on figure 9.25 nicolai p242
             
         # ground effect reduces induced drag, using nicolai section 10.2
         # (credit to Wieselberger for the equation), according to gudmundson
@@ -145,8 +141,15 @@ class Aircraft:
         
     def RC_max(self, W, h, dT):
         """ Maximum possible climb rate for given conditions in clean configuration"""
-        # TODO: take into account effect of low airspeed on thrust or P_a ?
-        return (self.P_a(h, dT) - self.P_r_min(W, h, dT)) / W
+        rho = density(h, dT)
+        def f(V):
+            CL = W / (0.5 * rho * V**2 * self.S)
+            CD = self.CD(CL)
+            P_r = V * (0.5 * rho * V**2 * self.S * CD)
+            P_a = self.P_a(h, dT, V=V)
+            return -(P_a - P_r) / W # minus so that minimize() will maximize
+        RC_max = -minimize_scalar(f, bounds=[0, self.V_max(W, h, dT)], method="bounded").x # minus to convert back to positive
+        return RC_max
     
     def climb_angle_max(self, W, h, dT, gear="up", flaps="up"):
         """ Maximum possible climb slope (RC/V) for given conditions in given config (default clean) """
@@ -170,21 +173,16 @@ class Aircraft:
             CL = self.CLmax_land
         return np.sqrt(W / (0.5 * density(h, dT) * self.S * CL))
     
-    def V_max(self, W, h, dT):
+    def V_max(self, W, h, dT, use_max_prop_eff=False):
         """
         Calculates the maximum true airspeed in clean configuration.
         
         It does so by finding the point where P_a() equals the drag force times
         velocity.
                 
-        Note that the maximum possible P_a() is used. this means that the
-        calculated value is inaccurate for high altitudes.
-        
-        TODO: fix this
-        
-        This is because the calculation of power available for low speeds
-        needs V_max, causing an infinite loop.
-        
+        When use_max_prop_eff is set to true it will not take into account
+        low-speed losses. This is to prevent an infinite loop when used by
+        the thrust function.        
 
         Parameters
         ----------
@@ -194,6 +192,8 @@ class Aircraft:
             Geopotential altitude [m].
         dT : float
             ISA temperature offset [deg C].
+        use_max_prop_efficiency : boolean
+            Whether to assume max prop efficiency
 
         Returns
         -------
@@ -202,11 +202,17 @@ class Aircraft:
         """
 
         rho = density(h, dT)
+        
         def diff(V): # returns difference between power available and power required
+            if type(V) is not np.float64:
+                V = V[0]
             CL = W / (0.5 * rho * self.S * V**2)
             CD = self.CD(CL)
             D = 0.5 * rho * self.S * CD * V**2
-            return self.P_a(h, dT) - D*V
+            if use_max_prop_eff:
+                return self.P_a(h, dT) - D*V
+            else:
+                return self.P_a(h, dT, V=V) - D*V
         return root_scalar(diff, x0=75).root
     
     def power_setting(self, W, V, h, dT):
