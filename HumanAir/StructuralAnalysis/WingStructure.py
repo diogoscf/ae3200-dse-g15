@@ -45,12 +45,16 @@ class WingStructure:
         self.t_skin = ac_data["Geometry"]["t_skin_wing"]  # [m] thickness of skin
         self.spar_pos = np.array(ac_data["Geometry"]["spar_pos"])  # position of spars
         self.stringer_area = ac_data["Geometry"]["wing_stringer_area"]  # [m2] area of stringers
-        self.Cr = ac_data["Aero"]["c_root_wing"]
+        self.cr = ac_data["Aero"]["c_root_wing"]
+        self.ct = self.cr * self.taper_ratio
         self.b = ac_data["Aero"]["b_Wing"]
         self.ypts = np.linspace(-self.b / 2, self.b / 2, self.nodes)
 
         self.chord_distribution = self.calculate_chord_distribution()
         self.spars = self.chord_distribution.reshape(len(self.chord_distribution), 1) * self.spar_pos
+
+        # Assume spar thickness is uniformly decreasing from root to tip
+        self.t_spar_dist = self.t1_spar + (self.t2_spar - self.t1_spar) / (self.cr - self.ct) * (self.chord_distribution - self.ct)
 
     # def import_data(self):
     #     df = pd.read_csv(self.file_path, sep="\s+", header=None, names=["x", "y"], skiprows=1)
@@ -123,12 +127,6 @@ class WingStructure:
         y_down = self.y_spar(df_down)
         return y_up, y_down
 
-    def t_spar(self):
-        """Assumption: uniform variation of thickness"""
-        ct = self.chord_distribution[-1]
-        cr = ct / self.taper_ratio
-        return self.t1_spar + (self.t2_spar - self.t1_spar) / (cr - ct) * (self.chord_distribution - ct)
-
     def diff(self, data):
         dx = []
         for i in range(len(data)):
@@ -178,7 +176,6 @@ class WingStructure:
         y_up, y_down = self.y_updown()
         l_box_up, l_box_down = self.d_s1s2()
         h_mid, h_s1s2 = self.h_s1s2()
-        t_spar = self.t_spar()
 
         # upper skin
         A_uskin = l_box_up.reshape((len(l_box_up), 1)) * self.t_skin
@@ -189,11 +186,11 @@ class WingStructure:
         y_lskin = self.y(y_down).reshape((len(y_down), 1))
 
         # left spar
-        A_lspar = t_spar * h_s1s2[:, 0].reshape((len(h_s1s2), 1))
+        A_lspar = self.t_spar_dist * h_s1s2[:, 0].reshape((len(h_s1s2), 1))
         y_lspar = h_mid[:, 0].reshape((len(h_mid), 1))
 
         # right spar
-        A_rspar = t_spar * h_s1s2[:, 1].reshape((len(h_s1s2), 1))
+        A_rspar = self.t_spar_dist * h_s1s2[:, 1].reshape((len(h_s1s2), 1))
         y_rspar = h_mid[:, 1].reshape((len(h_mid), 1))
 
         return (A_uskin * y_uskin + A_lskin * y_lskin + A_lspar * y_lspar + A_rspar * y_rspar) / (
@@ -203,13 +200,12 @@ class WingStructure:
     def Ixx(self, no_str):
         h_mid, h_s1s2 = self.h_s1s2()
         l_box_up, l_box_down = self.d_s1s2()
-        t_spar = self.t_spar()
         h_15c = h_s1s2[:, 0].reshape((len(h_s1s2), 1))
         h_50c = h_s1s2[:, 1].reshape((len(h_s1s2), 1))
         htot = h_15c + h_50c
         h_avemax = htot / 4
         I_stringer = self.stringer_area * no_str * h_avemax**2
-        I_spar = 1 / 12 * t_spar * (h_15c * 3 + h_50c * 3)
+        I_spar = 1 / 12 * self.t_spar_dist * (h_15c * 3 + h_50c * 3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
 

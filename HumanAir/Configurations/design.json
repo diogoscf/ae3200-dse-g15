@@ -69,7 +69,8 @@
         "spar_pos": [0.15, 0.5],
         "wing_stringer_area": 0.02,
         "strut_loc_b/2": 0.4,
-        "strut_loc_MAC": 0.25
+        "strut_loc_MAC": 0.25,
+        "wingbox_material": "Aluminium"
     },
     "Aero": {
         "CLmax_clean": 1.8,
@@ -192,5 +193,12 @@
         "Wbat_N": 6981.564025322721,
         "Wfuel_N": 2722.1274686465113,
         "Wpl": 705.6
+    },
+    "Materials": {
+        "Aluminium": {
+            "rho": 2710,
+            "E": 68e9,
+            "sigma_y": 40e6
+        }
     }
 }

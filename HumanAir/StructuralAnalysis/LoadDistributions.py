@@ -54,7 +54,12 @@ def weight_distribution(c, ac_data=aircraft_data):
     W_fuel = np.pad(W_fuel, pad_width=diff // 2, mode="constant")
     print(np.sum(W_fuel))
 
-    return W_structure + W_fuel, W_fuel, (nodes_half_wing - n_before_strut, nodes_half_wing + n_before_strut + extra), c_between_struts
+    return (
+        W_structure + W_fuel,
+        W_fuel,
+        (nodes_half_wing - n_before_strut, nodes_half_wing + n_before_strut + extra),
+        c_between_struts,
+    )
 
 
 def moment_distribution(V, altitude, Cm_DATA, AoA, ac_data=aircraft_data):
@@ -97,12 +102,14 @@ def strut_shear_result():
 #     print("Wtot = ", np.trapz(W / 9.81, Cl_DATA[AoA]["y_span"]), " kg")
 
 
-def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data):
+def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data, load_factor=1):
     b_half = ac_data["Aero"]["b_Wing"] / 2
     sweep = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
-    Dtot = -D  # drag and thrust act on the x axis (thrust = 0)
-    Vx = integrate.cumulative_trapezoid((Dtot * b_half / (nodes / 2))[nodes // 2 :], y_points[nodes // 2 :])
-    Vz = integrate.cumulative_trapezoid(((-L + W) * b_half / (nodes / 2))[nodes // 2 :], y_points[nodes // 2 :])
+    Dtot = -(D * (load_factor**2))  # drag and thrust act on the x axis (thrust = 0)
+    Vx = integrate.cumulative_trapezoid(np.flip((Dtot * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :])
+    Vz = integrate.cumulative_trapezoid(
+        np.flip(((-L * load_factor + W) * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :]
+    )
     Vx = np.append(Vx[::-1], [0])
     Vz = np.append(Vz[::-1], [0])
 
@@ -111,7 +118,7 @@ def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data):
         nodes, ac_data
     )  # axial force in the y span, during flight -- this is what we want now cause of cruise
     Ax_total_ground = axial_distribution_ground(nodes, ac_data)  # axial force in the y span, on the ground
-    Vy = Ax_total_flight
+    Vy = np.append(Ax_total_flight, [0])
 
     # Vz - shear force because of the strut
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
@@ -127,27 +134,36 @@ def InternalLoads(L, W, D, M, nodes, y_points, ac_data=aircraft_data):
     Mz = np.append(Mz[::-1], [0])
 
     # due to lift and weight moment arm
-    # TODO: Figure out signs for the 3 below
-    Ml = integrate.cumulative_trapezoid((L * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep), y_points[nodes // 2 :])
-    Mw = integrate.cumulative_trapezoid((W * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep), y_points[nodes // 2 :])
-    Mym = integrate.cumulative_trapezoid((M * b_half / (nodes / 2))[nodes // 2 :], y_points[nodes // 2 :])
+    Ml = integrate.cumulative_trapezoid(
+        np.flip((-L * load_factor * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep)), y_points[nodes // 2 :]
+    )
+    Mw = integrate.cumulative_trapezoid(
+        np.flip((W * b_half / (nodes / 2))[nodes // 2 :] * np.tan(sweep)), y_points[nodes // 2 :]
+    )
+    Mym = integrate.cumulative_trapezoid(
+        np.flip((M * load_factor * b_half / (nodes / 2))[nodes // 2 :]), y_points[nodes // 2 :]
+    )
 
     My = (np.array(Ml) + np.array(Mw) + np.array(Mym))[::-1]
     My = np.append(My, [0])
 
     return Vx, Vy, Vz, Mx, My, Mz
 
+def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
 
-def IntegrateTorqueFromLift(c, axis, data, sweep):
-    data = np.flip(data)
-    data = data[:c]
-    axis = np.flip(axis)
-    axis = axis[:c]
-    data = data * np.tan(sweep) * (axis - axis[c - 1])
+    nodes_data = len(Cl_data[0]["coefficient"])
+    ypts_orig = np.linspace(Cl_data[0]["y_span"][0], Cl_data[0]["y_span"][-1], nodes_data)
 
-    M = np.trapz(data, axis)
-    return M
+    for angle in Cl_data.keys():
+        Cl_data[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cl_data[angle]["coefficient"])
+        Cm_data[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cm_data[angle]["coefficient"])
+        Cdi_data[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cdi_data[angle]["coefficient"])
 
+        Cl_data[angle]["y_span"] = y_points
+        Cm_data[angle]["y_span"] = y_points
+        Cdi_data[angle]["y_span"] = y_points
+
+    return Cl_data, Cdi_data, Cm_data
 
 if __name__ == "__main__":
     # Data
@@ -155,46 +171,29 @@ if __name__ == "__main__":
     # Sw = 39  # [m2]
     # taper_ratio = 0.4
     # Vcruise = 60  # [m/s]
-    rho = 0.9  # [kg/m3]
-    structuralmass = 5250 / 9.81
-    batterymass_w = 0
+    # rho = 0.9  # [kg/m3]
+    # structuralmass = 5250 / 9.81
+    # batterymass_w = 0
     nl = 3.8  # Load Factor
     nl2 = -1.52
-    sweep = 0.157
+    # sweep = 0.157
     altitude = 3000  # [m]
-
-    # import files
-    Cl_DATA = Cl_data_wing
-    Cm_DATA = Cm_data_wing
-    Cdi_DATA = Cdi_data_wing
-
-    # nodes = len(Cl_DATA[AoA]["coefficient"])
     nodes = 501
+
     wing_structure_data = WingStructure(aircraft_data, airfoil_shape, nodes)
-    c = wing_structure_data.chord_distribution
+    chord_dist = wing_structure_data.chord_distribution
     y_points = wing_structure_data.ypts
-
-    nodes_data = len(Cl_DATA[AoA]["coefficient"])
-    ypts_orig = np.linspace(Cl_DATA[AoA]["y_span"][0], Cl_DATA[AoA]["y_span"][-1], nodes_data)
-
     # print(Cl_DATA[-10.0].keys())
 
-    for angle in Cl_DATA.keys():
-        Cl_DATA[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cl_DATA[angle]["coefficient"])
-        Cm_DATA[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cm_DATA[angle]["coefficient"])
-        Cdi_DATA[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cdi_DATA[angle]["coefficient"])
-
-        Cl_DATA[angle]["y_span"] = y_points
-        Cm_DATA[angle]["y_span"] = y_points
-        Cdi_DATA[angle]["y_span"] = y_points
+    Cl_DATA, Cdi_DATA, Cm_DATA = interpolate_Cl_Cd_Cm(Cl_data_wing, Cdi_data_wing, Cm_data_wing, y_points)
 
     # Cm_DATA = np.interp(y_points, ypts_orig, Cm_DATA[AoA]["coefficient"])
     # Cdi_DATA = np.interp(y_points, ypts_orig, Cdi_DATA[AoA]["coefficient"])
 
     L_cruise, D_cruise = force_distribution(
-        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], Cl_DATA=Cl_data_wing, Cdi_DATA=Cdi_data_wing
+        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], Cl_DATA=Cl_DATA, Cdi_DATA=Cdi_DATA
     )
-    W_cruise, W_fuel, idxs, c_between_struts = weight_distribution(c, ac_data=aircraft_data)
+    W_cruise, W_fuel, idxs, c_between_struts = weight_distribution(chord_dist, ac_data=aircraft_data)
 
     M_cruise = moment_distribution(
         aircraft_data["Performance"]["Vc_m/s"], altitude, Cm_DATA, AoA, ac_data=aircraft_data
@@ -202,17 +201,17 @@ if __name__ == "__main__":
 
     # nl = 3.8
     Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
-        nl * L_cruise, W_cruise, abs(nl) * D_cruise, nl * M_cruise, nodes, y_points, ac_data=aircraft_data
+        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nl
     )
 
     # nl = origin
     Vx1, Vy1, Vz1, Mx1, My1, Mz1 = InternalLoads(
-        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data
+        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=1
     )
 
     # nl = -1
     Vx2, Vy2, Vz2, Mx2, My2, Mz2 = InternalLoads(
-        nl2 * L_cruise, W_cruise, abs(nl2) * D_cruise, nl2 * M_cruise, nodes, y_points, ac_data=aircraft_data
+        L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nl2
     )
 
     # plt.subplot(2, 2, 1)
@@ -226,13 +225,24 @@ if __name__ == "__main__":
     # plt.tight_layout()
     # plt.grid()
 
+    # plt.subplot(2, 2, 1)
+    # plt.plot(y_points[nodes // 2 :], Vx, label="n=3.8")
+    # plt.plot(y_points[nodes // 2 :], Vx1, label="cruise")
+    # plt.plot(y_points[nodes // 2 :], Vx2, label="n=-1")
+    # plt.title("Shear Force Vx along Span")
+    # plt.xlabel("Spanwise Position [m]")
+    # plt.ylabel("Vx [N]")
+    # # plt.xlim(left=0)
+    # plt.grid()
+    # plt.legend()
+
     plt.subplot(2, 2, 1)
-    plt.plot(y_points[nodes // 2 :], Vx, label="n=3.8")
-    plt.plot(y_points[nodes // 2 :], Vx1, label="cruise")
-    plt.plot(y_points[nodes // 2 :], Vx2, label="n=-1")
-    plt.title("Shear Force Vx along Span")
+    plt.plot(y_points[nodes // 2 :], Vy, label="n=3.8")
+    plt.plot(y_points[nodes // 2 :], Vy1, label="cruise")
+    plt.plot(y_points[nodes // 2 :], Vy2, label="n=-1")
+    plt.title("Shear Force Vy along Span")
     plt.xlabel("Spanwise Position [m]")
-    plt.ylabel("Vx [N]")
+    plt.ylabel("Vy [N]")
     # plt.xlim(left=0)
     plt.grid()
     plt.legend()
@@ -259,26 +269,26 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid()
 
+    # plt.subplot(2, 2, 4)
+    # plt.plot(y_points[nodes // 2 :], Mz, label="n=3.8")
+    # plt.plot(y_points[nodes // 2 :], Mz1, label="cruise")
+    # plt.plot(y_points[nodes // 2 :], Mz2, label="n=-1")
+    # plt.title("Torque Mz along Span")
+    # plt.xlabel("Spanwise Position [m]")
+    # plt.ylabel("Mz [Nm]")
+    # # plt.xlim(left=0)
+    # plt.legend()
+    # plt.grid()
+
     plt.subplot(2, 2, 4)
-    plt.plot(y_points[nodes // 2 :], Mz, label="n=3.8")
-    plt.plot(y_points[nodes // 2 :], Mz1, label="cruise")
-    plt.plot(y_points[nodes // 2 :], Mz2, label="n=-1")
-    plt.title("Torque Mz along Span")
+    plt.plot(y_points[y_points.shape[0] // 2 :], My, label="n=3.8")
+    plt.plot(y_points[y_points.shape[0] // 2 :], My1, label="cruise")
+    plt.plot(y_points[y_points.shape[0] // 2 :], My2, label="n=-1")
+    plt.title("Torque My along Span")
     plt.xlabel("Spanwise Position [m]")
-    plt.ylabel("Mz [Nm]")
-    # plt.xlim(left=0)
+    plt.ylabel("My [Nm]")
     plt.legend()
     plt.grid()
 
-    # plt.subplot(2, 2, 4)
-    # plt.plot(y_points[y_points.shape[0]//2:], My, label="n=3.8")
-    # plt.plot(y_points[y_points.shape[0]//2:], My1, label="cruise")
-    # plt.plot(y_points[y_points.shape[0]//2:], My2, label="n=-1")
-    # plt.title("Torque My along Span")
-    # plt.xlabel("Spanwise Position [m]")
-    # plt.ylabel("My [Nm]")
-    # plt.legend()
-    # plt.grid()
-    # plt.tight_layout()
-
+    plt.tight_layout()
     plt.show()
