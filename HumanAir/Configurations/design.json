@@ -45,11 +45,11 @@
         "Dp_m": 2.286
     },
     "Geometry": {
-        "fus_height_m": 2.2,
-        "fus_length_m": 12.05,
+        "fus_height_m": 1.8,
+        "fus_length_m": 11.72,
         "fus_width_m": 1.6,
         "XLEMAC_m": 3.25596819153751,
-        "tail_length_m": 5.2,
+        "tail_length_m": 5.5,
         "l_f_nonosecone": 9.5,
         "fuselage_max_perimeter": 6.8,
         "w_engine": 0.85,
@@ -85,12 +85,12 @@
         "deda": 0,
         "VhV": 0.85,
         "S_Wing": 36.27269326905173,
-        "S_h": 4.751643947348438,
+        "S_h": 8,
         "S_v": 3.168,
         "tc_m_Wing": 0.1367,
         "tc_m_HP": 0.12,
         "b_Wing": 19.974974992714486,
-        "b_h": 4.874240426645181,
+        "b_h": 6.32,
         "b_v": 2.518,
         "t_root_max_Wing": 0.46,
         "t_root_max_h": 0.3,
@@ -101,14 +101,17 @@
         "c_root_HS": 1.392640121898623,
         "c_tip_HS": 0.5570560487594493,
         "MAC_wing": 1.9270847859390599,
-        "MAC_HS": 1.0345326619818345
+        "MAC_HS": 1.0345326619818345,
+        "Cm_0_wing": -0.20192
     },
     "Flaps": {
         "cprime_c": 1.075,
         "Swf": 17.912441120519386,
         "delta_f": 45,
-        "mu1": 0.17,
-        "mu2": 0.75,
+        "mu1_land": 0.19,
+        "mu2_land": 0.75,
+        "mu1_takeoff": 0.215,
+        "mu2_takeoff": 0.75,
         "CL0": 1.4,
         "deflection_landing": 25,
         "deflection_takeoff": 10,
@@ -130,6 +133,7 @@
         "W/S_N/m2": 859.8001,
         "W/P_N/W": 0.12065176979161106,
         "Vc_m/s": 60.0,
+        "V_takeoff_m/s": 35.0,
         "M_D": 0.2556706628569902,
         "range_nm": 600,
         "endurance": 4.74871794871795,
@@ -211,6 +215,11 @@
         "Wbat_N": 6963.139301524177,
         "Wfuel_N": 2786.738409908664,
         "Wpl_w/o_pilot": 5933.088000000002,
-        "W_pilot": 988.8480000000001
+        "W_pilot": 988.8480000000001,
+        "Engine Weight": 3988.3536,
+        "Propeller Weight": 988.848,
+        "Electric Motor Weight": 384.552,
+        "Passenger Mass": 84,
+        "Luggage Mass": 16.8
     }
 }
