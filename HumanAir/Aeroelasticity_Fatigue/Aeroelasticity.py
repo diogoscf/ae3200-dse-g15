@@ -5,6 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from HumanAir.aircraft_data import aircraft_data
 from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
+from scipy.linalg import eig
+
 
 
 
@@ -131,15 +133,14 @@ def Flutter(K_h, K_theta, rho_arr, V_arr, CL_alpha, b, a, x_theta, m_arr, I_thet
 
                 # Define the function representing the equation M_s * p^2 - C_a * p + (K_s - K_a) = 0
                 def equation(p):
-                    p = np.reshape(p, (2, 1)) # Reshape p to be a column vector
-                    term1 = M_s @ (p**2)
-                    term2 = C_a @ p
-                    term3 = K_s - K_a
+                    term1 = M_s * p**2  # M_s * p^2
+                    term2 = C_a * p  # C_a * p
+                    term3 = K_s - K_a  # K_s - K_a
                     result = term1 - term2 + term3
-                    return result.flatten()
-                
-                # Initial guess for the vector p
-                p0 = np.array([1, 1])
+                    return result.flatten()  # Return a flattened array for fsolve
+
+                # Initial guess for the scalar p
+                p0 = 1
 
                 # Solve the equation
                 solution = fsolve(equation, p0)
@@ -204,7 +205,7 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
     V_flut : float
         The flutter speed of the aircraft.
     """
-    eigenvalues = []
+    eigenvalues_lst = []
     for V in V_arr:
         # Define matrices
         CL_alpha_dot =  CL_alpha * (1-a) # The rate of change of the lift for a rate of change in angle of attack.
@@ -215,35 +216,81 @@ def flutter_diagram(K_h, K_theta, rho, V_arr, CL_alpha, b, a, x_theta, m, I_thet
         C_a = np.array([[q * (2 * b) * CL_alpha * 1/V, q * (2 * b) * CL_alpha_dot * b/V], [q * (2 * b) * CL_alpha * 1/V * (1/2 + a) * b, q * (2 * b) * b/V * b * CL_alpha * a * (1/2 - a)]])
         M_s = np.array([[m, S_theta], [S_theta, I_theta]])
 
-        print(K_a)
+        # print("K_s: ", K_s)
+        # print("K_a: ", K_a)
+        # print("C_a: ", C_a)
+        # print("M_s: ", M_s)
         
-        # Define the function representing the equation M_s * p^2 - C_a * p + (K_s - K_a) = 0
-        def equation(p):
-            p = np.reshape(p, (2, 1))
-            term1 = M_s @ (p**2)
-            term2 = C_a @ p
-            term3 = K_s - K_a
-            result = term1 - term2 + term3
-            return result.flatten()
+        # Solve M_s * p^2 - C_a * p + (K_s - K_a) = 0
+        # p1= (C_a + np.sqrt(C_a**2 - 4 * M_s @ (K_s - K_a)))/(2 * M_s)
+        # p2= (C_a - np.sqrt(C_a**2 - 4 * M_s @ (K_s - K_a)))/(2 * M_s)
+        # print("p1: ", p1)
+        # print("p2: ", p2)
+        # solution = np.array([p1, p2])
         
-        # Initial guess for the vector p
-        p0 = np.array([1, 1])
-        
-        # Solve the equation
-        solution = fsolve(equation, p0)
-        eigenvalues.append(solution)
+        # Define the matrices A and B
+        A = -np.linalg.inv(M_s) @ C_a
+
+        B = np.linalg.inv(M_s) @ (K_s - K_a)
+
+        # Construct the system matrix F
+        n = A.shape[0]
+        I = np.eye(n)
+        zero_matrix = np.zeros_like(A)
+
+        F = np.block([
+            [zero_matrix, I],
+            [-B, -A]
+        ])
+
+        # Compute the eigenvalues
+        eigenvalues, _ = eig(F)
+
+        # Print the eigenvalues
+        # print("Eigenvalues: ", eigenvalues)s
+
+
+
+        # def equation(p):
+        #     term1 = M_s * p**2  # M_s * p^2
+        #     term2 = C_a * p  # C_a * p
+        #     term3 = K_s - K_a  # K_s - K_a
+        #     result = term1 - term2 + term3
+        #     return result.flatten()  # Return a flattened array for fsolve
+
+        # # Initial guess for the scalar p
+        # p0 = 1
+
+        # # Solve the equation
+        # solution = fsolve(equation, p0)
+        eigenvalues_lst.append(eigenvalues)
+        print("Eigenvalues: ", eigenvalues)
 
     # Plot real parts of eigenvalue pairs in p against V
-    real_eigenvalues = [eigenvalue[0] for eigenvalue in eigenvalues]
-    plt.plot(V_arr, real_eigenvalues)
+    real_eigenvalues_1 = [eigenvalue[0].real for eigenvalue in eigenvalues_lst]
+    real_eigenvalues_2 = [eigenvalue[1].real for eigenvalue in eigenvalues_lst]
+    # real_eigenvalues_3 = [eigenvalue[2].real for eigenvalue in eigenvalues_lst]
+    # real_eigenvalues_4 = [eigenvalue[3].real for eigenvalue in eigenvalues_lst]
+    plt.plot(V_arr, real_eigenvalues_1, label="Real part 1")
+    plt.plot(V_arr, real_eigenvalues_2, label="Real part 2")
+    # plt.plot(V_arr, real_eigenvalues_3, label="Real part 3")
+    # plt.plot(V_arr, real_eigenvalues_4, label="Real part 4")
+    plt.legend()
     plt.xlabel("V [m/s]")
     plt.ylabel("Re(p)")
     plt.title("Flutter diagram - Real parts of eigenvalues")
     plt.show()
     
     # plot imaginary parts of eigenvalue pairs in p against V
-    imaginary_eigenvalues = [eigenvalue[1] for eigenvalue in eigenvalues]
-    plt.plot(V_arr, imaginary_eigenvalues)
+    # imaginary_eigenvalues_1 = [eigenvalue[0].imag for eigenvalue in eigenvalues_lst]
+    # imaginary_eigenvalues_2 = [eigenvalue[1].imag for eigenvalue in eigenvalues_lst]
+    imaginary_eigenvalues_3 = [eigenvalue[2].imag for eigenvalue in eigenvalues_lst]
+    imaginary_eigenvalues_4 = [eigenvalue[3].imag for eigenvalue in eigenvalues_lst]
+    # plt.plot(V_arr, imaginary_eigenvalues_1, label="Imaginary part 1")
+    # plt.plot(V_arr, imaginary_eigenvalues_2, label="Imaginary part 2")
+    plt.plot(V_arr, imaginary_eigenvalues_3, label="Imaginary part 3")
+    plt.plot(V_arr, imaginary_eigenvalues_4, label="Imaginary part 4")
+    plt.legend()
     plt.xlabel("V [m/s]")
     plt.ylabel("Im(p)")
     plt.title("Flutter diagram - Imaginary parts of eigenvalues")
@@ -279,4 +326,7 @@ if __name__ == "__main__":
     C_L_alpha = 2*np.pi
 
 
-    flutter_diagram(K_h, K_theta, rho, np.linspace(0, 150, 100), C_L_alpha, b, a, x_theta, ma+mf, I_theta)
+    flutter_diagram(K_h, K_theta, rho, np.linspace(np.finfo(float).eps, 150, 100), C_L_alpha, b, a, x_theta, ma+mf, I_theta)
+    # DO NOT START THE LINSPACE AT 0, THIS WILL CAUSE A DIVISION BY ZERO ERROR IN THE C_a MATRIX
+
+
