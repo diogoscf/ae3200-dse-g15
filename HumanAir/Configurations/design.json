@@ -166,7 +166,10 @@
         "PMW_N": 13823.725060914154,
         "PNW_N": 3539.8151781716942,
         "Xnw_m": 0.2,
-        "Xmw_m": 4.833142048850664
+        "Xmw_m": 4.833142048850664,
+        "Tipback_angle_deg": 15,
+        "Scrape_angle_deg": 15,
+        "Nose_gear_distance": 0.4
     },
     "Stability": {
         "Cg_Aft": 0.35,
