@@ -18,10 +18,7 @@ class Class_II_Weight:
         self.W_TO = N_to_lbs(ac_data["Weights"]["MTOW_N"]) / ac_data["Contingency"]
         self.W_L = N_to_lbs(ac_data["Weights"]["W_L_N"]) / ac_data["Contingency"]
         self.W_F = N_to_lbs(ac_data["Weights"]["Wfuel_N"]) / ac_data["Contingency"]
-        self.W_E = (
-            N_to_lbs(ac_data["Weights"]["OEW_N"] - ac_data["Contingency"] * ac_data["Weights"]["W_Pilot_N"])
-            / ac_data["Contingency"]
-        )
+        self.W_E = N_to_lbs(ac_data["Weights"]["OEW_N"]) / ac_data["Contingency"]
         self.W_bat = N_to_lbs(ac_data["Weights"]["Wbat_N"]) / ac_data["Contingency"]
 
         self.S_Wing = m_squared_to_ft_squared(ac_data["Aero"]["S_Wing"])
@@ -50,7 +47,7 @@ class Class_II_Weight:
         self.t_root_max_h = m_to_ft(ac_data["Aero"]["t_root_max_h"])
         self.t_root_max_v = m_to_ft(ac_data["Aero"]["t_root_max_v"])
 
-        self.V_H = m_s_to_kt(ac_data["Performance"]["VH_m/s"])
+        self.V_H = m_s_to_kt(ac_data["Performance"]["Vh_m/s"])
         self.V_c = m_s_to_kt(ac_data["Performance"]["Vc_m/s"])
         self.M_D = ac_data["Performance"]["M_D"]
         self.QCW_to_QCh = m_to_ft(ac_data["Stability"]["QCW_to_QCh"])
@@ -216,7 +213,8 @@ class Class_II_Weight:
 
         results["USAF"] = 0.054 * self.l_s_m**0.501 * (self.W_L * self.n_ult_l) ** 0.684
 
-        results["Average"] = np.average([results["Cessna"], results["USAF"]])
+	#  Can easily change below between Cessna twice or Cessna and USAF
+        results["Average"] = np.average([results["Cessna"], results["Cessna"]])
 
         self.l_s_n = ft_to_m(self.l_s_n)
         self.l_s_m = ft_to_m(self.l_s_m)
@@ -469,7 +467,7 @@ class Class_II_Weight:
         MTOW_new = 0
 
         # initialise the class 2 weight subdictionary
-        self.dict["CL2Weight"] = {}
+        # self.dict["CL2Weight"] = {}
         self.dict["CL2Weight"]["MTOW_N"] = (
             self.dict["Weights"]["MTOW_N"] / self.dict["Contingency"]
         )  # the first value shall be the one returned from the class 1 weight estimation
@@ -502,7 +500,12 @@ class Class_II_Weight:
             self.dict["Aero"]["b_h"] = b_h
 
             # trasnform the new MTOW to N
-            MTOW_new = OEW + 9.81 * FuelWeight + 9.81 * self.dict["Iterations Class I"]["Wpl_des_kg"]
+            MTOW_new = (
+                OEW
+                + 9.81 * FuelWeight
+                + 9.81 * self.dict["Iterations Class I"]["Wpl_des_kg"]
+                - self.dict["Weights"]["W_Pilot_N"]
+            )
             self.W_TO = N_to_lbs(MTOW_new)
             self.W_E = N_to_lbs(OEW)
             self.W_F = N_to_lbs(9.81 * FuelWeight)
@@ -522,7 +525,10 @@ class Class_II_Weight:
             self.dict["CL2Weight"]["OEW"] = self.dict["Contingency_C2W"] * OEW
             self.dict["CL2Weight"]["Wbat_N"] = self.dict["Contingency_C2W"] * 9.81 * BatteryWeight
             self.dict["CL2Weight"]["Wfuel_N"] = self.dict["Contingency_C2W"] * 9.81 * FuelWeight
-            self.dict["CL2Weight"]["Wpl"] = self.dict["Contingency_C2W"] * self.dict["Iterations Class I"]["Wpl_des_kg"]
+            self.dict["CL2Weight"]["Wpl_w/o_pilot"] = self.dict["Contingency_C2W"] * (
+                9.81 * self.dict["Iterations Class I"]["Wpl_des_kg"] - self.dict["Weights"]["W_Pilot_N"]
+            )
+            self.dict["CL2Weight"]["W_pilot"] = self.dict["Contingency_C2W"] * self.dict["Weights"]["W_Pilot_N"]
             # print MTOW w/o cont, MTOW w cont, OEW w cont, Bat weight w cont, Fuel weight w cont,
             # Payload w contingency, Structures w contingency, Fuel system w contingency, Powerplant w contingency,
             # Fixed equipment w contingency

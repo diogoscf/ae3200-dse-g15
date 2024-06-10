@@ -59,7 +59,7 @@ def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=
 
     WS_Nm2 = aircraft_data["Performance"]["W/S_N/m2"]
 
-    MGC_m = aircraft_data["Geometry"]["MGC_m"]
+    MGC_m = aircraft_data["Aero"]["MAC_wing"]
     clalpha = aircraft_data["Aero"]["CLalpha"]
 
     CLmax_clean = aircraft_data["Aero"]["CLmax_clean"]
