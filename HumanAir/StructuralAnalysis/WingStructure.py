@@ -204,8 +204,8 @@ class WingStructure:
     def Ixx(self, no_str):
         h_mid, h_s1s2 = self.h_s1s2()
         l_box_up, l_box_down = self.d_s1s2()
-        h_15c = h_s1s2[:, 0].reshape((len(h_s1s2), 1))
-        h_50c = h_s1s2[:, 1].reshape((len(h_s1s2), 1))
+        h_15c = h_s1s2[:, 0].flatten()
+        h_50c = h_s1s2[:, 1].flatten()
         htot = h_15c + h_50c
         h_avemax = htot / 4
         I_stringer = self.stringer_area * no_str * h_avemax**2
