@@ -113,7 +113,7 @@ class FuselageSizing:
     def check_back(self, s_gear):
         l_end_main_land = self.l_end_main_land(s_gear)
         l_end_nose_land = self.l_end_nose_land()
-        return True if l_end_main_land - l_end_nose_land < 0 else False
+        return l_end_main_land - l_end_nose_land < 0
 
     def battery_dim(self, s_gear):
         if self.check_back(s_gear):
