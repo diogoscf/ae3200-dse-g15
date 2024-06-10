@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 
 import aircraft
 
-h_max = 6000
+h_max = 7000
+h_step = 100
 
 def plot_climb_rate(acf):
    
     W = acf.W_MTO
     dT = 0    
     
-    h_list = np.arange(0, h_max, 100)
+    h_list = np.arange(0, h_max, h_step)
     RC_max = np.zeros(len(h_list))
     P_a = np.zeros(len(h_list))
     P_r_min = np.zeros(len(h_list))
@@ -52,16 +53,16 @@ def plot_climb_gradient(acf):
     W = acf.W_MTO
     dT = 0    
     
-    h_list = np.arange(0, h_max, 10)
+    h_list = np.arange(0, h_max, h_step)
     max_gradient_clean = np.zeros(len(h_list))
     max_gradient_TO = np.zeros(len(h_list))
     max_gradient_land = np.zeros(len(h_list))
 
     
     for i, h in enumerate(h_list):
-        max_gradient_clean[i] = acf.climb_angle_max(W, h, dT) * 100
-        max_gradient_TO[i] = acf.climb_angle_max(W, h, dT, gear="up", flaps="TO") * 100
-        max_gradient_land[i] = acf.climb_angle_max(W, h, dT, gear="down", flaps="land") * 100
+        max_gradient_clean[i] = acf.climb_slope_max(W, h, dT)
+        max_gradient_TO[i] = acf.climb_slope_max(W, h, dT, gear="up", flaps="TO")
+        max_gradient_land[i] = acf.climb_slope_max(W, h, dT, gear="down", flaps="land")
 
     print(f"Sea level MTOW max climb gradient, clean config: {max_gradient_clean[0]:.3f} %")
     print(f"Sea level MTOW max climb gradient, gear up, take-off flaps: {max_gradient_TO[0]:.3f} %")
@@ -86,9 +87,9 @@ def plot_climb_gradient(acf):
 def plot_stall_speed(acf):
     
     W = acf.W_MTO
-    dT = 0    
+    dT = 0
     
-    h_list = np.arange(0, h_max, 10)
+    h_list = np.arange(0, h_max, h_step)
     stall_clean = np.zeros(len(h_list))
     stall_TO = np.zeros(len(h_list))
     stall_land = np.zeros(len(h_list))
@@ -126,7 +127,7 @@ def plot_stall_speed(acf):
     plt.xlabel("Velocity (m/s)")
     plt.ylabel("Altitude (m)")
     plt.ylim(0,h_max)
-    plt.xlim(0, 70)
+    plt.xlim(0, 200)
    #plt.xlim(0,max(stall_clean[0], stall_TO[0], stall_land[0])*1.05)
     plt.legend()
     
@@ -142,17 +143,17 @@ def plot_cruise_power_setting(acf):
     W = acf.W_MTO
     dT = 0    
     
-    h_list = np.arange(0, h_max, 10)
+    h_list = np.arange(0, h_max, h_step)
     powersetting = np.zeros(len(h_list))
     
     for i, h in enumerate(h_list):
-        powersetting[i] = acf.power_setting(W, acf.V_cruise, h, dT)
+        powersetting[i] = acf.power_setting(acf.V_cruise, W, h, dT)
         
-        
-    std_cruise = acf.power_setting(W, acf.V_cruise, acf.h_cruise, acf.dT_cruise)
-    max_cruise = acf.power_setting(W, acf.V_cruise, acf.h_cruise_max, acf.dT_cruise)
+    
+    std_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise, acf.dT_cruise)
+    max_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise_max, acf.dT_cruise)
     print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise} ISA+{acf.dT_cruise}: {std_cruise:.3f}")
-    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise_max} ISA+{acf.dT_cruise}: {max_cruise:.3f}")
+    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise_max} ISA+{acf.dT_cruise}: {max_cruise:.3f} ")
 
 
     plt.figure(figsize=(10,7))
@@ -167,23 +168,17 @@ def plot_cruise_power_setting(acf):
     plt.show()
     
 def plot_take_off_performance(acf):
-    res = acf.takeoff_ground_run(acf.W_MTO, 0, 0, 0, "grass")
-    print(f"Takeoff performance: {res[0]:.2f} with precision {res[1]}")
-    res2 = acf.takeoff_ground_run(acf.W_MTO, 0, 0, -5, "grass")
-    print(f"Takeoff performance: {res2[0]:.2f} with precision {res2[1]}")
+    res = acf.takeoff_ground_run(acf.W_MTO, 750, 18, 0, "grass")
+    print(f"750m ISA+18 MTOW grass takeoff ground run: {res[0]:.2f} m with precision {res[1]}")
+    #res2 = acf.takeoff_ground_run(acf.W_MTO, 0, 0, -5, "grass")
+    #print(f"Takeoff performance: {res2[0]:.2f} with precision {res2[1]}")
 
-    
 def plot_landing_performance(acf):
-    dist, V_lst, s_lst, s_tot = acf.landing_ground_distance(acf.W_MTO, 0, 0, 0, "grass")
-    print(f"Landing distance using quad: {dist[0]:.2f} with precision {dist[1]}\n using loop: {s_tot:.2f}")
-    plt.figure(figsize=(10,7))
-    plt.plot(s_lst, V_lst)
-    plt.xlabel("Ground distance [m]")
-    plt.ylabel("Velocity [m/s]")
-    plt.savefig("plots/landing_speed_distance.svg")
-    plt.show()
-    
-    
+    dist = acf.landing_ground_distance(acf.W_MTO, 750, 18, 0, "grass", reversible_pitch=True)
+    print(f"750m ISA+18 MTOW grass with thrust reverse landing distance: {dist:.2f} m")
+    dist = acf.landing_ground_distance(acf.W_MTO, 750, 18, 0, "grass", reversible_pitch=False)
+    print(f"750m ISA+18 MTOW grass without thrust reverse landing distance: {dist:.2f} m")
+
 def plot_thrust(acf):
     v_lst = np.arange(0, acf.V_max(acf.W_OE, 0, 0), 1)
     T_lst = []
@@ -198,11 +193,11 @@ def plot_thrust(acf):
     plt.savefig("plots/thrust_speed.svg")
     plt.show()
     
-    print(f"Max thrust: {T_lst[0]:.2f}")
-    print(f"Min thrust: {T_lst[-1]:.2f}")
+    #print(f"Max thrust: {T_lst[0]:.2f}")
+    #print(f"Min thrust: {T_lst[-1]:.2f}")
 
     
-    v_lst = np.arange(0, acf.V_max(acf.W_OE, 0, 0), 1)
+    v_lst = np.arange(0, acf.V_max(acf.W_OE, 0, 0)+1, 1)
     T_lst = []
     for V in v_lst:
         T_lst.append(acf.prop_eff(V, 0, 0, use_takeoff_power=True))
@@ -220,9 +215,9 @@ def plot_thrust(acf):
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
     plot_climb_rate(acf)
-    # plot_climb_gradient(acf)
-    # plot_stall_speed(acf)
-    # plot_cruise_power_setting(acf)
-    # plot_take_off_performance(acf)
-    # plot_landing_performance(acf)
-    # plot_thrust(acf)
+    plot_climb_gradient(acf)
+    plot_stall_speed(acf)
+    plot_cruise_power_setting(acf)
+    plot_take_off_performance(acf)
+    plot_landing_performance(acf)
+    plot_thrust(acf)

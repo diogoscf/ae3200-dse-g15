@@ -8,6 +8,9 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     Calculates the take-off ground run for given conditions using the Ruijgrok
     method (p372-376).
     
+    Does not take rotation phase into account, simply calculates distance from
+    V=0 to V=lift off speed.
+    
     It is inaccurate for high postive slopes and will throw an exception when
     the integration error estimate exceeds 0.001 m.
         
@@ -34,6 +37,8 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
 
     """
     
+    # TODO: multiply by safety factor to ensure takeoff not at very end of runway?
+    
     # TODO: ground effect currently only accounted for by reduced induced drag
     # there is a good discussion on ground effect in  
     # Fundamentals of Aircraft and Airship Design: Volume 1 by nicolai
@@ -50,8 +55,8 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     # configuration. This is a conservative estimate since CS23 requires the
     # rotation speed to be >=V_S1 or >=1.05*V_MC and the speed at 15m >=1.2*V_S1
     V_S_TO = np.sqrt(W / (0.5 * rho * acf.S * acf.CLmax_TO))
-    V_LOF = 1.2 * V_S_TO 
-    
+    V_LOF = max(1.2 * V_S_TO, 0)#35) # 35 at 750+18 was chosen by control department as minimum
+    # TODO: check if 35 is really required
     xi = np.arctan(slope/100) # angle of slope
     
     if surface == "paved":
@@ -68,10 +73,10 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     
     s_run, accuracy = quad(f, 0, V_LOF) # integrate from V=0 to V=V_LOF
     
-    #if accuracy > 10**-3:
-    #    raise Exception(f"Low accuracy in integrating takeoff distance: \
-    #                    s_run = {s_run}, accuracy = {accuracy}. \
-    #                    This is likely due to a high positive slope. Slope={slope}%")
+    if accuracy > 10**-3:
+        raise Exception(f"Low accuracy in integrating takeoff distance: \
+                        s_run = {s_run}, accuracy = {accuracy}. \
+                        This is likely due to a high positive slope. Slope={slope}%")
     #
     # Torenbeek method, torenbeek p167-168
     # Assumes constant speed propeller for Torenbeek method.
@@ -118,51 +123,80 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     return s_run, accuracy
 
     
-def landing_ground_distance(acf, W, h, dT, slope, surface):
+def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=False):
+    """
+    Estimates landing ground run distance using gudmundsen method (chapter 22).
     
-    # ruijgrok p 388-393
-    # 
+    Assumes one second of free roll after touchdown before braking. 
     
-    # constants
+    Raises an exception when estimateed absolute error of integration drops 
+    below 0.001.
+
+    Parameters
+    ----------
+    acf : Aircraft
+        The aircraft object.
+    W : float
+        Aircraft gross weight [N].
+    h : float
+        Geopotential altitude [m].
+    dT : float
+        ISA temperature offset.
+    slope : float
+        Slope of runway, positive = upwards, in %.
+    surface : string
+        "grass" or "paved".
+
+    Returns
+    -------
+    float
+        Ground run distance [m].
+
+    """
+            
     rho = density(h, dT)
     g = 9.80665
     
-    # touchdown velocity 
-    V_T = 1.3 * np.sqrt(W/( 0.5 * rho * acf.S * acf.CLmax_land)) # TODO: set more accurately
+    V_T = 1.1 * np.sqrt(W/( 0.5 * rho * acf.S * acf.CLmax_land)) # touchdown velocity 
 
-    CL = acf.CL_ground_land # TODO: take into account ground effect?
-    CD = acf.CD(CL, gear="down", flaps="land", ground_effect_h=0) # TODO: take into account ground effect?
+    CL = acf.CL_ground_land # TODO: take into account ground effect
+    CD = acf.CD(CL, gear="down", flaps="land", ground_effect_h=0)
     
-    mu = 0.25 # TODO: set a realistic value and take into account surface
-    D_g_max = 0.2 * W # TODO: set a realistic value
-    
-    def f(V):
-        L = 0.5 * rho * V**2 * acf.S * CL
-        D = 0.5 * rho * V**2 * acf.S * CD
-        D_g = min(D_g_max, mu*(W-L)*acf.weight_on_MLG) # assumes zero pitching moment
-        return (W/g * V) / (-D - D_g) # ruijgrok eq 16.7-9 and 16.7-1 and 16.7-2 combined
-    
-    s_ground, accuracy = quad(f, V_T, 0)
-    
-    if accuracy > 10**-3:
-        raise Exception(f"Low accuracy in integrating landing distance: \
-                        s_ground = {s_ground}, accuracy = {accuracy}.")
+    xi = np.arctan(slope/100) # angle of slope
 
+    if surface == "paved":
+        mu = 0.4
+    elif surface == "grass":
+        mu = 0.2 # wet grass, gudmundsen provides no value for dry grass, = conservative
+        
+    if reversible_pitch:
+        T = -0.4 * acf.T(0, h, dT) # -40% of static thrust according to gudmundsen
+    else:
+        T = 0.07 * acf.T(0, h, dT) # -+7% of static thrust according to gudmundsen
     
-    # the following is for testing
-    step = -0.001
-    V_lst = []
-    s_lst = []
-    s_tot = 0
-    V = V_T
+    V_avg = V_T / np.sqrt(2)   
+    L = 0.5 * rho * V_avg**2 * acf.S * CL
+    D = 0.5 * rho * V_avg**2 * acf.S * CD
     
+    D_g = mu*(W-L)*acf.weight_on_MLG # assumes zero pitching moment
+
+    s_ground = - V_T**2 * W / (2 * g * (T - D - D_g - W * np.sin(xi))) # gudmundsen eq 22-2 and 22-13
+    
+    s_ground += 3* V_T # add 2 seconds of overflight, 1 second of free roll at touchdown speed
+    
+   #  def f(V):
+   #      L = 0.5 * rho * V**2 * acf.S * CL
+   #      D = 0.5 * rho * V**2 * acf.S * CD
+   #      D_g = mu*(W-L)*acf.weight_on_MLG # assumes zero pitching moment
+   #      return (W/g * V) / (T - D - D_g - W*np.sin(xi))
+   #  s_ground2, accuracy = quad(f, V_T, 0)
+   # # s_ground2 += V_T
+    
+   #  if accuracy > 10**-3:
+   #      raise Exception(f"Low accuracy in integrating landing distance: \
+   #                      s_ground = {s_ground}, accuracy = {accuracy}.")
+        
     # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbel
     
-    while V > 0:
-        s_tot += f(V)*step
-        s_lst.append(s_tot)
-        V_lst.append(V)
-        V += step
-    
-    return (s_ground, accuracy), V_lst, s_lst, s_tot
+    return s_ground#, s_ground2
     

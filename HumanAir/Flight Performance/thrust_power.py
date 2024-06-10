@@ -79,9 +79,7 @@ def P_a(acf, h, dT, use_takeoff_power=False, V=None):
     else:
         return acf.prop_eff(V, h, dT) * P_shaft(acf, h, dT, use_takeoff_power=use_takeoff_power)
 
-    """
-    TODO: RC_max() assumes constant P_a with velocity, if this changes here
-    then the implementation of that function must be changed too """
+
 
 
 """
@@ -97,7 +95,8 @@ It is an array of dicts, each dict containing:
     
     "use_takeoff_power": boolean, whether max constant or max TO power was used
     
-    V_H_ms : float, maximum velocity this calculation can be used for in m/s.
+    V_C_ms : float, maximum velocity this calculation can be used for in m/s,
+        beyond this point T = P_a/V is used.
 
     "abcd_vector": 1D array with four floats, this is multiplied (dot product) 
         with the vector [V**3, V**2, V, 1] (with V in kt) to get the thrust in 
@@ -161,7 +160,7 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
            np.isclose(calc["dT"], dT) and \
            calc["use_takeoff_power"] == use_takeoff_power:
             abcd_vector = calc["abcd_vector"]
-            V_H_ms = calc["V_H_ms"]
+            V_C_ms = calc["V_C_ms"]
             
     # if no previously calculated abcd_vector exists, calculate it
     if abcd_vector is None:
@@ -197,10 +196,10 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
         T_Vmax_N = P_sh_W * eff_prop_max / V_H_ms
         T_Vmax_lb = conv.N_to_lbs(T_Vmax_N)
         
-        print(f"For h={h:.2f} dT={dT:.2f} use_takeoff_power={use_takeoff_power}:\n \
-                Static thrust: {T_static_N:.2f}\n \
-                Cruise thrust: {T_cruise_N:.2f}\n \
-                V_max thrust:  {T_Vmax_N:.2f}")
+        # print(f"For h={h:.2f} dT={dT:.2f} use_takeoff_power={use_takeoff_power}:\n \
+        #         Static thrust: {T_static_N:.2f}\n \
+        #         Cruise thrust: {T_cruise_N:.2f}\n \
+        #         V_max thrust:  {T_Vmax_N:.2f}")
                 
         
         #
@@ -224,15 +223,17 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
             "h": h,
             "dT": dT,
             "use_takeoff_power": use_takeoff_power,
-            "V_H_ms": V_H_ms,
+            "V_C_ms": V_C_ms,
             "abcd_vector": abcd_vector            
             })
     
     # check if V_ms is out of bounds
-    if V_ms > V_H_ms:
-        print(f"*************{V_ms:.4f}-{V_H_ms:.4f}***********")
-        #raise Exception("Velocity given to thrust function exceeds max speed, \
-        #                this is out of bounds.")
+    if V_ms > V_C_ms:
+        # this method is not accurate for V > V_cruise, it was found that if
+        # V_max is too far from V_cruise the interpolation gets off, so beyond
+        # V_cruise P_a/V is returned. This works since one of the constraints
+        # of the interpolation is that dT/dV=0 at V_cruise
+        return P_a(acf, h, dT, use_takeoff_power=use_takeoff_power) / V_ms
                         
     # velocity vector
     V_kt = conv.m_s_to_kt(V_ms)
@@ -245,5 +246,30 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
     return thrust_N
 
 def prop_eff(acf, V, h, dT, use_takeoff_power=False):
-    return T(acf, V, h, dT, use_takeoff_power=use_takeoff_power)*V/P_shaft(acf, h, dT, use_takeoff_power=use_takeoff_power)
+    """
+    Calculates prop efficiency using eff_p = T*V/P_shaft.
+
+    Parameters
+    ----------
+    acf : Aircraft
+        The aircraft object.
+    V : float
+        True airspeed [m/s].
+    h : float
+        Geopoential altitude [m].
+    dT : float
+        ISA temperature offset [deg C].
+    use_takeoff_power : boolean, optional
+        Whether to use takoeff or max continuous power. The default is False.
+
+    Returns
+    -------
+    float
+        Prop efficiency [0-1].
+
+    """
+    eff = T(acf, V, h, dT, use_takeoff_power=use_takeoff_power)*V/P_shaft(acf, h, dT, use_takeoff_power=use_takeoff_power)
+    if eff > 1 and V > 0: # warn user, V>0 condition to ignore warnings for nonsensical values
+        print(f"Propeller efficiency > 1. V={V} m/s, h={h} m, dT={dT} degC, takeoffpower={use_takeoff_power}, eff={eff}")
+    return eff
     

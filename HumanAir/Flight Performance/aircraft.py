@@ -4,7 +4,12 @@ from scipy.optimize import root_scalar, minimize_scalar
 
 from helper import density
 import thrust_power
-import takeoff_landing
+import takeoff_landing 
+
+# old span: 36.27269326905173
+#        "Fuel_engine_P_TO_W": 368000,
+#        "Fuel_engine_P_max_cont_W": 338000
+
 
 class Aircraft:
     """
@@ -56,20 +61,20 @@ class Aircraft:
         self.retractable_gear = dat["Landing_gear"]["Retractable"]
 
         # weights
-        self.W_OE           = dat["Weights"]["OEW_N"]
-        self.W_MF           = dat["Weights"]["MFW_N"] # max fuel weight
-        self.W_bat          = dat["Weights"]["Wbat_N"]
+        self.W_OE           = dat["CL2Weight"]["OEW"]
+        self.W_MF           = dat["CL2Weight"]["Wfuel_N"] # max fuel weight
+        self.W_bat          = dat["CL2Weight"]["Wbat_N"]
         self.W_pl_des       = dat["Weights"]["Wpl_des_kg"] * 9.80655
         self.W_pl_max       = dat["Weights"]["Wpl_max_kg"] * 9.80655
-        self.W_MTO          = dat["Weights"]["MTOW_N"]
+        self.W_MTO          = dat["CL2Weight"]["MTOW_N"] #- self.W_pl_max/2 - self.W_MF / 2
         
         x_cg = dat["Stability"]["Cg_Front"]*dat["Aero"]["MAC_wing"] + dat["Geometry"]["XLEMAC_m"]
         x_main, x_nose = dat["Landing_gear"]["Xmw_m"], dat["Landing_gear"]["Xnw_m"]
         self.weight_on_MLG  = (x_cg - x_nose) / (x_main - x_nose) # fraction of weight on MLG with front most possible CG position
         
         # propulsion
-        self.max_cont_power_sealevel  = dat["Power_prop"]["Fuel_engine_P_TO_W"]
-        self.takeoff_power_sealevel   = dat["Power_prop"]["Fuel_engine_P_max_cont_W"]
+        self.max_cont_power_sealevel  = dat["Power_prop"]["Fuel_engine_P_max_cont_W"]
+        self.takeoff_power_sealevel   = dat["Power_prop"]["Fuel_engine_P_TO_W"]
         self.eff_powertrain     = dat["Power_prop"]["eta_powertrain"]
         self.max_eff_prop       = dat["Power_prop"]["eta_p"]
         
@@ -126,13 +131,15 @@ class Aircraft:
     def V_Dmin(self, W, h, dT):
         """ Calculates velocity corresponding with minimum drag in clean configuration """
         a = 1 / (self.CD0_clean * np.pi * self.AR * self.e_clean)
-        return np.sqrt( W/self.S * 2/density(h, dT) * a )
+        b = np.sqrt( W/self.S * 2/density(h, dT) * a ) # ruijgrok p224, same as V at (L/D)max
+        c = np.sqrt( W / (0.5 * density(h, dT) * self.S * self.CL_LDmax))
+        if not np.isclose(b,c):
+            print(f"V_D min error: {b:.2f} - {c:.2f}")
+        return b
     
     def D_min(self, W):
         """ Minimum drag (in Newtons) for given weight in clean configuration. Corresponds to V_Dmin """
-        return W / self.LDmax
-    
-
+        return W / self.LDmax # ruijgrok p220
         
     def P_r_min(self, W, h, dT):
         """ Minimum possible value for  power required for given conditions in clean configuration,
@@ -140,37 +147,141 @@ class Aircraft:
         return W * np.sqrt(W/self.S * 2/density(h, dT) * 1/self.L3D2max) # ruijgrok p221
         
     def RC_max(self, W, h, dT):
-        """ Maximum possible climb rate for given conditions in clean configuration"""
+        """
+        Calculates maximum possible climb rate for clean configuration in given
+        condition. Assumes constant V.
+        
+        Uses scipy.optimize.minimize_scalar to find the velocity with maximum
+        climb rate (to take into account non-constant power available.)
+
+        Parameters
+        ----------
+        W : float
+            Aircraft gross weight [N].
+        h : float
+            Geopotential altitude [m].
+        dT : TYPE
+            ISA temperature offset [deg C].
+
+        Returns
+        -------
+        float
+            Maximum climb rate [m/s].
+
+        """
         rho = density(h, dT)
-        def f(V):
+        
+        def RC(V): # calculates climbrate *-1
             CL = W / (0.5 * rho * V**2 * self.S)
             CD = self.CD(CL)
             P_r = V * (0.5 * rho * V**2 * self.S * CD)
             P_a = self.P_a(h, dT, V=V)
             return -(P_a - P_r) / W # minus so that minimize() will maximize
-        RC_max = -minimize_scalar(f, bounds=[0, self.V_max(W, h, dT)], method="bounded").x # minus to convert back to positive
-        return RC_max
+        
+        bounds = [self.stall_speed(W, h, dT), self.V_max(W, h, dT)]
+        if bounds[0] > bounds[1]:
+            return 0
+        
+        res = minimize_scalar(RC, bounds=bounds, method="bounded") # minus to convert back to positive
+        rc_max = -res.fun
+        
+        #
+        # alternate method, does not take into account varying prop efficiency,
+        # result is almost the same
+        #
+        #rc2 = (self.P_a(h, dT) - self.P_r_min(W, h, dT)) / W
+        #print(f"RC {res.x:.2f} - {rc_max:.2f} - {rc2:.2f}")
+        
+        return rc_max
     
-    def climb_angle_max(self, W, h, dT, gear="up", flaps="up"):
-        """ Maximum possible climb slope (RC/V) for given conditions in given config (default clean) """
-        # TODO: take into account effect of low airspeed on thrust or P_a ?
-        # adsee I q3 lecture 3 slide 93
-        if flaps == "up":
-            CL = self.CLmax_clean / self.CL_climb_safetyfactor
-        elif flaps == "TO":
-            CL = self.CLmax_TO / self.CL_climb_safetyfactor
-        elif flaps == "land":
-            CL = self.CLmax_land / self.CL_climb_safetyfactor
-        return self.P_a(h, dT)/W * 1/np.sqrt(W/self.S * 2/density(h, dT) * 1/CL) - self.CD(CL, gear=gear, flaps=flaps)/CL
+    def climb_slope_max(self, W, h, dT, gear="up", flaps="up"):
+        """
+        Calculates maximum possuble climb slope for given conditions, assuming
+        constant V.
+        
+        Takes into account lower power available at low speeds, and since the
+        max climb slope is achieved at high CL (=low speeds) this method gives
+        signifiantly lower results than when constant P_a is assumed.
+
+        Parameters
+        ----------
+        W : float
+            Aircraft gross weight.
+        h : float
+            Altitude.
+        dT : float
+            ISA temperature offset.
+        gear : string, optional
+            "up" or "down". The default is "up".
+        flaps : float, optional
+            "up", "TO", or "landing. The default is "up".
+
+        Returns
+        -------
+        float
+            Maximum climb slope ranging 0-100% [no unit].
+
+        """
+        rho = density(h, dT)
+        
+        def slope(V): # calculates slope *-1
+            CL = W / (0.5 * rho * V**2 * self.S)
+            CD = self.CD(CL, gear=gear, flaps=flaps)
+            D = 0.5 * rho * V**2 * self.S * CD
+            T = self.T(V, h, dT)
+            return -(T - D) / W # minus so that minimize() will maximize
+        
+        bounds = [self.stall_speed(W, h, dT), self.V_max(W, h, dT)]
+        if bounds[0] > bounds[1]:
+            return 0
+        
+        res = minimize_scalar(slope, bounds=bounds, method="bounded") # minus to convert back to positive
+        slope_max = np.tan(np.arcsin(-res.fun)) *100 # result is sin(gamma), we need tan(gamma)
+
+        #
+        # alternate method for testing (does not take into account varying prop eff)
+        #
+        
+        # if flaps == "up":
+        #     CL = self.CLmax_clean / self.CL_climb_safetyfactor
+        # elif flaps == "TO":
+        #     CL = self.CLmax_TO / self.CL_climb_safetyfactor
+        # elif flaps == "land":
+        #     CL = self.CLmax_land / self.CL_climb_safetyfactor
+        # slope_max2 = 100* self.P_a(h, dT)/W * 1/np.sqrt(W/self.S * 2/density(h, dT) * 1/CL) - self.CD(CL, gear=gear, flaps=flaps)/CL
+        # print(f"SL {res.x:.2f} - {slope_max:.2f} - {slope_max2:.2f}")
+        
+        return slope_max
     
     def stall_speed(self, W, h, dT, flaps="up"):
-        """ Calculates stall speed for given conditions in given config (default clean) """
+        """
+        Calcualtes stall speed for given conditions in given config (default
+        is clean).
+
+        Parameters
+        ----------
+        W : float
+            Aircraft gross weight [N].
+        h : float
+            Geopotential altitude [m].
+        dT : float
+            ISA temperature offset [deg C].
+        flaps : string, optional
+            "up", "TO", or "landing". The default is "up".
+
+        Returns
+        -------
+        float
+            Stall speed [m/s].
+
+        """
         if flaps == "up":
             CL = self.CLmax_clean
         elif flaps == "TO":
             CL = self.CLmax_TO
         elif flaps == "land":
             CL = self.CLmax_land
+        
         return np.sqrt(W / (0.5 * density(h, dT) * self.S * CL))
     
     def V_max(self, W, h, dT, use_max_prop_eff=False):
@@ -182,7 +293,9 @@ class Aircraft:
                 
         When use_max_prop_eff is set to true it will not take into account
         low-speed losses. This is to prevent an infinite loop when used by
-        the thrust function.        
+        the thrust function.   
+        
+        TODO: root_scalar method employed is not very reliable at high altitudes
 
         Parameters
         ----------
@@ -200,7 +313,6 @@ class Aircraft:
         float
             The maximum true airspeed in m/s.
         """
-
         rho = density(h, dT)
         
         def diff(V): # returns difference between power available and power required
@@ -213,14 +325,42 @@ class Aircraft:
                 return self.P_a(h, dT) - D*V
             else:
                 return self.P_a(h, dT, V=V) - D*V
-        return root_scalar(diff, x0=75).root
+            
+        return root_scalar(diff, x0=150).root
     
-    def power_setting(self, W, V, h, dT):
-        """ Gives power setting required to maintain cruise (0-1, but also goes beyond 1) """
-        CL = W / (0.5 * density(h, dT) * self.S * V**2)
-        D = 0.5 * density(h, dT) * self.S * self.CD(CL) * V**2
+    def power_setting(self, V, W, h, dT):
+        """
+        Returns power setting (0-1 and >1 if impossible speed) to maintain 
+        steady horizontal flight at given speed in clean configuration.
+        
+        Returns 0 if C_L > 1 because with current drag estimation CD is
+        inaccurate for C_L>1.
+        
+        TODO: change this when CD() has been updated.
+
+        Parameters
+        ----------
+        V : float
+            True airpseed [m/s].
+        W : float
+            Aircraft gross weight [N].
+        h : float
+            Altitude [m].
+        dT : float
+            ISA temperature offset [deg C].
+
+        Returns
+        -------
+        float
+            Power setting [0-1 and >1 if impossible].
+
+        """
+        CL = W / (0.5 * density(h, dT) * V**2 * self.S)
+        D = 0.5 * density(h, dT) * V**2 * self.S * self.CD(CL)
+        
         if CL > 1: return 0
-        return V * D / self.P_a(h, dT)
+        
+        return V * D / self.P_a(h, dT, V=V)
     
     
     #
@@ -230,5 +370,5 @@ class Aircraft:
     def takeoff_ground_run(self, W, h, dT, slope, surface):
         return takeoff_landing.takeoff_ground_run(self, W, h, dT, slope, surface)
        
-    def landing_ground_distance(self, W, h, dT, slope, surface):
-        return takeoff_landing.landing_ground_distance(self, W, h, dT, slope, surface)
+    def landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=False):
+        return takeoff_landing.landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=reversible_pitch)
