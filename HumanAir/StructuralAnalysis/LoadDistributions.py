@@ -188,7 +188,7 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1,
     Vz = Vz[::-1]
 
     strut_Vz, strut_Vy, _ = strut_force(
-        wing_structure.Ixx(ac_data["Geometry"]["stringer_number"][0])[nodes_half_wing:],
+        wing_structure.Ixx(ac_data["Geometry"]["wing_stringer_number"][0])[nodes_half_wing:],
         y_points[nodes_half_wing:],
         Vz,
         max_iter=100,

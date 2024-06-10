@@ -18,7 +18,14 @@ from HumanAir.StructuralAnalysis.LoadDistributions import (
     interpolate_Cl_Cd_Cm,
     get_deflection,
 )
-from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cdi_data_wing, Cm_data_wing
+from HumanAir.aircraft_data import (
+    aircraft_data,
+    airfoil_shape,
+    Cl_data_wing,
+    Cdi_data_wing,
+    Cm_data_wing,
+    save_ac_data_to_json,
+)
 
 # Caching for SPEEEEEEEEEEEEEEEEEEEED
 # force_distributions = None
@@ -444,3 +451,11 @@ if __name__ == "__main__":
     print("Minimum weight:", weight)
 
     print("Total time taken:", time.time() - start, "s")
+    if input("Save optimised data to design.json? [y/N]").lower() == "y":
+        aircraft_data["Geometry"]["t_spar_root"] = optimized_t_spar_root
+        aircraft_data["Geometry"]["t_spar_tip"] = optimized_t_spar_tip
+        aircraft_data["Geometry"]["t_skin_wing"] = optimized_t_skin
+        aircraft_data["Geometry"]["wing_stringer_number"] = np.ceil(optimized_no_stringers).astype(int).tolist()
+
+        save_ac_data_to_json(aircraft_data)
+        print("Data saved to design.json")
