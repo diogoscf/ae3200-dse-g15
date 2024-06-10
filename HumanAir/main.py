@@ -22,6 +22,8 @@ from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.AerodynamicDesign.FlapsDesign import flaps_design
 from HumanAir.AerodynamicDesign.FullStability import TailIteration
+from HumanAir.AerodynamicDesign.AileronSizing import AileronSizing
+from HumanAir.AerodynamicDesign.WeathercockStability import VerticalTailSizing
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight as ClassIIWeight
@@ -706,9 +708,19 @@ if __name__ == "__main__":
         flaps_design(ac_data = class_2_dictionary)
 
         logging.info(" Calculating flap position and design succesfully")
+        logging.info(" Sizing the ailerons")
+
+        # sizing the ailerons
+        AileronSizing(acd = class_2_dictionary)
+        logging.info(" Calculating aileron position and design succesfully")
+        logging.info(" Sizing the vertical tail")
+
+        # size the vertical tail
+        VerticalTailSizing(acd=class_2_dictionary)
+        logging.info(" Sizing the vertical tail successful")
+        logging.info(" Sizing the horizontal tail")
 
         # size the horizontal tail
-        logging.info(" Sizing the horizontal tail")
         TailIteration(ac_datafile=class_2_dictionary)
         logging.info(" Sizing the horizontal tail successful")
 

@@ -12,7 +12,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from aircraft_data import aircraft_data
 from isa import isa
 
-def TailSizing (acd = aircraft_data):
+def VerticalTailSizing (acd = aircraft_data):
     # change this using CATIA
     print("DONT FORGET TO REVISE PARAMETER FROM CATIA")
     S_fus = 19

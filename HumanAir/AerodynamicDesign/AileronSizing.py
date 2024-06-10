@@ -45,7 +45,7 @@ def AileronSizing(acd = aircraft_data):
         
         P_deg = P_rad * (180/3.14) 
 
-        turn_time = round(60 / P_deg,0)
+        turn_time = round(60 / P_deg,2)
 
         if turn_time < (acd["CL2Weight"]["MTOW_N"] / 9.81 + 200) / 590:
             design_found = True
@@ -55,6 +55,8 @@ def AileronSizing(acd = aircraft_data):
             acd["Aileron"]["roll_rate_rad"] = P_rad
             acd["Aileron"]["CL_delta_a"] = CL_delta_a
             acd["Aileron"]["CL_P"] = CL_P
+            acd["Aileron"]["turn_time"] = turn_time
+            acd['Aileron']['hinge_position'] = pos
             break
     
     if design_found:
