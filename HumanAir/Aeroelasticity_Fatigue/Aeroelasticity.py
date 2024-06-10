@@ -9,8 +9,17 @@ from scipy.linalg import eig
 from sympy import symbols, Matrix, det, Poly
 
 
+"""
+NOTE: 
+- We only analyze the part of the wing after the strut, so that we only have to deal with a cantilever beam. We thus argue the strut blocks all vibration from occurring 
+  between it and the fuselage. So the typical section is at 70% of the wing span after the strut. 
 
-def Divergence(K_theta, CL_alpha, a, b, rho):
+- Nevermind, it is better not to do this, consider the full wing, and get conservative results :). 
+
+"""
+
+
+def Divergence(K_theta, CL_alpha, a, B, rho):
     """
     Calculate the divergence speed of an aircraft based on the given parameters. 
     The typical section is the airfoil cross-section of the wing at 70% of the wing span.
@@ -23,7 +32,7 @@ def Divergence(K_theta, CL_alpha, a, b, rho):
         The lift curve slope of the full 3D wing wing.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil. non-dimensionalized by the half-chord length.
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     rho : float
         The air density for the given operating regime.
@@ -33,19 +42,19 @@ def Divergence(K_theta, CL_alpha, a, b, rho):
     V_div : float
         The divergence speed of the aircraft.
     """
-    q = K_theta / ((2 * b) * CL_alpha * (1/2 + a) * b) # where S = 2 * b since we analyse per unit span.
+    q = K_theta / ((2 * B) * CL_alpha * (1/2 + a) * B) # where S = 2 * b since we analyse per unit span.
     V_div = np.sqrt(2 * q / rho)
     return V_div
 
 
 
-def Reversal(c, K_theta, CL_alpha, CM_ac_beta, b, rho):
+def Reversal(h, K_theta, CL_alpha, CM_ac_beta, B, rho):
     """
     Calculate the flutter speed of an aircraft based on the given parameters.
 
     Parameters
     ----------
-    c : float
+    h : float
         The distance from the half-chord  to the hinge of the aileron        
     K_theta : float
         The torsional stiffness of the full 3D wing from root to typical section.
@@ -53,7 +62,7 @@ def Reversal(c, K_theta, CL_alpha, CM_ac_beta, b, rho):
         The lift curve slope of the full 3D wing wing.
     CM_ac_beta : float
         The change in pitching moment about the typical section aerodynamic section with deflection of the control surface (aileron).
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     rho : float
         The air density for the given operating regime.
@@ -63,8 +72,8 @@ def Reversal(c, K_theta, CL_alpha, CM_ac_beta, b, rho):
     V_rev : float
         The aileron reversal speed of the aircraft.
     """
-    CL_beta = 2 * (np.sqrt(1 - c**2) + np.arccos(c)) # The lift variation with deflection of the control surface (aileron).
-    q = - CL_beta * K_theta / (CL_alpha * CM_ac_beta * 2 * b *(2 * b))
+    CL_beta = 2 * (np.sqrt(1 - h**2) + np.arccos(h)) # The lift variation with deflection of the control surface (aileron).
+    q = - CL_beta * K_theta / (CL_alpha * CM_ac_beta * 2 * B *(2 * B))
     V_rev = np.sqrt(2 * q / rho)
     return V_rev
 
@@ -89,7 +98,7 @@ def rho_altitude(rho):
 
 
 
-def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, b, V_arr):
+def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr):
     """
     Calculate the flutter speed of an aircraft for various configurations (m_arr) and operating regimes (rho_arr).
 
@@ -113,7 +122,7 @@ def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, 
         The wing surface area.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     V_arr : numpy array
         Array containing all airspeeds you would like to analyse aircraft flutter for. Should be 0 to V_dive * 1.15
@@ -140,11 +149,11 @@ def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, 
             K_s = np.array([[K_h, 0],
             [0, K_theta]])
             K_a = np.array([[0, -S*C_L_alpha],
-            [0, S*C_L_alpha*(.5+a)*b]])
+            [0, S*C_L_alpha*(.5+a)*B]])
             C_a = np.array([[-S*C_L_alpha, 0], 
-            [S*C_L_alpha*(0.5*a)*b, 0]])
-            # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*b], 
-            # [S*C_L_alpha*(0.5*a)*b, S*(1-a)*C_L_alpha*b**2*(0.5+a) + S*b**2*C_L_alpha*a*(0.5-a)]])
+            [S*C_L_alpha*(0.5*a)*B, 0]])
+            # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*B], 
+            # [S*C_L_alpha*(0.5*a)*B, S*(1-a)*C_L_alpha*B**2*(0.5+a) + S*B**2*C_L_alpha*a*(0.5-a)]])
 
             # Define the symbolic variable
             ps = symbols('ps')
@@ -214,7 +223,7 @@ def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, 
 
 
 
-def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, V_arr):
+def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, V_arr):
     """
     Generate a flutter diagram for the the given aircraft configuration
     
@@ -238,7 +247,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, 
         The wing surface area.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     V_arr : numpy array 
         Array containing all airspeeds you would like to analyse aircraft flutter for. Should be 0 to V_dive * 1.15
@@ -254,11 +263,11 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, 
     K_s = np.array([[K_h, 0],
       [0, K_theta]])
     K_a = np.array([[0, -S*C_L_alpha],
-    [0, S*C_L_alpha*(.5+a)*b]])
+    [0, S*C_L_alpha*(.5+a)*B]])
     C_a = np.array([[-S*C_L_alpha, 0], 
-    [S*C_L_alpha*(0.5*a)*b, 0]])
-    # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*b], 
-    # [S*C_L_alpha*(0.5*a)*b, S*(1-a)*C_L_alpha*b**2*(0.5+a) + S*b**2*C_L_alpha*a*(0.5-a)]])
+    [S*C_L_alpha*(0.5*a)*B, 0]])
+    # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*B], 
+    # [S*C_L_alpha*(0.5*a)*B, S*(1-a)*C_L_alpha*B**2*(0.5+a) + S*B**2*C_L_alpha*a*(0.5-a)]])
 
     # Define the symbolic variable
     ps = symbols('ps')
@@ -343,7 +352,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, 
 
 
 
-def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, alpha0, C_M_AC):
+def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, alpha0, C_M_AC):
     """
     Analyze the static aeroelasticity of an aircraft wing.
     
@@ -359,7 +368,7 @@ def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, alpha0, C_M_AC):
         The lift curve slope of the full 3D wing wing.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     q : float
         The dynamic pressure at which you would like to analyze the aeroelastic deformation of the wing.
@@ -376,11 +385,11 @@ def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, alpha0, C_M_AC):
     K_s = np.array([[K_h, 0],
       [0, K_theta]])
     K_a = np.array([[0, -S*C_L_alpha],
-    [0, S*C_L_alpha*(.5+a)*b]])
+    [0, S*C_L_alpha*(.5+a)*B]])
     F_st_alpha0 = np.array([[-S*C_L_alpha],
-    [S*C_L_alpha*(.5+a)*b]])
+    [S*C_L_alpha*(.5+a)*B]])
     F_st_M_AC   = np.array([[0],
-    [S*C_M_AC*2*b]])
+    [S*C_M_AC*2*B]])
 
     # Iterative aeroelastic solution
     tol = 1
@@ -422,7 +431,7 @@ def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, alpha0, C_M_AC):
 
 
 
-def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, W, C_M_AC):
+def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, W, C_M_AC):
     """
     Analyze the static trimmed aeroelasticity of an aircraft wing.
 
@@ -438,7 +447,7 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, W, C_M_AC
         The lift curve slope of the full 3D wing wing.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
-    b : float
+    B : float
         Half-chord length of the typical section (not wingspan!!!)
     q : float
         The dynamic pressure at which you would like to analyze the aeroelastic deformation of the wing.
@@ -455,11 +464,11 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, W, C_M_AC
     K_s = np.array([[K_h, 0],
       [0, K_theta]])
     K_a = np.array([[0, -S*C_L_alpha],
-    [0, S*C_L_alpha*(.5+a)*b]])
+    [0, S*C_L_alpha*(.5+a)*B]])
     F_st_alpha0 = np.array([[-S*C_L_alpha],
-    [S*C_L_alpha*(.5+a)*b]])
+    [S*C_L_alpha*(.5+a)*B]])
     F_st_M_AC   = np.array([[0],
-    [S*C_M_AC*2*b]])
+    [S*C_M_AC*2*B]])
 
     # Iterative aeroelastic trim solution
     tol1 = 1
@@ -494,11 +503,11 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, W, C_M_AC
 
     # Monolithic aeroelastic solution
     A = np.block([
-        [K_s - q * K_a, np.array([[q * S * C_L_alpha], [-q * S * C_L_alpha * (.5 + a) * b]])],
+        [K_s - q * K_a, np.array([[q * S * C_L_alpha], [-q * S * C_L_alpha * (.5 + a) * B]])],
         [np.array([0, q * S * C_L_alpha]), q * S * C_L_alpha]
     ])
     b = np.array([0, q * F_st_M_AC[1][0], W])
-    x_mono = np.linalg.solve(A, b)
+    x_mono = np.linalg.solve(A, B)
     
     # Plot convergence history
     plt.figure()
@@ -533,12 +542,12 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, W, C_M_AC
 
 
 if __name__ == "__main__":
-    analyze = "static trimmed aeroelasticity" # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
+    analyze = "flutter" # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
     
     if analyze == "divergence":
         # Geometric Parameters
         a = -0.5
-        b = 0.127
+        B = 0.127
         
         # Stiffness Parameters
         K_theta = 37.3
@@ -554,7 +563,7 @@ if __name__ == "__main__":
 
     if analyze == "reversal":
         # Geometric Parameters
-        b = 0.127
+        B = 0.127
 
         # Stiffness Parameters
         K_theta = 37.3
@@ -565,7 +574,7 @@ if __name__ == "__main__":
         rho = 1.225
         
         # Calculate reversal speed
-        V_rev = Reversal(c, K_theta, C_L_alpha, CM_ac_beta, b, rho)
+        V_rev = Reversal(c, K_theta, C_L_alpha, CM_ac_beta, B, rho)
         print(f"Reversal speed: {V_rev} m/s")
 
 
@@ -578,7 +587,7 @@ if __name__ == "__main__":
 
         # Geometric Parameters
         a = -0.5
-        b = 0.127
+        B = 0.127
         c = 0.5
         S = 1 * c
         
@@ -601,7 +610,7 @@ if __name__ == "__main__":
         q = 1/2 * rho * V**2
         
         # flutter_v2(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, V_arr)
-        Identifier, V_flut_dict = flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, b, V_arr)
+        Identifier, V_flut_dict = flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr)
         
         # If no flutter: 
         if Identifier == None: 
@@ -628,7 +637,7 @@ if __name__ == "__main__":
 
         # Geometric Parameters
         a = -0.5
-        b = 0.127
+        B = 0.127
         c = 0.5
         S = 1 * c
         
@@ -647,7 +656,7 @@ if __name__ == "__main__":
         q = 1/2 * rho * V**2
         
         # Static Aeroelasticity
-        static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, alpha0, C_M_AC)
+        static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, alpha0, C_M_AC)
 
 
     if analyze == "static trimmed aeroelasticity":
@@ -659,7 +668,7 @@ if __name__ == "__main__":
 
         # Geometric Parameters
         a = -0.5
-        b = 0.127
+        B = 0.127
         c = 0.5
         S = 1 * c
         
@@ -678,4 +687,4 @@ if __name__ == "__main__":
         q = 1/2 * rho * V**2
 
         # Static Trimmed Aeroelasticity
-        static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, b, q, w, C_M_AC)
+        static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, w, C_M_AC)
