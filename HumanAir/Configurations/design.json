@@ -101,8 +101,10 @@
         "c_root_HS": 1.7706473206369533,
         "c_tip_HS": 0.7082589282547813,
         "MAC_wing": 1.9270847859390599,
-        "MAC_HS": 1.3153380096160223,
-        "Cm_0_wing": -0.20192
+        "MAC_HS": 1.0345326619818345,
+        "Cm_0_wing": -0.20192,
+        "cd_0_airfoil": 0.014,
+        "cl_alpha_airfoil_deg": 0.123
     },
     "Flaps": {
         "cprime_c": 1.075,
@@ -128,6 +130,9 @@
         "deltaCLmax_takeoff": 0.20000000000000018,
         "Sprime_S_landing": 1.0116598079561043,
         "Sprime_S_takeoff": 1.0046639231824417
+    },
+    "Aileron": {
+
     },
     "Performance": {
         "W/S_N/m2": 859.8001,
