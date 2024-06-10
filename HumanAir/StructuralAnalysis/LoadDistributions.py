@@ -214,6 +214,7 @@ if __name__ == "__main__":
         L_cruise, W_cruise, D_cruise, M_cruise, nodes, y_points, ac_data=aircraft_data, load_factor=nl2
     )
 
+
     # plt.subplot(2, 2, 1)
     # plt.plot(y_points, nl*L_cruise, label='Lift')
     # plt.plot(y_points, -W_cruise, label = 'Weight')
