@@ -21,6 +21,7 @@ from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
 from HumanAir.AerodynamicDesign.FlapsDesign import flaps_design
+from HumanAir.AerodynamicDesign.FullStability import TailIteration
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight as ClassIIWeight
@@ -696,15 +697,20 @@ if __name__ == "__main__":
         logging.info(" Calculating the loading distribution diagram")
 
         # plot the load distribution diagrams
-        load_distribution_diagram(ac_data=class_2_dictionary)
+        load_distribution_diagram(ac_data = class_2_dictionary)
 
         logging.info(" Calculating the loading distribution diagram successful")
+        logging.info(" Sizing the flaps")
 
-        logging.info(" Sizing flaps")
         # sizing the flaps
-        class_2_dictionary=flaps_design(ac_data=class_2_dictionary)
+        flaps_design(ac_data = class_2_dictionary)
 
         logging.info(" Calculating flap position and design succesfully")
+
+        # size the horizontal tail
+        logging.info(" Sizing the horizontal tail")
+        TailIteration(ac_datafile=class_2_dictionary)
+        logging.info(" Sizing the horizontal tail successful")
 
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")

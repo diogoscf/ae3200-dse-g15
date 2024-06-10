@@ -48,7 +48,7 @@ class FuselageSizing:
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
-    def __init__(self, ac_data=aircraft_data):
+    def __init__(self, ac_data=aircraft_data, bat_xcg = 0.1):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
         self.h_engine = ac_data["Geometry"]["h_engine"]  # height of engine [m]
@@ -61,8 +61,8 @@ class FuselageSizing:
         self.h_nose_strut = ac_data["Landing_gear"]["l_s_n"]  # height of nose strut [m]
         self.h_main_strut = ac_data["Landing_gear"]["l_s_m"]  # height of main strut [m]
         self.l_main_lateral = ac_data["Landing_gear"]["ymin_m"]  # main landing gear position when opened
-        self.l_long_nose = ac_data["Landing_gear"]["lm_m"]  # nose landing gear longitudinal position
-        self.l_long_main = ac_data["Landing_gear"]["ln_m"]  # main landing gear longitudinal position
+        self.l_long_nose = ac_data["Landing_gear"]["Xnw_m"]  # nose landing gear longitudinal position
+        self.l_long_main = ac_data["Landing_gear"]["Xmw_m"]  # main landing gear longitudinal position
 
         self.h_battery = ac_data["Geometry"]["h_battery"]  # battery height
 
@@ -77,6 +77,8 @@ class FuselageSizing:
         self.w_motor = ac_data["Geometry"]["w_motor"]
         self.l_motor = ac_data["Geometry"]["l_motor"]
         self.l_empty = ac_data["Geometry"]["l_empty"]
+
+        self.bat_xcg = bat_xcg
 
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
@@ -94,6 +96,7 @@ class FuselageSizing:
         return np.sqrt(l_lateral**2 + h**2)
 
     def l_battery(self, w_battery):
+
         return self.V_battery / (self.h_battery * w_battery)
 
     def w_battery(self, l_battery):

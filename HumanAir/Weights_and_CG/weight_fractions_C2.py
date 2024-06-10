@@ -411,7 +411,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
     # Update nose gear dimensions for additional pressure
     Wheel_pressure = max(Pressure_list)
-    find_lg(nose_loading, max(CGlist), wcg, ac_datafile, max_load_nose=Wheel_pressure, fwdcg=min(FullCGlist))[0:5]
+    find_lg(nose_loading, max(CGlist), wcg, ac_datafile, max_load_nose = Wheel_pressure, fwdcg=min(FullCGlist))[0:5]
 
     # Update dictionary values
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
@@ -422,7 +422,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
 
 # iterate though lemac such that the x_lemac is larger than 3.2m and that the landing gear can fit with the batteries
-def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.1, bat_xcg_init=0.1, lemac_limit = 3.2):
+def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xcg_init=0.2, lemac_limit = 3.2):
 
     # initialise the sizing parameter
     sizing = False
@@ -431,14 +431,19 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.1, bat_xc
     # loop to get the optimised lemac and landing gear data with the batteries in the right position and the lemac larger than 3.2m
     while not sizing:
 
-        _, CGlist, xlemac, _ = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
+        _, CGlist, xlemac, nose_check = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
+
+        # check if the nose gear can be placed
+        if not nose_check:
+            print("Nose gear collapsed, increasing battery xcg")
+            bat_xcg += 0.01
 
         # check if the xlemac is acceptable
         if xlemac > lemac_limit:
             # TODO: call the function from fuselage sizing and check if the boxes overlap and returns the lemac
 
             # get the position of the batteries and the landing gears
-            fuselage_sizing = FuselageSizing(ac_data=ac_data)
+            fuselage_sizing = FuselageSizing(ac_data=ac_data, bat_xcg = bat_xcg)
             bellow_position = fuselage_sizing.below_position(s_gear=0.1)  # s_gear is the clearance
 
             # check if the sizings are not overlapping
@@ -446,10 +451,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.1, bat_xc
                 bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
                 and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
-
-
-                # print(bellow_position)
-                # fuselage_sizing.plot_side_drawing(s_gear=0.1)
 
                 # if the sizing is correct, break the loop and return the optimised xlemac and update the xcg of the batteries
                 sizing = True
@@ -474,8 +475,7 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.1, bat_xc
         else:
             bat_xcg += 0.01
 
-    # TODO: save the xcg list
-    return sizing, bat_xcg
+    return bat_xcg
 
 
 def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage= 3 / 4):
@@ -501,10 +501,15 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage= 3 / 4):
     )
 
     # update the aircraft data with the new lh
+
     ac_data["Stability"]["QCW_to_QCh"] = QCH_mac - QCW_mac
+
+    return QCH_mac - QCW_mac
 
 if __name__ == "__main__":
     init = time.process_time()
-    #print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False))
+    #print(iterate_cg_lg(aircraft_data, PERCENTAGE=-0.1, bat_xcg=0.5, plot=False))
+    calculate_lh(ac_data=aircraft_data)
+    #optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.05, bat_xcg_init=0.5, lemac_limit = 3.2)
     total = time.process_time() - init
     print(total)
