@@ -129,7 +129,6 @@ class WP_WS:
 
         return optimal_WP, optimal_WS
 
-
     #  ========== 2: Plot Lines =========="""
     def plot(self, saving=None):
         optimal_point = self.calculate_optimal_point()

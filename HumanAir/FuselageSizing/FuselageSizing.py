@@ -5,10 +5,12 @@ import matplotlib.patches as patches
 import os
 import sys
 import time
-#position update
+
+# position update
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
+
 
 class FuselageSizing:
     """
@@ -48,7 +50,7 @@ class FuselageSizing:
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
-    def __init__(self, ac_data=aircraft_data, bat_xcg = 0.1):
+    def __init__(self, ac_data=aircraft_data, bat_xcg=0.1):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
         self.h_engine = ac_data["Geometry"]["h_engine"]  # height of engine [m]
@@ -90,7 +92,7 @@ class FuselageSizing:
         return FuselageSizing.l_pax * self.n_row()
 
     def length_main_strut(self, s_gear):
-        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle/2
+        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle / 2
         h = self.h_main_strut
         l_lateral = self.l_main_lateral - l_lateral_strut
         return np.sqrt(l_lateral**2 + h**2)
@@ -132,7 +134,7 @@ class FuselageSizing:
 
         else:
             # print('Landing gear folds forward')
-            w_battery = (self.top_width() - 2 * FuselageSizing.s)
+            w_battery = self.top_width() - 2 * FuselageSizing.s
             l_battery = self.l_battery(w_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
@@ -150,7 +152,7 @@ class FuselageSizing:
         # s_gear is the distance between the two areas
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # bottom width from seats:
-        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2  + self.w_aisle
+        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2 + self.w_aisle
 
         # bottom width from landing gear:
         bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft)
@@ -433,35 +435,38 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
-
     def above_position(self):
         my_dict = {}
-        my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
-        my_dict['empty_space'] =  (my_dict['frontwall'][-1], my_dict['frontwall'][-1] + self.l_empty)
-        my_dict['motor'] = (my_dict['empty_space'][-1], my_dict['empty_space'][-1] + self.l_motor)
-        my_dict['engine'] = (my_dict['motor'][-1], my_dict['motor'][-1] + self.l_engine)
-        my_dict['firewall'] = (my_dict['engine'][-1], my_dict['engine'][-1] + FuselageSizing.l_enbu)
-        my_dict['cockpit'] = (my_dict['firewall'][-1], my_dict['firewall'][-1] + self.l_cock)
-        my_dict['row1'] = (my_dict['cockpit'][-1], my_dict['cockpit'][-1] + FuselageSizing.l_pax)
-        my_dict['row2'] = (my_dict['row1'][-1], my_dict['row1'][-1] + FuselageSizing.l_pax)
-        my_dict['row3'] = (my_dict['row2'][-1], my_dict['row2'][-1] + FuselageSizing.l_pax)
-        my_dict['tailcone'] = (my_dict['row3'][-1], my_dict['row3'][-1] + self.l_tailcone)
-        my_dict['backwall'] = (my_dict['tailcone'][-1], my_dict['tailcone'][-1] + FuselageSizing.t_fuse)
+        my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
+        my_dict["empty_space"] = (my_dict["frontwall"][-1], my_dict["frontwall"][-1] + self.l_empty)
+        my_dict["motor"] = (my_dict["empty_space"][-1], my_dict["empty_space"][-1] + self.l_motor)
+        my_dict["engine"] = (my_dict["motor"][-1], my_dict["motor"][-1] + self.l_engine)
+        my_dict["firewall"] = (my_dict["engine"][-1], my_dict["engine"][-1] + FuselageSizing.l_enbu)
+        my_dict["cockpit"] = (my_dict["firewall"][-1], my_dict["firewall"][-1] + self.l_cock)
+        my_dict["row1"] = (my_dict["cockpit"][-1], my_dict["cockpit"][-1] + FuselageSizing.l_pax)
+        my_dict["row2"] = (my_dict["row1"][-1], my_dict["row1"][-1] + FuselageSizing.l_pax)
+        my_dict["row3"] = (my_dict["row2"][-1], my_dict["row2"][-1] + FuselageSizing.l_pax)
+        my_dict["tailcone"] = (my_dict["row3"][-1], my_dict["row3"][-1] + self.l_tailcone)
+        my_dict["backwall"] = (my_dict["tailcone"][-1], my_dict["tailcone"][-1] + FuselageSizing.t_fuse)
         return my_dict
 
-    def below_position(self, s_gear, front_retractable = True):
+    def below_position(self, s_gear, front_retractable=True):
 
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
-        #print('w_battery', l_battery)
-        #print('s_gear', s_gear)
+        # print('w_battery', l_battery)
+        # print('s_gear', s_gear)
 
         my_dict = {}
-        my_dict['frontwall'] = (0, FuselageSizing.t_fuse)
-        my_dict['nose landing gear'] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut)
-        my_dict['main landing gear'] = (self.l_long_main - self.length_main_strut(s_gear=0.1), self.l_long_main)
-        my_dict['battery'] = (self.l_end_nose_land() + FuselageSizing.s, self.l_end_nose_land() + FuselageSizing.s + l_battery )
-        #print(my_dict['battery'][0], my_dict['battery'][1])
+        my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
+        my_dict["nose landing gear"] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut)
+        my_dict["main landing gear"] = (self.l_long_main - self.length_main_strut(s_gear=0.1), self.l_long_main)
+        my_dict["battery"] = (
+            self.l_end_nose_land() + FuselageSizing.s,
+            self.l_end_nose_land() + FuselageSizing.s + l_battery,
+        )
+        # print(my_dict['battery'][0], my_dict['battery'][1])
         return my_dict
+
 
 if __name__ == "__main__":
     # # Example usage:
@@ -485,7 +490,7 @@ if __name__ == "__main__":
     init = time.process_time()
 
     fuselage_size = FuselageSizing(ac_data=aircraft_data)
-    #print(fuselage_size.above_position())
+    # print(fuselage_size.above_position())
     print(fuselage_size.below_position(0.1))
     print(fuselage_size.battery_dim(0.1))
     # print(fuselage_size.bottom_width(0.1))
@@ -496,9 +501,7 @@ if __name__ == "__main__":
     print(total)
 
 
-
-
-'''
+"""
     print("top_width", fuselage_size.top_width())
     print("bottom_width", fuselage_size.bottom_width(s_gear=0.1))
     print("fuselage height", fuselage_size.height())
@@ -509,4 +512,4 @@ if __name__ == "__main__":
     print("main_strut_length", fuselage_size.length_main_strut(s_gear=0.1))
     print("nose_strut_length", fuselage_size.h_nose_strut)
     print("position", fuselage_size.position())
-'''
+"""

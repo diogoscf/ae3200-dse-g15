@@ -96,7 +96,7 @@ def test_class_II_weight_init():
     assert weight_class.W_TO == N_to_lbs(1000) / 1.2  # Contingency
     assert weight_class.W_L == N_to_lbs(200) / 1.2
     assert weight_class.W_F == N_to_lbs(300) / 1.2
-    assert weight_class.W_E == N_to_lbs(100) / 1.2   # OEW - Wpilot
+    assert weight_class.W_E == N_to_lbs(100) / 1.2  # OEW - Wpilot
 
     assert weight_class.S_Wing == m_squared_to_ft_squared(15)
     assert weight_class.S_h == m_squared_to_ft_squared(13)
@@ -274,7 +274,7 @@ def test_landing_gear_weight(aircraft_data=aircraft_data):
     if weight_class.retractable:
         result1 += 0.014 * weight_class.W_TO
 
-    result2 = 0.054 * weight_class.l_s_m**0.501 * (weight_class.W_L * weight_class.n_ult_l) ** 0.684
+    # result2 = 0.054 * weight_class.l_s_m**0.501 * (weight_class.W_L * weight_class.n_ult_l) ** 0.684
 
     assert math.isclose(weight_class.LandingGearWeight()["Average"], (result1 + result1) / 2, rel_tol=1e-3)
 

@@ -14,7 +14,7 @@ sys.path.append(project_root)
 
 from HumanAir.StructuralAnalysis.Functions import import_data2
 from HumanAir.aircraft_data import aircraft_data
-from isa import isa
+from HumanAir.isa import isa
 
 
 # Define the forces along half span

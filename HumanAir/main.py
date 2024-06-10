@@ -699,19 +699,19 @@ if __name__ == "__main__":
         logging.info(" Calculating the loading distribution diagram")
 
         # plot the load distribution diagrams
-        load_distribution_diagram(ac_data = class_2_dictionary)
+        load_distribution_diagram(ac_data=class_2_dictionary)
 
         logging.info(" Calculating the loading distribution diagram successful")
         logging.info(" Sizing the flaps")
 
         # sizing the flaps
-        flaps_design(ac_data = class_2_dictionary)
+        flaps_design(ac_data=class_2_dictionary)
 
         logging.info(" Calculating flap position and design succesfully")
         logging.info(" Sizing the ailerons")
 
         # sizing the ailerons
-        AileronSizing(acd = class_2_dictionary)
+        AileronSizing(acd=class_2_dictionary)
         logging.info(" Calculating aileron position and design succesfully")
         logging.info(" Sizing the vertical tail")
 
