@@ -57,6 +57,7 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     V_S_TO = np.sqrt(W / (0.5 * rho * acf.S * acf.CLmax_TO))
     V_LOF = max(1.2 * V_S_TO, 0)#35) # 35 at 750+18 was chosen by control department as minimum
     # TODO: check if 35 is really required
+    print(V_LOF)
     xi = np.arctan(slope/100) # angle of slope
     
     if surface == "paved":

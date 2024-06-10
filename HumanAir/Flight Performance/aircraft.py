@@ -1,10 +1,14 @@
-import json
 import numpy as np
 from scipy.optimize import root_scalar, minimize_scalar
 
 from helper import density
 import thrust_power
 import takeoff_landing 
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+import aircraft_data
 
 # old span: 36.27269326905173
 #        "Fuel_engine_P_TO_W": 368000,
@@ -23,8 +27,7 @@ class Aircraft:
     """
     
     def __init__(self, FILE="design.json"):
-        with open("../Configurations/" + FILE,'r') as f:
-            dat = json.load(f)
+        dat = aircraft_data.aircraft_data
             
         # assumptions:
         # - variable pitch propeller (in takeoff run calculation)
@@ -64,8 +67,9 @@ class Aircraft:
         self.W_OE           = dat["CL2Weight"]["OEW"]
         self.W_MF           = dat["CL2Weight"]["Wfuel_N"] # max fuel weight
         self.W_bat          = dat["CL2Weight"]["Wbat_N"]
-        self.W_pl_des       = dat["Weights"]["Wpl_des_kg"] * 9.80655
-        self.W_pl_max       = dat["Weights"]["Wpl_max_kg"] * 9.80655
+        self.W_pl_no_pilot  = dat["CL2Weight"]["Wpl_w/o_pilot"] # class ii
+        self.W_pl_des       = dat["Weights"]["Wpl_des_kg"] * 9.80655 # class i
+        self.W_pl_max       = dat["Weights"]["Wpl_max_kg"] * 9.80655 # class i
         self.W_MTO          = dat["CL2Weight"]["MTOW_N"] #- self.W_pl_max/2 - self.W_MF / 2
         
         x_cg = dat["Stability"]["Cg_Front"]*dat["Aero"]["MAC_wing"] + dat["Geometry"]["XLEMAC_m"]
@@ -130,7 +134,7 @@ class Aircraft:
         
     def V_Dmin(self, W, h, dT):
         """ Calculates velocity corresponding with minimum drag in clean configuration """
-        a = 1 / (self.CD0_clean * np.pi * self.AR * self.e_clean)
+        a = 1 / np.sqrt(self.CD0_clean * np.pi * self.AR * self.e_clean)
         b = np.sqrt( W/self.S * 2/density(h, dT) * a ) # ruijgrok p224, same as V at (L/D)max
         c = np.sqrt( W / (0.5 * density(h, dT) * self.S * self.CL_LDmax))
         if not np.isclose(b,c):
