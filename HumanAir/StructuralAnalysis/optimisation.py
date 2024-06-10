@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize  # type: ignore[import-untyped]
-from scipy.integrate import cumulative_trapezoid  # type: ignore[import-untyped]
+
+# from scipy.integrate import cumulative_trapezoid  # type: ignore[import-untyped]
 import sys
 import os
 import matplotlib.pyplot as plt  # noqa: F401
@@ -56,9 +57,6 @@ def objective(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sectio
     W_stringers = np.sum(rho * A_stringer * stringers_at_nodes * len_nodes)
     weight = W_skin + W_spar + W_stringers
     return weight
-
-
-
 
 
 def get_axial_forces(Mx, Vy, MOI, h_max, stringers_at_nodes, A_stringer):
@@ -176,7 +174,14 @@ def print_time():
 
 # TODO: Make the AoA taken from aircraft_data, need to implement it in the json
 def run_optimiser(
-    ac_data=aircraft_data, AoA=-5.0, altitude=None, nlim=None, max_deflect=1.7, nodes=401, maxiter=None, full_return=False
+    ac_data=aircraft_data,
+    AoA=-5.0,
+    altitude=None,
+    nlim=None,
+    max_deflect=1.7,
+    nodes=401,
+    maxiter=None,
+    full_return=False,
 ):
     """
     Function to run the optimization of the wing structure
@@ -227,7 +232,7 @@ def run_optimiser(
     l_box_up, l_box_down = l_box_up[(l_box_up.shape[0] // 2) :], l_box_down[(l_box_down.shape[0] // 2) :]
     chord_dist = wing_structure.chord_distribution
     y_points = wing_structure.ypts
-    chord_halfspan, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
+    _, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
 
     # Parameters
     # rho = 2710  # density of aluminium (kg/m^3)
@@ -261,9 +266,9 @@ def run_optimiser(
     t0 = stack_variables(t_spar_tip0, t_spar_root0, t_skin0, no_string)
 
     # Define the bounds for each variable
-    extra = 1 if nodes % 2 == 1 else 0
+    # extra = 1 if nodes % 2 == 1 else 0
     bounds_t_spar = [(0.0005, 0.01)] * 2
-    bounds_t_skin = [(0.0005, 0.003)] # [(0.0005, 0.01)]
+    bounds_t_skin = [(0.0005, 0.003)]  # [(0.0005, 0.01)]
     bounds_no_stringers = [(1, 60)] * (len(no_string))
     bounds = np.array(bounds_t_spar + bounds_t_skin + bounds_no_stringers)
 
@@ -350,7 +355,9 @@ def run_optimiser(
     )
 
     # Optimized thickness values
-    optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers = unstack_variables(solution.x)
+    optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers = unstack_variables(
+        solution.x
+    )
     weight = solution.fun
     # I = get_I(optimized_t_spar, optimized_t_skin, optimized_no_stringers, wing_structure.stringer_area)
     # deflection = get_deflection(I, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
@@ -398,7 +405,8 @@ if __name__ == "__main__":
     material = aircraft_data["Geometry"]["wingbox_material"]
 
     MOI, stringer_dist = MOI_and_stringers_from_variables(
-        stack_variables(optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers), *MOI_args
+        stack_variables(optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers),
+        *MOI_args,
     )
 
     deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
