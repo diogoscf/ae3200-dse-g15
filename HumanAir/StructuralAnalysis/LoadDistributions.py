@@ -116,18 +116,19 @@ def read_points_from_load_dist(L_cruise, W_cruise, W_fuel, idxs):
     return a, b, c, d, e, f
 
 
-def strut_force_zero_deflection(MOI, v_strut_orig, y_points_until_strut):
-    integral_val = integrate.cumulative_trapezoid(
-        (y_points_until_strut[-1] - y_points_until_strut) / MOI[: len(y_points_until_strut)],
-        y_points_until_strut,
-        initial=0,
-    )[-1]
-    P_zero_deflection = -v_strut_orig / integral_val
-    print(P_zero_deflection)
-    return P_zero_deflection
+def strut_error_calculation(P, Vz, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut):
+    Vz_strut = P * np.cos(theta_strut)
+    Vz = Vz.copy()
+    Vz[:n_before_strut] += Vz_strut  # [N]
+    Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
+    Mx = Mx[::-1]
+    v_wing = get_deflection(MOI, y_points_halfspan, Mx, E)[n_before_strut]
+    v_strut = Vz_strut * l_strut / (A_strut * E)
+
+    return v_wing - v_strut
 
 
-def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data=aircraft_data):
+def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_data=aircraft_data):
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
     nodes_half_wing = len(y_points_halfspan)
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
@@ -141,56 +142,87 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data
     A_strut = ac_data["Geometry"]["strut_section_area_m2"]
     # P = -Vz_orig[n_before_strut]*3.5  # [N], initial guess
 
-    Mx = -integrate.cumulative_trapezoid(np.flip(Vz_orig * y_points_halfspan), y_points_halfspan, initial=0)[::-1]
-    v_40_orig = get_deflection(MOI, y_points_halfspan, Mx, E)[n_before_strut]
-    P = strut_force_zero_deflection(MOI, v_40_orig, y_points_halfspan[:n_before_strut])
+    # Mx = -integrate.cumulative_trapezoid(np.flip(Vz_orig * y_points_halfspan), y_points_halfspan, initial=0)[::-1]
+    # v_40_orig = get_deflection(MOI, y_points_halfspan, Mx, E)[n_before_strut]
+    # P = strut_force_zero_deflection(MOI, v_40_orig, y_points_halfspan[:n_before_strut], E)
+
+    def strut_error_calc_w_args(p):
+        return strut_error_calculation(
+            p, Vz_orig, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut
+        )
+
+    P_curr = 0
+    err_curr = strut_error_calc_w_args(P_curr)
+
+    step = 10000
 
     for _ in range(max_iter):
         # deflection at 40% of halfspan
+        P_next = P_curr + step
+        err_next = strut_error_calc_w_args(P_next)
 
-        V_strut = P
-        Vz_strut = P * np.cos(theta_strut)
-        Vy_strut = P * np.sin(theta_strut)
+        if np.abs(err_next) < tol:
+            P_curr = P_next
+            err_curr = err_next
+            break
+        
+        if err_curr * err_next < 0: # found the bracket
+            step /= 2
+            if abs(err_curr) < abs(err_next):
+                P_next = P_curr
+                err_next = err_curr
+            continue
 
-        Vz = Vz_orig.copy()
-        Vz[:n_before_strut] += Vz_strut  # [N]
+        if np.abs(err_curr) < np.abs(err_next):
+            step = -step
 
-        Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
-        Mx = Mx[::-1]
+        P_curr = P_next
+        err_curr = err_next
 
-        v = get_deflection(MOI, y_points_halfspan, Mx, E)
-        v_40 = v[n_before_strut]
+        # V_strut = P
+        # Vz_strut = P * np.cos(theta_strut)
+        # Vy_strut = P * np.sin(theta_strut)
+
+        # Vz = Vz_orig.copy()
+        # Vz[:n_before_strut] += Vz_strut  # [N]
+
+        # Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
+        # Mx = Mx[::-1]
+
+        # v = get_deflection(MOI, y_points_halfspan, Mx, E)
+        # v_40 = v[n_before_strut]
         # if v_40 > 0.5:
         #     v_40 = 0.5
         # if v_40 < 0:
         #     v_40 = 0
 
         # deflection at an angle
-        delta = v_40 / np.sin(theta_strut)
+        # delta = v_40 / np.sin(theta_strut)
 
-        # strut force
-        P_new = delta * A_strut * E / l_strut
+        # # strut force
+        # P_new = delta * A_strut * E / l_strut
 
-        print(P, v_40, delta, P_new, flush=True)
+        # # print(P, v_40, delta, P_new, flush=True)
 
-        plt.plot(y_points_halfspan, Vz, "r-")
-        plt.plot(y_points_halfspan, Mx, "g-")
-        plt.ylim(-0.2e5, 1.2e5)
-        plt.twinx()
-        plt.plot(y_points_halfspan, v, "b-")
-        plt.ylim(-0.2, 1.2)
-        plt.grid()
-        plt.show()
+        # # plt.plot(y_points_halfspan, Vz, "r-")
+        # # plt.plot(y_points_halfspan, Mx, "g-")
+        # # plt.ylim(-0.2e5, 1.2e5)
+        # # plt.twinx()
+        # # plt.plot(y_points_halfspan, v, "b-")
+        # # plt.ylim(-0.2, 1.2)
+        # # plt.grid()
+        # # plt.show()
 
-        if abs(P_new - P) < tol:
-            break
+        # if abs(P_new - P) < tol:
+        #     break
 
-        # update
-        P = P_new
+        # # update
+        # P = P_new
 
-    exit(0)
-    # print(V_strut)
-    # return 0, 0, 0
+    V_strut = P_curr
+    Vz_strut = P_curr * np.cos(theta_strut)
+    Vy_strut = P_curr * np.sin(theta_strut)
+
     return Vz_strut, Vy_strut, V_strut
 
 
