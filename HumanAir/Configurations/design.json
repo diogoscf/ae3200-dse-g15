@@ -68,7 +68,7 @@
         "t_skin_wing": 0.0011500427076044577,
         "spar_pos": [
             0.15,
-            0.5
+            0.65
         ],
         "wing_stringer_area_m": 0.0001,
         "wing_stringer_MOI_m4": 6.54e-09,
@@ -94,13 +94,13 @@
         ],
         "strut_loc_b/2": 0.4,
         "strut_loc_MAC": 0.25,
-        "strut_section_area_m2": 5e-05,
+        "strut_section_area_m2": 5e-03,
         "wing_stringer_number": [
-            34,
-            34,
-            5
+            1,
+            1,
+            1
         ],
-        "stringer_sections": [
+        "wing_stringer_sections": [
             0.4,
             0.3,
             0.3

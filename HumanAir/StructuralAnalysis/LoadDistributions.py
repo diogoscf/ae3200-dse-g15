@@ -116,14 +116,21 @@ def read_points_from_load_dist(L_cruise, W_cruise, W_fuel, idxs):
     return a, b, c, d, e, f
 
 
+def strut_force_zero_deflection(MOI, v_strut_orig, y_points_until_strut):
+    integral_val = integrate.cumulative_trapezoid(
+        (y_points_until_strut[-1] - y_points_until_strut) / MOI[: len(y_points_until_strut)],
+        y_points_until_strut,
+        initial=0,
+    )[-1]
+    P_zero_deflection = -v_strut_orig / integral_val
+    print(P_zero_deflection)
+    return P_zero_deflection
+
+
 def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data=aircraft_data):
-    P = 0
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
     nodes_half_wing = len(y_points_halfspan)
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
-
-    Mx = -integrate.cumulative_trapezoid(np.flip(Vz_orig * y_points_halfspan), y_points_halfspan, initial=0)
-    Mx = Mx[::-1]
 
     h_fus = ac_data["Geometry"]["fus_height_m"]
     halfspan = ac_data["Aero"]["b_Wing"] / 2
@@ -132,24 +139,14 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data
 
     E = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["E"]
     A_strut = ac_data["Geometry"]["strut_section_area_m2"]
+    # P = -Vz_orig[n_before_strut]*3.5  # [N], initial guess
+
+    Mx = -integrate.cumulative_trapezoid(np.flip(Vz_orig * y_points_halfspan), y_points_halfspan, initial=0)[::-1]
+    v_40_orig = get_deflection(MOI, y_points_halfspan, Mx, E)[n_before_strut]
+    P = strut_force_zero_deflection(MOI, v_40_orig, y_points_halfspan[:n_before_strut])
 
     for _ in range(max_iter):
         # deflection at 40% of halfspan
-        v = get_deflection(MOI, y_points_halfspan, Mx, E)
-        v_40 = v[n_before_strut]
-
-        # deflection at an angle
-        delta = v_40 / np.sin(theta_strut)
-
-        # strut force
-        P_new = delta * A_strut * E / l_strut
-
-        if abs(P_new - P) < tol:
-            P = P_new
-            break
-
-        # update
-        P = P_new
 
         V_strut = P
         Vz_strut = P * np.cos(theta_strut)
@@ -161,6 +158,39 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data
         Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
         Mx = Mx[::-1]
 
+        v = get_deflection(MOI, y_points_halfspan, Mx, E)
+        v_40 = v[n_before_strut]
+        # if v_40 > 0.5:
+        #     v_40 = 0.5
+        # if v_40 < 0:
+        #     v_40 = 0
+
+        # deflection at an angle
+        delta = v_40 / np.sin(theta_strut)
+
+        # strut force
+        P_new = delta * A_strut * E / l_strut
+
+        print(P, v_40, delta, P_new, flush=True)
+
+        plt.plot(y_points_halfspan, Vz, "r-")
+        plt.plot(y_points_halfspan, Mx, "g-")
+        plt.ylim(-0.2e5, 1.2e5)
+        plt.twinx()
+        plt.plot(y_points_halfspan, v, "b-")
+        plt.ylim(-0.2, 1.2)
+        plt.grid()
+        plt.show()
+
+        if abs(P_new - P) < tol:
+            break
+
+        # update
+        P = P_new
+
+    exit(0)
+    # print(V_strut)
+    # return 0, 0, 0
     return Vz_strut, Vy_strut, V_strut
 
 
@@ -188,7 +218,7 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1,
     Vz = Vz[::-1]
 
     strut_Vz, strut_Vy, _ = strut_force(
-        wing_structure.Ixx(ac_data["Geometry"]["wing_stringer_number"][0])[nodes_half_wing:],
+        wing_structure.Ixx()[nodes_half_wing:],
         y_points[nodes_half_wing:],
         Vz,
         max_iter=100,

@@ -50,15 +50,21 @@ class WingStructure:
         self.ct = self.cr * self.taper_ratio
         self.b = ac_data["Aero"]["b_Wing"]
         self.ypts = np.linspace(-self.b / 2, self.b / 2, self.nodes)
+        self.stringer_number = ac_data["Geometry"]["wing_stringer_number"]
+        self.stringer_sections = ac_data["Geometry"]["wing_stringer_sections"]
 
         self.chord_distribution = self.calculate_chord_distribution()
-        self.spars = self.chord_distribution.reshape(len(self.chord_distribution), 1) * self.spar_pos
+        self.spars = self.chord_distribution.reshape(-1,1) * self.spar_pos
 
         # Assume spar thickness is uniformly decreasing from root to tip
         self.t_spar_dist = self.calc_spar_dist()
 
+        self.stringer_dist = self.calc_stringer_dist()
+
         self.airfoil_division = self.calc_airfoil_division()
         self.y_up, self.y_down = self.y_updown()
+
+        self.hmax_dist = self.calc_hmax_dist()
 
     # def import_data(self):
     #     df = pd.read_csv(self.file_path, sep="\s+", header=None, names=["x", "y"], skiprows=1)
@@ -89,6 +95,28 @@ class WingStructure:
 
     def calc_spar_dist(self):
         return self.t1_spar + (self.t2_spar - self.t1_spar) / (self.cr - self.ct) * (self.chord_distribution - self.ct)
+    
+    def calc_hmax_dist(self):
+        hmax_airfoil = np.max(self.airfoil_division[0][:,1])
+        return hmax_airfoil * self.chord_distribution
+
+    def calc_stringer_dist(self):
+        if len(self.stringer_sections) != len(self.stringer_number):
+            raise ValueError("The number of stringer sections should be equal to the number of stringers per section")
+
+        stringers = np.ones(self.nodes // 2)
+        stringer_section_ends = np.rint(np.cumsum(self.stringer_sections) * (len(stringers)//2)).astype(int)
+        stringer_section_starts = np.insert(stringer_section_ends[:-1], 0, 0)
+        for i in range(len(self.stringer_sections)):
+            start = stringer_section_starts[i]
+            end = stringer_section_ends[i]
+            # print(start, end)
+            stringers[start:end] = self.stringer_number[i]
+
+        middle = [] if self.nodes % 2 == 0 else [self.stringer_number[0]]
+        stringers = np.concatenate([stringers, middle, np.flip(stringers)])
+
+        return stringers
 
     def calc_airfoil_division(self):
         df = copy.deepcopy(self.airfoil_data)
@@ -201,15 +229,15 @@ class WingStructure:
             A_uskin + A_lskin + A_lspar + A_rspar
         )
 
-    def Ixx(self, no_str):
+    def Ixx(self):
         h_mid, h_s1s2 = self.h_s1s2()
         l_box_up, l_box_down = self.d_s1s2()
-        h_15c = h_s1s2[:, 0].flatten()
-        h_50c = h_s1s2[:, 1].flatten()
-        htot = h_15c + h_50c
+        h_frontspar = h_s1s2[:, 0].flatten()
+        h_rearspar = h_s1s2[:, 1].flatten()
+        htot = h_frontspar + h_rearspar
         h_avemax = htot / 4
-        I_stringer = self.stringer_area * no_str * h_avemax**2
-        I_spar = 1 / 12 * self.t_spar_dist * (h_15c * 3 + h_50c * 3)
+        I_stringer = self.stringer_area * self.stringer_dist * h_avemax**2
+        I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar * 3 + h_rearspar * 3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
 
@@ -239,11 +267,11 @@ if __name__ == "__main__":
     # plt.axis('equal')
     # plt.show()
     idx = find_nearest(y, 3.986)
-    print(y[idx])
+    # print(y[idx])
 
     # print(torisonal_stiffness.spars())
     h_mid, h_s1s2 = wing_structure_data.h_s1s2()
-    print(h_s1s2[idx])
+    # print(h_s1s2[idx])
 
     # plt.plot(df_down[:,0], df_down[:,1])
     # plt.plot(df_up[:,0], df_up[:,1])

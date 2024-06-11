@@ -51,7 +51,7 @@ def get_stringers_at_nodes(stringer_sections, no_stringers, nodes_halfspan, cent
     return stringers
 
 
-def objective(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node):
+def get_weight(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node):
     t_spar_tip, t_spar_root, t_skin, no_stringers = unstack_variables(variables)
     stringers_at_nodes = get_stringers_at_nodes(
         stringer_sections_halfspan, no_stringers, n_halfspan, centre_node=centre_node
@@ -66,12 +66,20 @@ def objective(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sectio
     return weight
 
 
+def objective(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node):
+    weight = get_weight(
+        variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node
+    )
+    obj_val = (weight - 40) / 100  # Lowest possible is around 60 kg
+    print(obj_val, flush=True)
+    return obj_val
+
+
 def get_axial_forces(Mx, Vy, MOI, h_max, stringers_at_nodes, A_stringer):
     sigma_bending = Mx * h_max / MOI
     sigma_axial = Vy / (A_stringer * stringers_at_nodes)
     sigma = sigma_bending + sigma_axial
 
-    print(f"{np.max(sigma)/1e6:.2f} MPa, with P = {np.max(sigma) * A_stringer} N", flush=True)
     P = sigma * A_stringer
     return P
 
@@ -81,29 +89,54 @@ def get_axial_stresses(Mx, MOI, h_max):
     return sigma
 
 
-def get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c):
+def get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h_frontspar, h_rearspar):
     I_skin = t_skin * (w_top + w_bottom) * h_avemax**2
-    I_spar = 1 / 12 * t_spar * (h_15c**3 + h_50c**3)
+    I_spar = 1 / 12 * t_spar * (h_frontspar**3 + h_rearspar**3)
     I_stringers = A_stringer * no_stringers * h_avemax**2
     MOI = I_skin + I_spar + I_stringers
     return MOI
 
 
 lengths_vars = None
+CONVERSION_FACTOR_THICKNESSES = 1000  # Convert to mm and back, for numerical reasons
+CONVERSION_FACTOR_STRINGERS = 5  # Convert to something around order 1 for numerical reasons
 
 
 def stack_variables(t_spar_tip, t_spar_root, t_skin, no_stringers):
-    return np.hstack(([t_spar_tip, t_spar_root, t_skin], no_stringers)).flatten()
+    return np.hstack(
+        (
+            [
+                t_spar_tip * CONVERSION_FACTOR_THICKNESSES,
+                t_spar_root * CONVERSION_FACTOR_THICKNESSES,
+                t_skin * CONVERSION_FACTOR_THICKNESSES,
+            ],
+            [x / CONVERSION_FACTOR_STRINGERS for x in no_stringers],
+        )
+    ).flatten()
 
 
 def unstack_variables(variables):
     t_spar_tip, t_spar_root, t_skin = variables[:3].flatten()
     no_stringers = variables[3:].flatten()
-    return t_spar_tip, t_spar_root, t_skin, no_stringers
+    return (
+        t_spar_tip / CONVERSION_FACTOR_THICKNESSES,
+        t_spar_root / CONVERSION_FACTOR_THICKNESSES,
+        t_skin / CONVERSION_FACTOR_THICKNESSES,
+        no_stringers * CONVERSION_FACTOR_STRINGERS,
+    )
 
 
 def MOI_from_variables(
-    variables, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c, n_halfspan, stringer_sections_halfspan, centre_node
+    variables,
+    A_stringer,
+    w_top,
+    w_bottom,
+    h_avemax,
+    h_frontspar,
+    h_rearspar,
+    n_halfspan,
+    stringer_sections_halfspan,
+    centre_node,
 ):
     return MOI_and_stringers_from_variables(
         variables,
@@ -111,8 +144,8 @@ def MOI_from_variables(
         w_top,
         w_bottom,
         h_avemax,
-        h_15c,
-        h_50c,
+        h_frontspar,
+        h_rearspar,
         n_halfspan,
         stringer_sections_halfspan,
         centre_node,
@@ -120,14 +153,23 @@ def MOI_from_variables(
 
 
 def MOI_and_stringers_from_variables(
-    variables, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c, n_halfspan, stringer_sections_halfspan, centre_node
+    variables,
+    A_stringer,
+    w_top,
+    w_bottom,
+    h_avemax,
+    h_frontspar,
+    h_rearspar,
+    n_halfspan,
+    stringer_sections_halfspan,
+    centre_node,
 ):
     t_spar_root, t_spar_tip, t_skin, no_stringers = unstack_variables(variables)
     stringers_at_nodes = get_stringers_at_nodes(
         stringer_sections_halfspan, no_stringers, n_halfspan, centre_node=centre_node
     )
     t_spar = np.linspace(t_spar_root, t_spar_tip, n_halfspan)
-    MOI = get_I(t_spar, t_skin, stringers_at_nodes, A_stringer, w_top, w_bottom, h_avemax, h_15c, h_50c)
+    MOI = get_I(t_spar, t_skin, stringers_at_nodes, A_stringer, w_top, w_bottom, h_avemax, h_frontspar, h_rearspar)
 
     return MOI, stringers_at_nodes
 
@@ -135,25 +177,24 @@ def MOI_and_stringers_from_variables(
 def deflection_constraint(variables, y, Mx, max_deflect, E, MOI_args):
     MOI = MOI_from_variables(variables, *MOI_args)
     deflection = get_deflection(MOI, y, Mx, E)
-    return max_deflect - np.max(deflection)
+    return (max_deflect - np.max(deflection)) / max_deflect
 
 
-def stringer_buckling_constraint(variables, Mx, Vy, A_stringer, h_15c, E, I_stringer, L_eff, MOI_args):
+def stringer_buckling_constraint(variables, Mx, Vy, A_stringer, hmax, E, I_stringer, L_eff, MOI_args):
     P_cr = (np.pi) ** 2 * E * I_stringer / L_eff**2  # critical force at which stringer will buckle
-    h_max = h_15c / 2
     MOI, stringers = MOI_and_stringers_from_variables(variables, *MOI_args)
 
     # compressive stress
-    P = get_axial_forces(Mx, Vy, MOI, h_max, stringers, A_stringer)
+    P = get_axial_forces(Mx, Vy, MOI, hmax, stringers, A_stringer)
     # print(P_cr - np.max(P), flush=True)
-    return P_cr - np.max(P)
+    return (P_cr - np.max(P)) / P_cr
 
 
-def tensile_failure_constraint(variables, Mx, h_15c, sigma_yield, MOI_args):
-    h_max = h_15c / 2
+def tensile_failure_constraint(variables, Mx, hmax, sigma_yield, MOI_args):
     MOI = MOI_from_variables(variables, *MOI_args)
-    sigma = get_axial_stresses(Mx, MOI, h_max)
-    return sigma_yield - np.max(sigma)
+    sigma = get_axial_stresses(Mx, MOI, hmax)
+    # print((sigma_yield - np.max(sigma)) / sigma_yield, variables, flush=True)
+    return (sigma_yield - np.max(sigma)) / sigma_yield
 
 
 def get_force_distributions(AoA, altitude, Vc, Cl_data, Cdi_data, Cm_data, chord_dist, ac_data=aircraft_data):
@@ -241,12 +282,15 @@ def run_optimiser(
     y_points = wing_structure.ypts
     _, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
 
+    hmax = wing_structure.hmax_dist.flatten()  # maximum height of the wingbox, as a function of y
+    hmax = hmax[(hmax.shape[0] // 2) :]
+
     # Parameters
     # rho = 2710  # density of aluminium (kg/m^3)
 
-    h_15c = h_s1s2[:, 0]  # height of the spar at 15% of the chord, as a function of y
-    h_50c = h_s1s2[:, 1]  # height of the spar at 50% of the chord, as a function of y
-    htot = (h_15c + h_50c).flatten()  # total height, just for calculation ease, as a function of y
+    h_frontspar = h_s1s2[:, 0]  # height of the spar at 15% of the chord, as a function of y
+    h_rearspar = h_s1s2[:, 1]  # height of the spar at 50% of the chord, as a function of y
+    htot = (h_frontspar + h_rearspar).flatten()  # total height, just for calculation ease, as a function of y
     h_avemax = htot / 4  # averaged "max" height from the central line, as a function of y
     w_top = l_box_up.flatten()  # width of top "straight" skin, as a function of y
     w_bottom = l_box_down.flatten()  # width of bottom "straight" skin, as a function of y
@@ -255,13 +299,15 @@ def run_optimiser(
     # E = 68e9  # Young's Modulus for aluminium (Pa)
     # sigma_yield = 40e6  # Yield strength for aluminium (Pa)
 
-    stringer_sections_halfspan = [0.4, 0.3, 0.3]  # Should add up to 1
-    no_string = [50, 30, 20]
+    # stringer_sections_halfspan = [0.4, 0.3, 0.3]  # Should add up to 1
+    # no_string = [50, 30, 20]
 
     # Initial guess for thickness of spar
     t_spar = wing_structure.t_spar_dist.flatten()
     t_spar_root0, t_spar_tip0 = t_spar[0], t_spar[-1]
     t_skin0 = wing_structure.t_skin
+    stringer_sections_halfspan = wing_structure.stringer_sections
+    no_string = wing_structure.stringer_number
     # t_spar0 = t_spar0[t_spar0.shape[0] // 2 :]
     # Constant skin thickness [m]
     # t_skin0 = wing_structure.t_skin * np.ones(t_spar0.shape)
@@ -274,9 +320,11 @@ def run_optimiser(
 
     # Define the bounds for each variable
     # extra = 1 if nodes % 2 == 1 else 0
-    bounds_t_spar = [(0.0005, 0.01)] * 2
-    bounds_t_skin = [(0.0005, 0.003)]  # [(0.0005, 0.01)]
-    bounds_no_stringers = [(1, 60)] * (len(no_string))
+    bounds_t_spar = [(0.0005 * CONVERSION_FACTOR_THICKNESSES, 0.01 * CONVERSION_FACTOR_THICKNESSES)] * 2
+    bounds_t_skin = [
+        (0.0005 * CONVERSION_FACTOR_THICKNESSES, 0.003 * CONVERSION_FACTOR_THICKNESSES)
+    ]  # [(0.0005, 0.01)]
+    bounds_no_stringers = [(1 / CONVERSION_FACTOR_STRINGERS, 50 / CONVERSION_FACTOR_STRINGERS)] * (len(no_string))
     bounds = np.array(bounds_t_spar + bounds_t_skin + bounds_no_stringers)
 
     Cl_DATA, Cdi_DATA, Cm_DATA = interpolate_Cl_Cd_Cm(Cl_data_wing, Cdi_data_wing, Cm_data_wing, y_points)
@@ -302,8 +350,8 @@ def run_optimiser(
         w_top,
         w_bottom,
         h_avemax,
-        h_15c,
-        h_50c,
+        h_frontspar,
+        h_rearspar,
         n_halfspan,
         stringer_sections_halfspan,
         centre_node,
@@ -323,7 +371,7 @@ def run_optimiser(
         #         Mx,
         #         Vy,
         #         wing_structure.stringer_area,
-        #         h_15c,
+        #         hmax,
         #         ac_data["Materials"][material]["E"],
         #         ac_data["Geometry"]["wing_stringer_MOI_m4"],
         #         max_rib_dist_m,
@@ -333,7 +381,7 @@ def run_optimiser(
         {
             "type": "ineq",
             "fun": tensile_failure_constraint,
-            "args": (Mx, h_15c, ac_data["Materials"][material]["sigma_y"], MOI_args),
+            "args": (Mx, hmax, ac_data["Materials"][material]["sigma_y"], MOI_args),
         },
     ]
 
@@ -342,19 +390,21 @@ def run_optimiser(
 
     solver_options = {"maxiter": maxiter} if maxiter is not None else {}
 
+    objective_args = (
+        htot,
+        wtot,
+        ac_data["Materials"][material]["rho"],
+        len_node_segment,
+        wing_structure.stringer_area,
+        stringer_sections_halfspan,
+        n_halfspan,
+        centre_node,
+    )
+
     solution = minimize(
         objective,
         t0,
-        args=(
-            htot,
-            wtot,
-            ac_data["Materials"][material]["rho"],
-            len_node_segment,
-            wing_structure.stringer_area,
-            stringer_sections_halfspan,
-            n_halfspan,
-            centre_node,
-        ),
+        args=objective_args,
         method="SLSQP",
         bounds=bounds,
         constraints=constraints,
@@ -365,7 +415,8 @@ def run_optimiser(
     optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers = unstack_variables(
         solution.x
     )
-    weight = solution.fun
+    weight = get_weight(solution.x, *objective_args)
+    print(solution.message)
     # I = get_I(optimized_t_spar, optimized_t_skin, optimized_no_stringers, wing_structure.stringer_area)
     # deflection = get_deflection(I, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
 
@@ -381,7 +432,7 @@ def run_optimiser(
             Vy,
             MOI_args,
             wing_structure.stringer_area,
-            h_15c,
+            h_frontspar,
             max_deflect,
             max_rib_dist_m,
         )
@@ -402,11 +453,11 @@ if __name__ == "__main__":
         Vy,
         MOI_args,
         A_stringer,
-        h_15c,
+        h_frontspar,
         max_deflect,
         max_rib_dist,
-    ) = run_optimiser(aircraft_data, nodes=100, maxiter=None, max_deflect=1.7, full_return=True)
-    print(max_rib_dist)
+    ) = run_optimiser(aircraft_data, nodes=1000, maxiter=1000, max_deflect=1.7, full_return=True)
+    # print(max_rib_dist)
 
     # MOI, y, M, E
     material = aircraft_data["Geometry"]["wingbox_material"]
@@ -417,8 +468,8 @@ if __name__ == "__main__":
     )
 
     deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
-    axial_forces = get_axial_forces(Mx, Vy, MOI, h_15c / 2, stringer_dist, A_stringer)
-    axial_stresses = get_axial_stresses(Mx, MOI, h_15c / 2)
+    axial_forces = get_axial_forces(Mx, Vy, MOI, h_frontspar / 2, stringer_dist, A_stringer)
+    axial_stresses = get_axial_stresses(Mx, MOI, h_frontspar / 2)
 
     max_force_allowed = (
         (np.pi) ** 2
@@ -427,6 +478,8 @@ if __name__ == "__main__":
         / max_rib_dist**2
     )
     sigma_yield = aircraft_data["Materials"][material]["sigma_y"]
+
+    print("Total time taken:", time.time() - start, "s")
 
     plt.figure()
     plt.plot(y_points_halfspan, deflection, "g-", label="Deflection")
@@ -450,7 +503,6 @@ if __name__ == "__main__":
     print("Optimized number of stringers:", optimized_no_stringers)
     print("Minimum weight:", weight)
 
-    print("Total time taken:", time.time() - start, "s")
     if input("Save optimised data to design.json? [y/N]").lower() == "y":
         aircraft_data["Geometry"]["t_spar_root"] = optimized_t_spar_root
         aircraft_data["Geometry"]["t_spar_tip"] = optimized_t_spar_tip
