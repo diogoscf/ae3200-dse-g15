@@ -120,7 +120,8 @@ def VerticalTailSizing(acd=aircraft_data):
         raise Exception("Not valid configuration found. Revise/update design parameters!")
     # else:
     #     print(
-    #         acd["Aero"]["c_root_v"], acd["Aero"]["c_tip_v"], acd["Aero"]["S_v"], acd["Aero"]["b_v"], acd["Aero"]["AR_v"]
+    #         acd["Aero"]["c_root_v"], acd["Aero"]["c_tip_v"], 
+    # acd["Aero"]["S_v"], acd["Aero"]["b_v"], acd["Aero"]["AR_v"]
     #     )
     else:
         return acd
