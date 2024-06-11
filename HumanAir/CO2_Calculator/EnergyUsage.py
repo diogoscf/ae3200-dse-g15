@@ -97,15 +97,16 @@ bar1 = ax.bar(x - bar_width / 2, battery_percentage, bar_width, label="Battery",
 bar2 = ax.bar(x + bar_width / 2, fuel_percentage, bar_width, label="Fuel", color="blue")
 
 # Add labels and title with custom fonts
-font_dict = {'fontsize': 20}
+font_dict = {"fontsize": 20}
 ax.set_xlabel("Mission Distance (NM)", fontdict=font_dict)
 ax.set_ylabel("Percentage of Total Energy Used (%)", fontdict=font_dict)
 ax.set_xticks(x)
 ax.set_xticklabels([f"{int(distance_bins[i])}-{int(distance_bins[i+1])}" for i in range(len(distance_bins) - 1)])
 
 # Customize tick parameters
-ax.tick_params(axis='both', which='major', labelsize=15)
-ax.tick_params(axis='both', which='minor', labelsize=15)
+ax.tick_params(axis="both", which="major", labelsize=15)
+ax.tick_params(axis="both", which="minor", labelsize=15)
+
 
 # Add annotations on top of each bar for energy usage phases
 def get_phase_annotation(energy_type, battery_energy, fuel_energy, mission):
@@ -145,7 +146,7 @@ for bars, energy_type in zip([bar1, bar2], ["Battery", "Fuel"]):
                 ha="center",
                 va="bottom",
                 fontsize=11,  # Font size for annotations
-                fontweight='bold'  # Font weight for annotations
+                fontweight="bold",  # Font weight for annotations
             )
 
 # Create custom legend entries
@@ -160,7 +161,7 @@ legend_elements = [
 ]
 
 # Add custom legend with the specified elements
-ax.legend(handles=legend_elements, loc="upper center", prop={'size': 15})
+ax.legend(handles=legend_elements, loc="upper center", prop={"size": 15})
 
 # Save the figure
 plt.savefig("energy_usage_plot.pdf")
