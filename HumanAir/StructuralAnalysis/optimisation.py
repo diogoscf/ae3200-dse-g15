@@ -223,7 +223,7 @@ def shear_buckling_constraint(variables, Vz, My, E, nu, h_rearspar, MOI_args, ks
     shear = np.abs(get_shear_stress(Vz, My, Q, MOI, area, t_spar))
 
     idx = np.argmin((shear_critical - shear))
-    print(np.pi, ks, E, nu, t_spar[idx], h_rearspar[idx], shear_critical[idx])
+    # print(np.pi, ks, E, nu, t_spar[idx], h_rearspar[idx], shear_critical[idx])
 
     # print(shear_critical[idx]/1e6, shear[idx]/1e6, ((shear_critical - shear) / shear_critical)[idx], flush=True)
     return ((shear_critical - shear) / shear_critical)[idx]
