@@ -565,7 +565,7 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4):
     b_h = ac_data["Aero"]["b_h"]
 
     # calculate the leading edge angle of the horizontal stabiliser and the x lemac
-    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage ) * (1 - taper_h) / (1 + taper_h))
+    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage) * (1 - taper_h) / (1 + taper_h))
 
     # calculate where the mac of the horizontal stabiliser wrt the leading edge
     y_mac_h = b_h / 6 * (1 + 2 * taper_h) / (1 + taper_h)
