@@ -1,8 +1,7 @@
 # import pandas as pd
 import numpy as np
 import sys
-from math import tan, sqrt, pi
-
+from math import tan, sqrt, pi, atan
 # import time
 import os
 
@@ -313,6 +312,13 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
     ac_datafile["Aero"]["c_tip_HS"] = dummy_dict["Aero"]["c_tip_HS"]
     ac_datafile["Aero"]["MAC_HS"] = dummy_dict["Aero"]["MAC_HS"]
     ac_datafile["Stability"]["QCW_to_QCh"] = dummy_dict["Stability"]["QCW_to_QCh"]
+
+    tan_LE_sweep = tan(0) - 4 / ac_datafile['Aero']['AR_HS'] * (
+                (-3 / 4) * (1 - ac_datafile['Aero']["Taper_HS"]) / (1 + ac_datafile['Aero']["Taper_HS"]))
+    quarter_chord_sweep = atan(tan_LE_sweep + ac_datafile['Aero']["c_root_HS"] / (2 * ac_datafile['Aero']["b_h"]) * (
+                ac_datafile['Aero']["Taper_HS"] - 1))
+    ac_datafile["Aero"]["QuarterChordSweep_HS_deg"] = quarter_chord_sweep * 180 / np.pi
+    print("DA")
 
     # plot the optimised xcg for the landing gear
     Plotting(acd=ac_datafile, show=False)

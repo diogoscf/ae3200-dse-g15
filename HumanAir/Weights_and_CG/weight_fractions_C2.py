@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, ".."))
 sys.path.append(project_root)
+from math import atan
 
 from HumanAir.aircraft_data import aircraft_data
 from HumanAir.isa import isa
@@ -564,7 +565,7 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4):
     b_h = ac_data["Aero"]["b_h"]
 
     # calculate the leading edge angle of the horizontal stabiliser and the x lemac
-    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage * c_root_h) * (1 - taper_h) / (1 + taper_h))
+    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage ) * (1 - taper_h) / (1 + taper_h))
 
     # calculate where the mac of the horizontal stabiliser wrt the leading edge
     y_mac_h = b_h / 6 * (1 + 2 * taper_h) / (1 + taper_h)
@@ -578,7 +579,6 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4):
     # update the aircraft data with the new lh
 
     ac_data["Stability"]["QCW_to_QCh"] = QCH_mac - QCW_mac
-
     return QCH_mac - QCW_mac
 
 
