@@ -54,10 +54,10 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
 
     # set parameters based on Roskam VI for 2D AoA derivative
     print("Check the parameter set in AileronStickForce if the geometry of the aileron change.")
-    RN = 7 * 10**6  # use the 10^7 line from Roskam
-    Y_90 = 1.272 / 100 * 100  # from CATIA
-    Y_99 = 0.199 / 100 * 100  # from CATIA
-    tan_half_TE = (Y_90 / 2 - Y_99 / 2) / 9
+    # RN = 7 * 10**6  # use the 10^7 line from Roskam
+    # Y_90 = 1.272 / 100 * 100  # from CATIA
+    # Y_99 = 0.199 / 100 * 100  # from CATIA
+    # tan_half_TE = (Y_90 / 2 - Y_99 / 2) / 9
 
     PHI_doubleprime_te = 5.237 / 180.0 * np.pi  # taken from CATIA and defined in Roskam VI page 467 in radians
 
@@ -75,10 +75,10 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
         np.tan(PHI_doubleprime_te / 2) - 0.137
     )  # NOT SURE IF IT IS MAX or LOCAL t/c
 
-    balance_ratio = np.sqrt(
-        (0.05 / (acd["Aileron"]["hinge_position"] - 0.05)) ** 2
-        - (6.31 / 2 / (acd["Aileron"]["hinge_position"] - 0.05) / 100) ** 2
-    )
+    # balance_ratio = np.sqrt(
+    #     (0.05 / (acd["Aileron"]["hinge_position"] - 0.05)) ** 2
+    #     - (6.31 / 2 / (acd["Aileron"]["hinge_position"] - 0.05) / 100) ** 2
+    # )
 
     c_h_alpha_bal_c_doubleprime_h_alpha = 0.96  # select from Roskam VI page 471 using CATIA and assuming ELLIPTIC nose
 
@@ -102,10 +102,10 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
 
     # Step 2: find the control derivative w.r.t Aileron deflection
 
-    RN = 7 * 10**6  # use the 10^7 line from Roskam
-    Y_90 = 1.272 / 100 * 100  # from CATIA
-    Y_99 = 0.199 / 100 * 100  # from CATIA
-    tan_half_TE = (Y_90 / 2 - Y_99 / 2) / 9
+    # RN = 7 * 10**6  # use the 10^7 line from Roskam
+    # Y_90 = 1.272 / 100 * 100  # from CATIA
+    # Y_99 = 0.199 / 100 * 100  # from CATIA
+    # tan_half_TE = (Y_90 / 2 - Y_99 / 2) / 9
 
     PHI_doubleprime_te = 5.237 / 180.0 * np.pi  # taken from CATIA and defined in Roskam VI page 467 in radians
 
@@ -129,9 +129,9 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
 
     eta_i = acd["Aileron"]["start"]
     eta_o = acd["Aileron"]["end"]
-    K_delta_eta_i = 2.43  # taken from Roskam VI page 485
-    K_delta_eta_o = 4.0  # taken from Roskam VI page 485
-    K_delta = (K_delta_eta_i * (1 - eta_i) - K_delta_eta_o * (1 - eta_o)) / (eta_o - eta_i)
+    # K_delta_eta_i = 2.43  # taken from Roskam VI page 485
+    # K_delta_eta_o = 4.0  # taken from Roskam VI page 485
+    # K_delta = (K_delta_eta_i * (1 - eta_i) - K_delta_eta_o * (1 - eta_o)) / (eta_o - eta_i)
 
     B2 = 1.0  # taken from Roskam VI page 483 based on cf/c and cb/cf
     alpha_sigma = 0.37  # taken from Roskam VI page 230 based on the aileron deflection angle
