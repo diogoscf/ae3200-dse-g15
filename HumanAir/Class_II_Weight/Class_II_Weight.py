@@ -213,7 +213,7 @@ class Class_II_Weight:
 
         results["USAF"] = 0.054 * self.l_s_m**0.501 * (self.W_L * self.n_ult_l) ** 0.684
 
-	#  Can easily change below between Cessna twice or Cessna and USAF
+        #  Can easily change below between Cessna twice or Cessna and USAF
         results["Average"] = np.average([results["Cessna"], results["Cessna"]])
 
         self.l_s_n = ft_to_m(self.l_s_n)
