@@ -63,13 +63,48 @@
         "h_aisle": 1.524,
         "w_motor": 0.54,
         "l_motor": 0.176,
-        "t_spar_tip": 0.010,
-        "t_spar_root": 0.025,
-        "t_skin_wing": 0.007,
-        "spar_pos": [0.15, 0.5],
-        "wing_stringer_area_m": 1e-4,
+        "t_spar_tip": 0.0005,
+        "t_spar_root": 0.0005,
+        "t_skin_wing": 0.0011500427076044577,
+        "spar_pos": [
+            0.15,
+            0.5
+        ],
+        "wing_stringer_area_m": 0.0001,
+        "wing_stringer_MOI_m4": 6.54e-09,
+        "wing_rib_pos": [
+            0.05,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.35,
+            0.4,
+            0.45,
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.72,
+            0.79,
+            0.86,
+            0.93,
+            1
+        ],
         "strut_loc_b/2": 0.4,
         "strut_loc_MAC": 0.25,
+        "strut_section_area_m2": 5e-05,
+        "wing_stringer_number": [
+            34,
+            34,
+            5
+        ],
+        "stringer_sections": [
+            0.4,
+            0.3,
+            0.3
+        ],
         "wingbox_material": "Aluminium"
     },
     "Aero": {
@@ -197,8 +232,8 @@
     "Materials": {
         "Aluminium": {
             "rho": 2710,
-            "E": 68e9,
-            "sigma_y": 40e6
+            "E": 68900000000.0,
+            "sigma_y": 276000000.0
         }
     }
 }

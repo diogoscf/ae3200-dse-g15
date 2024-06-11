@@ -8,6 +8,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cm_data_wing, Cdi_data_wing
 from HumanAir.StructuralAnalysis.WingStructure import WingStructure
+
+# from HumanAir.StructuralAnalysis.optimisation import get_deflection
 from HumanAir.isa import isa
 
 # from HumanAir.unit_conversions import G
@@ -23,17 +25,30 @@ from HumanAir.isa import isa
 #     return chord_length, y
 
 
-def force_distribution(AoA, altitude, V, Cl_DATA, Cdi_DATA, ac_data=aircraft_data):
-    Sw = ac_data["Aero"]["S_Wing"]
+def get_deflection(MOI, y, M, E):
+    integrand = M / MOI
+    # print(np.sum(I), np.sum(M), np.sum(integrand))
+    theta = -1 / E * integrate.cumulative_trapezoid(integrand, y, initial=0)
+    v = -integrate.cumulative_trapezoid(theta, y, initial=0)
+    return v
+
+
+def force_distribution(AoA, altitude, V, chord_dist, Cl_DATA, Cdi_DATA):
     rho = isa(altitude)[2]
     Cl = np.array(Cl_DATA[AoA]["coefficient"])
     Cdi = np.array(Cdi_DATA[AoA]["coefficient"])
-    L = Cl * 0.5 * rho * V**2 * Sw  # [N/m]
-    D = Cdi * 0.5 * rho * V**2 * Sw  # [N/m]
+    L = Cl * 0.5 * rho * V**2 * chord_dist  # [N/m]
+    D = Cdi * 0.5 * rho * V**2 * chord_dist  # [N/m]
     # plt.plot(Cl_DATA[AoA]["y_span"], L, label="Lift")
     # plt.ylim(0, np.max(L) * 1.1)
     # plt.show()
     return L, D
+
+
+def moment_distribution(AoA, altitude, V, chord_dist, Cm_DATA, ac_data=aircraft_data):
+    MAC = ac_data["Aero"]["MAC_wing"]
+    M = np.array(Cm_DATA[AoA]["coefficient"]) * 0.5 * isa(altitude)[2] * V**2 * chord_dist * MAC  # [Nm/m]
+    return M
 
 
 def weight_distribution(c, ac_data=aircraft_data):
@@ -65,13 +80,6 @@ def weight_distribution(c, ac_data=aircraft_data):
         (nodes_half_wing - n_before_strut, nodes_half_wing + n_before_strut + extra),
         c_between_struts,
     )
-
-
-def moment_distribution(V, altitude, Cm_DATA, AoA, ac_data=aircraft_data):
-    Sw = ac_data["Aero"]["S_Wing"]
-    MAC = ac_data["Aero"]["MAC_wing"]
-    M = np.array(Cm_DATA[AoA]["coefficient"]) * 0.5 * isa(altitude)[2] * V**2 * Sw * MAC  # M_cruise
-    return M
 
 
 # axial forces distribution - during ground - so only the ends (0.6L)
@@ -108,110 +116,52 @@ def read_points_from_load_dist(L_cruise, W_cruise, W_fuel, idxs):
     return a, b, c, d, e, f
 
 
-def strut_force(
-    E,
-    halfspan,
-    h_fuselage,
-    v_max,
-    t_skin,
-    h_spar1_MAC,
-    h_spar2_MAC,
-    x_spar1_MAC,
-    x_spar2_MAC,
-    load_factor,
-    lift,
-    weight_wing_tot,
-    weight_fuel,
-    idxs,
-):
-    # give different a,b,d,e,f for different load cases
-    a, b, c, d, e, f = read_points_from_load_dist(lift * load_factor, weight_wing_tot, weight_fuel, idxs)
-    wa0 = a - b
-    wb = b
-    wc = c
-    wd0 = d - c
-    we = e - c
-    wf0 = f - e
+def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=100, tol=1e-6, ac_data=aircraft_data):
+    P = 0
+    strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
+    nodes_half_wing = len(y_points_halfspan)
+    n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
 
-    # compatibility equation:
-    #        vmax = vA + vB - vC - vD - vE - v_strut
+    Mx = -integrate.cumulative_trapezoid(np.flip(Vz_orig * y_points_halfspan), y_points_halfspan, initial=0)
+    Mx = Mx[::-1]
 
-    # inertia
-    havg_spar_MAC = (h_spar1_MAC + h_spar2_MAC) / 2
-    MOI = (
-        1 / 12 * (x_spar2_MAC - x_spar1_MAC) * havg_spar_MAC**3
-        - 1 / 12 * (x_spar2_MAC - x_spar1_MAC - 2 * t_skin) * (havg_spar_MAC - 2 * t_skin) ** 3
-    )
-    # I = I*10e-12 #[m^4] if arguments are given in mm
+    h_fus = ac_data["Geometry"]["fus_height_m"]
+    halfspan = ac_data["Aero"]["b_Wing"] / 2
+    l_strut = np.sqrt((halfspan * strut_loc) ** 2 + h_fus**2)
+    theta_strut = np.arctan(h_fus / (halfspan * strut_loc))
 
-    # deflections
-    vA = wa0 * halfspan**4 / (30 * E * MOI)
-    vB = wb * halfspan**4 / (8 * E * MOI)
-    vC = wc * halfspan**4 / (8 * E * MOI)
-    vD = wd0 * (0.6 * halfspan) ** 4 / (30 * E * MOI) + (0.4 * halfspan) * (0.6 * halfspan) ** 3 / (24 * E * MOI)
-    vE = we * (0.4 * halfspan) ** 4 / (8 * E * MOI) + (0.6 * halfspan) * we * (0.4 * halfspan) ** 3 / (6 * E * MOI)
-    vF = wf0 * (0.4 * halfspan) ** 4 / (30 * E * MOI) + (0.6 * halfspan) * wf0 * (0.4 * halfspan) ** 3 / (24 * E * MOI)
-    v_strut_factor = (0.4 * halfspan) ** 3 / (3 * E * MOI) + (0.6 * halfspan) * (0.4 * halfspan) ** 2 / (2 * E * MOI)
+    E = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["E"]
+    A_strut = ac_data["Geometry"]["strut_section_area_m2"]
 
-    # Strut Force
-    Vz_strut = (v_max - vA - vB + vC + vD + vE + vF) / v_strut_factor
-    angle = np.arctan(h_fuselage / (0.4 * halfspan))
-    Vy_strut = Vz_strut / np.tan(angle)  # noqa: F841
+    for _ in range(max_iter):
+        # deflection at 40% of halfspan
+        v = get_deflection(MOI, y_points_halfspan, Mx, E)
+        v_40 = v[n_before_strut]
 
-    # return Vz_strut, Vy_strut
-    return 0, 0
+        # deflection at an angle
+        delta = v_40 / np.sin(theta_strut)
 
+        # strut force
+        P_new = delta * A_strut * E / l_strut
 
-def strut_force_from_ac_data(
-    lift, weight_wing_tot, weight_fuel, idxs, wing_structure, v_max, load_factor=1, ac_data=aircraft_data
-):
-    material = ac_data["Geometry"]["wingbox_material"]
-    E = ac_data["Materials"][material]["E"]
-    span = ac_data["Aero"]["b_Wing"]
-    halfspan = span / 2
-    h_fuselage = ac_data["Geometry"]["fus_height_m"]
-    t_skin = ac_data["Geometry"]["t_skin_wing"]
-    MAC = ac_data["Aero"]["MAC_wing"]
+        if abs(P_new - P) < tol:
+            P = P_new
+            break
 
-    taper_ratio = ac_data["Aero"]["Taper_Wing"]
-    MAC_y = (span / 6) * (1 + 2 * taper_ratio) / (1 + taper_ratio)
-    MAC_y_idx = np.rint(MAC_y / halfspan).astype(int) * (wing_structure.nodes // 2)
+        # update
+        P = P_new
 
-    _, h_s1s2 = wing_structure.h_s1s2()
-    h_15c, h_50c = h_s1s2[:, 0], h_s1s2[:, 1]
+        V_strut = P
+        Vz_strut = P * np.cos(theta_strut)
+        Vy_strut = P * np.sin(theta_strut)
 
-    h_spar1_MAC = h_15c[(wing_structure.nodes // 2) :][MAC_y_idx]  # TODO
-    h_spar2_MAC = h_50c[(wing_structure.nodes // 2) :][MAC_y_idx]  # TODO
+        Vz = Vz_orig.copy()
+        Vz[:n_before_strut] += Vz_strut  # [N]
 
-    x_spar1_MAC = 0.15 * MAC  # x_spar1_MAC = ac_data["Geometry"]["x_spar1_MAC"]
-    x_spar2_MAC = 0.5 * MAC  # x_spar2_MAC = ac_data["Geometry"]["x_spar2_MAC"]
+        Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
+        Mx = Mx[::-1]
 
-    return strut_force(
-        E,
-        halfspan,
-        h_fuselage,
-        v_max,
-        t_skin,
-        h_spar1_MAC,
-        h_spar2_MAC,
-        x_spar1_MAC,
-        x_spar2_MAC,
-        load_factor,
-        lift,
-        weight_wing_tot,
-        weight_fuel,
-        idxs,
-    )
-
-
-# def strut_shear_result():
-#     return 6670
-
-
-# def TestForces(Lcruise, W, Cl_DATA, AoA):
-#     dy = (Cl_DATA[AoA]["y_span"][-1] - Cl_DATA[AoA]["y_span"][0]) / nodes
-#     print("Ltot = ", np.trapz(Lcruise / 9.81, Cl_DATA[AoA]["y_span"]), " kg")
-#     print("Wtot = ", np.trapz(W / 9.81, Cl_DATA[AoA]["y_span"]), " kg")
+    return Vz_strut, Vy_strut, V_strut
 
 
 def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1, vmax=0):
@@ -219,9 +169,9 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1,
     nodes = wing_structure.nodes
     chord_dist = wing_structure.chord_distribution
 
-    W, W_fuel, idxs, _ = weight_distribution(chord_dist, ac_data=aircraft_data)
+    W, *_ = weight_distribution(chord_dist, ac_data=ac_data)
     nodes_half_wing = nodes // 2
-    b_half = ac_data["Aero"]["b_Wing"] / 2
+    # b_half = ac_data["Aero"]["b_Wing"] / 2
     sweep = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
 
     # X_forces = -(D * (load_factor**2)) * b_half / (nodes_half_wing)  # drag and thrust act on the x axis (thrust = 0)
@@ -231,15 +181,19 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1,
     )
     Vx = Vx[::-1]
     # Z_force_distribution = W - (L * (b_half / (nodes_half_wing))) * load_factor
-    Z_force_distribution = W * (nodes_half_wing / b_half) - L * load_factor
+    Z_force_distribution = W - L * load_factor
     Vz = integrate.cumulative_trapezoid(
         np.flip(Z_force_distribution[nodes_half_wing:]), y_points[nodes_half_wing:], initial=0
     )
     Vz = Vz[::-1]
 
-    # TODO: this may be wrong (the L non-dimensional crap)
-    strut_Vz, strut_Vy = strut_force_from_ac_data(
-        L * (b_half / (nodes_half_wing)), W, W_fuel, idxs, wing_structure, vmax, load_factor, ac_data
+    strut_Vz, strut_Vy, _ = strut_force(
+        wing_structure.Ixx(ac_data["Geometry"]["wing_stringer_number"][0])[nodes_half_wing:],
+        y_points[nodes_half_wing:],
+        Vz,
+        max_iter=100,
+        tol=1e-6,
+        ac_data=ac_data,
     )
 
     # Vy - axial force diagram because of the strut
@@ -290,6 +244,9 @@ def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
     nodes_data = len(Cl_data[0]["coefficient"])
     ypts_orig = np.linspace(Cl_data[0]["y_span"][0], Cl_data[0]["y_span"][-1], nodes_data)
 
+    # plt.plot(ypts_orig, Cl_data[0.0]["coefficient"])
+    # plt.show()
+
     for angle in Cl_data.keys():
         Cl_data[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cl_data[angle]["coefficient"])
         Cm_data[angle]["coefficient"] = np.interp(y_points, ypts_orig, Cm_data[angle]["coefficient"])
@@ -304,7 +261,7 @@ def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
 
 if __name__ == "__main__":
     # Data
-    AoA = -6
+    AoA = 0
     # Sw = 39  # [m2]
     # taper_ratio = 0.4
     # Vcruise = 60  # [m/s]
@@ -315,7 +272,7 @@ if __name__ == "__main__":
     nl2 = -1.52
     # sweep = 0.157
     altitude = 3000  # [m]
-    nodes = 41
+    nodes = 401
 
     wing_structure_data = WingStructure(aircraft_data, airfoil_shape, nodes)
     chord_dist = wing_structure_data.chord_distribution
@@ -328,11 +285,11 @@ if __name__ == "__main__":
     # Cdi_DATA = np.interp(y_points, ypts_orig, Cdi_DATA[AoA]["coefficient"])
 
     L_cruise, D_cruise = force_distribution(
-        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], Cl_DATA=Cl_DATA, Cdi_DATA=Cdi_DATA
+        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], chord_dist, Cl_DATA=Cl_DATA, Cdi_DATA=Cdi_DATA
     )
 
     M_cruise = moment_distribution(
-        aircraft_data["Performance"]["Vc_m/s"], altitude, Cm_DATA, AoA, ac_data=aircraft_data
+        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], chord_dist, Cm_DATA, ac_data=aircraft_data
     )
 
     # print(np.sum(L_cruise))
