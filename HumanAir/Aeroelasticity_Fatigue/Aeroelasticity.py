@@ -9,12 +9,17 @@ from scipy.linalg import eig
 from sympy import symbols, Matrix, det, Poly
 
 
+
+
 """
 NOTE: 
 - We only analyze the part of the wing after the strut, so that we only have to deal with a cantilever beam. We thus argue the strut blocks all vibration from occurring 
   between it and the fuselage. So the typical section is at 70% of the wing span after the strut. 
 
-- Nevermind, it is better not to do this, consider the full wing, and get conservative results :). 
+- Nevermind, it is better not to do this, consider the full wing, and get conservative results :). If we fail due to flutter, we can revise based on this, but untill then 
+  just stay conservative.
+
+- The typical section is the airfoil cross-section of the wing at 70% of the wing span.
 
 """
 
@@ -29,7 +34,7 @@ def Divergence(K_theta, CL_alpha, a, B, rho):
     K_theta : float
         The torsional stiffness of the full 3D wing from root to typical section.
     CL_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil. non-dimensionalized by the half-chord length.
     B : float
@@ -55,11 +60,11 @@ def Reversal(h, K_theta, CL_alpha, CM_ac_beta, B, rho):
     Parameters
     ----------
     h : float
-        The distance from the half-chord  to the hinge of the aileron        
+        The distance from the half-chord to the hinge of the aileron        
     K_theta : float
         The torsional stiffness of the full 3D wing from root to typical section.
     CL_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     CM_ac_beta : float
         The change in pitching moment about the typical section aerodynamic section with deflection of the control surface (aileron).
     B : float
@@ -98,14 +103,14 @@ def rho_altitude(rho):
 
 
 
-def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr):
+def flutter_analysis(m, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr):
     """
     Calculate the flutter speed of an aircraft for various configurations (m_arr) and operating regimes (rho_arr).
 
     Parameters
     ----------
-    m_arr : numpy array
-        Array containing all aircraft (mass) configurations you would like to analyse aircraft flutter for (fully loaded, empty, etc.)
+    m : float
+        Mass of the airfoil = mass of the wing per unit span (divide the total mass of the wing by the wingspan to get this value).
     I_theta : float
         The torsional moment of inertia of the typical section about the elastic axis. 
     S_theta : float
@@ -117,7 +122,7 @@ def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, 
     K_theta : float
         The torsional stiffness of the full 3D wing from root to typical section.
     C_L_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     S : float
         The wing surface area.
     a : float
@@ -137,78 +142,76 @@ def flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, 
     """
     V_flut_dict = {}
     index = 0
-    for m in m_arr:
-        for rho in rho_arr:
-            # Verbose
-            if index % 10 == 0:
-                print(f"Analysed {index}/{len(m_arr) * len(rho_arr)} configurations.")
+    for rho in rho_arr:
+        # Verbose
+        if index % 2 == 0:
+            print(f"Analysed {index}/{len(rho_arr)} configurations.")
 
-            # Define matrices
-            M_s = np.array([[m, S_theta],
-            [S_theta, I_theta]]) 
-            K_s = np.array([[K_h, 0],
-            [0, K_theta]])
-            K_a = np.array([[0, -S*C_L_alpha],
-            [0, S*C_L_alpha*(.5+a)*B]])
-            C_a = np.array([[-S*C_L_alpha, 0], 
-            [S*C_L_alpha*(0.5*a)*B, 0]])
-            # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*B], 
-            # [S*C_L_alpha*(0.5*a)*B, S*(1-a)*C_L_alpha*B**2*(0.5+a) + S*B**2*C_L_alpha*a*(0.5-a)]])
+        # Define matrices
+        M_s = np.array([[m, S_theta],
+        [S_theta, I_theta]]) 
+        K_s = np.array([[K_h, 0],
+        [0, K_theta]])
+        K_a = np.array([[0, -S*C_L_alpha],
+        [0, S*C_L_alpha*(.5+a)*B]])
+        C_a = np.array([[-S*C_L_alpha, 0], 
+        [S*C_L_alpha*(0.5*a)*B, 0]])
+        # C_a = np.array([[-S*C_L_alpha, -S*C_L_alpha*(1-a)*B], 
+        # [S*C_L_alpha*(0.5*a)*B, S*(1-a)*C_L_alpha*B**2*(0.5+a) + S*B**2*C_L_alpha*a*(0.5-a)]])
 
-            # Define the symbolic variable
-            ps = symbols('ps')
+        # Define the symbolic variable
+        ps = symbols('ps')
 
-            # Calculate eigenfrequencies with changing flow velocity
-            q = 1/2 * rho * V_arr**2
-            V = V_arr
-            p_save = []
+        # Calculate eigenfrequencies with changing flow velocity
+        q = 1/2 * rho * V_arr**2
+        V = V_arr
+        p_save = []
 
-            for i in range(len(q)):
-                Kae = Matrix(K_s - q[i] * K_a)
-                A = ps**2 * Matrix(M_s) - ps * q[i] / V[i] * Matrix(C_a) + Kae
-                DA = det(A)
-                characteristic_equation = Poly(DA, ps).all_coeffs()
-                p = np.roots([float(coeff) for coeff in characteristic_equation])
-                # The first two eigenvalues are complex conjugates, and so are the last two eigenvalues in the 4 eigenvalue array p. 
-                # For flutter analysis we are only interested in when the real part of the eigenvalue becomes positive, and when the imaginary parts get close together. 
-                # The metric of becoming real is not affected by complex conjugates, and it does not matter whether the imaginary parts come close together when negative or
-                # when positive. All that is important is that we select the same conjugates (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value. 
-                # We can therefore discard the second and fourth eigenvalues in the array p (which are the conjugates of p[0] and p[2] respectively).
-                p_save.append([p[0], p[2]])
-            # Convert p_save to a numpy array for easier manipulation
-            p_save = np.array(p_save)
+        for i in range(len(q)):
+            Kae = Matrix(K_s - q[i] * K_a)
+            A = ps**2 * Matrix(M_s) - ps * q[i] / V[i] * Matrix(C_a) + Kae
+            DA = det(A)
+            characteristic_equation = Poly(DA, ps).all_coeffs()
+            p = np.roots([float(coeff) for coeff in characteristic_equation])
+            # The first two eigenvalues are complex conjugates, and so are the last two eigenvalues in the 4 eigenvalue array p. 
+            # For flutter analysis we are only interested in when the real part of the eigenvalue becomes positive, and when the imaginary parts get close together. 
+            # The metric of becoming real is not affected by complex conjugates, and it does not matter whether the imaginary parts come close together when negative or
+            # when positive. All that is important is that we select the same conjugates (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value. 
+            # We can therefore discard the second and fourth eigenvalues in the array p (which are the conjugates of p[0] and p[2] respectively).
+            p_save.append([p[0], p[2]])
+        # Convert p_save to a numpy array for easier manipulation
+        p_save = np.array(p_save)
 
-            # Separate real parts of p_save, as these drive the flutter speed
-            real_p_save = np.real(p_save)
+        # Separate real parts of p_save, as these drive the flutter speed
+        real_p_save = np.real(p_save)
 
-            # Compute the point where the real part of the eigenvalue becomes positive for V != 0
-            V_flut = 0
-            for i in range(len(real_p_save)):
-                V_flut1 = np.inf
-                V_flut2 = np.inf
-                if real_p_save[i][0] > 0 and V[i] > 0.1:  # 0.1 is arbitrary to avoid the first point where the real part is positive
-                                                          # If one of the eigenvalues really instantly gets a positive real part, the np.round(x, 0) function i use at the end
-                                                          # accounts for this and rounds the V_flut back down to V_flut = 0, which it should be. However, in case the eigenvalue
-                                                          # does not get positive real part instantly and just starts at 0 (which the program interperets as positive), V_flut will  
-                                                          # not be set = 0 as well. 
-                                                          # I now realize i also could have just said real_p_save[i][0]>0.01, but i think my method is more precise (what if 0.005, 
-                                                          # my method would catch this instantly).
-                    V_flut1 = V[i]
-                    break
-                if real_p_save[i][1] > 0 and V[i] > 0.1: # 0.1 is arbitrary to avoid the first point where the real part is positive
-                    V_flut2 = V[i]
-                    break
-            if V_flut1 != 0 or V_flut2 != 0:
-                V_flut = min(V_flut1, V_flut2)
-            
-            # Store Results
-            V_flut_dict[index] = {
-            "V_flut [m/s]": V_flut, 
-            "mass configuration [kg]": m,
-            "rho [kg/m^3]": rho}
+        # Compute the point where the real part of the eigenvalue becomes positive for V != 0
+        V_flut = 0
+        for i in range(len(real_p_save)):
+            V_flut1 = np.inf
+            V_flut2 = np.inf
+            if real_p_save[i][0] > 0 and V[i] > 0.1:  # 0.1 is arbitrary to avoid the first point where the real part is positive
+                                                        # If one of the eigenvalues really instantly gets a positive real part, the np.round(x, 0) function i use at the end
+                                                        # accounts for this and rounds the V_flut back down to V_flut = 0, which it should be. However, in case the eigenvalue
+                                                        # does not get positive real part instantly and just starts at 0 (which the program interperets as positive), V_flut will  
+                                                        # not be set = 0 as well. 
+                                                        # I now realize i also could have just said real_p_save[i][0]>0.01, but i think my method is more precise (what if 0.005, 
+                                                        # my method would catch this instantly).
+                V_flut1 = V[i]
+                break
+            if real_p_save[i][1] > 0 and V[i] > 0.1: # 0.1 is arbitrary to avoid the first point where the real part is positive
+                V_flut2 = V[i]
+                break
+        if V_flut1 != 0 or V_flut2 != 0:
+            V_flut = min(V_flut1, V_flut2)
+        
+        # Store Results
+        V_flut_dict[index] = {
+        "V_flut [m/s]": V_flut, 
+        "rho [kg/m^3]": rho}
 
-            # Increment counter
-            index += 1
+        # Increment counter
+        index += 1
             
     # Find the configuration with the lowest flutter speed
     V_flut_min = np.inf
@@ -230,7 +233,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     Parameters
     ----------
     m : float
-        The mass of the aircraft wing.
+        Mass of the airfoil = mass of the wing per unit span (divide the total mass of the wing by the wingspan to get this value).
     I_theta : float
         The torsional moment of inertia of the typical section about the elastic axis.
     S_theta : float
@@ -242,7 +245,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     K_theta : float
         The torsional stiffness of the full 3D wing from root to typical section.
     C_L_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     S : float
         The wing surface area.
     a : float
@@ -365,7 +368,7 @@ def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, alpha0, C_M_AC):
     S : float
         The wing surface area.
     C_L_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
     B : float
@@ -444,7 +447,7 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, W, C_M_AC
     S : float
         The wing surface area.
     C_L_alpha : float
-        The lift curve slope of the full 3D wing wing.
+        The lift curve slope of the typical section airfoil.
     a : float
         Distance from half-chord to the elastic axis of the typical section airfoil, non-dimensionalized by the half-chord length.
     B : float
@@ -452,7 +455,7 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, W, C_M_AC
     q : float
         The dynamic pressure at which you would like to analyze the aeroelastic deformation of the wing.
     W : float
-        The weight of the wing.
+        The weight of the total aircraft in [N]
     C_M_AC : float
         The pitching moment coefficient about the aerodynamic center of the typical section.
 
@@ -581,7 +584,6 @@ if __name__ == "__main__":
     if analyze == "flutter":
         # Mass Parameters
         m = 1.567 + 0
-        m_arr = np.linspace(m*0.8, m*1.2, 10)
         I_theta = 0.01347
         S_theta = 0.08587
 
@@ -610,7 +612,7 @@ if __name__ == "__main__":
         q = 1/2 * rho * V**2
         
         # flutter_v2(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, b, V_arr)
-        Identifier, V_flut_dict = flutter_analysis(m_arr, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr)
+        Identifier, V_flut_dict = flutter_analysis(m, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a, B, V_arr)
         
         # If no flutter: 
         if Identifier == None: 
@@ -624,9 +626,8 @@ if __name__ == "__main__":
             print("########################################################################################")
             print("rho: ", V_flut_dict[Identifier]["rho [kg/m^3]"])
             print("Altitude: ", rho_altitude(V_flut_dict[Identifier]["rho [kg/m^3]"]))
-            print("Mass Configuration: ", V_flut_dict[Identifier]["mass configuration [kg]"])
             print("########################################################################################")
-            flutter_diagram(V_flut_dict[Identifier]["mass configuration [kg]"], I_theta, S_theta, V_flut_dict[Identifier]["rho [kg/m^3]"], K_h, K_theta, C_L_alpha, S, a, b, V_arr)
+            flutter_diagram(m, I_theta, S_theta, V_flut_dict[Identifier]["rho [kg/m^3]"], K_h, K_theta, C_L_alpha, S, a, B, V_arr)
 
     
     if analyze =="static aeroelasticity":
