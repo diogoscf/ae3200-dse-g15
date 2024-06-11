@@ -498,7 +498,6 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
 # iterate though lemac such that the x_lemac is larger than 3.2m and that the landing gear can fit with the batteries
 def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xcg_init=0.2, lemac_limit=3.2):
-
     # initialise the sizing parameter
     sizing = False
     bat_xcg = bat_xcg_init
@@ -506,7 +505,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
     # loop to get the optimised lemac and landing gear data with the batteries
     # in the right position and the lemac larger than 3.2m
     while not sizing:
-
         _, CGlist, xlemac, nose_check = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
 
         # check if the nose gear can be placed
@@ -527,7 +525,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
                 bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
                 and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
-
                 # if the sizing is correct, break the loop and return the optimised xlemac
                 # and update the xcg of the batteries
                 sizing = True
@@ -563,11 +560,11 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4):
     # get the horizontal stabiliser data from the aircraft data
     AR_h = ac_data["Aero"]["AR_HS"]
     taper_h = ac_data["Aero"]["Taper_HS"]
-    c_root_h = ac_data["Aero"]["c_root_HS"]
+    # c_root_h = ac_data["Aero"]["c_root_HS"]
     b_h = ac_data["Aero"]["b_h"]
 
     # calculate the leading edge angle of the horizontal stabiliser and the x lemac
-    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage * c_root_h) * (1 - taper_h) / (1 + taper_h))
+    tan_LE_sweep = tan(0) - 4 / AR_h * ((-hinge_chord_percentage) * (1 - taper_h) / (1 + taper_h))
 
     # calculate where the mac of the horizontal stabiliser wrt the leading edge
     y_mac_h = b_h / 6 * (1 + 2 * taper_h) / (1 + taper_h)
@@ -581,7 +578,6 @@ def calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4):
     # update the aircraft data with the new lh
 
     ac_data["Stability"]["QCW_to_QCh"] = QCH_mac - QCW_mac
-
     return QCH_mac - QCW_mac
 
 
