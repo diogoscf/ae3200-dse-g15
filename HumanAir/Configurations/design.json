@@ -143,7 +143,10 @@
         "CL_delta_a": 8.362375397348743e-05,
         "CL_P": -0.0422333591307271,
         "turn_time": 6.29,
-        "hinge_position": 0.3
+        "hinge_position": 0.3,
+        "Ch_0": 0.035,
+        "C_h_alpha": -0.3781,
+        "C_h_delta": -0.726
     },
     "Performance": {
         "W/S_N/m2": 859.8001,
