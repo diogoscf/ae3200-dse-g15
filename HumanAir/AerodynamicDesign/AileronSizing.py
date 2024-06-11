@@ -138,7 +138,7 @@ def AileronDerivatives(acd=aircraft_data): # sizing method starting from p 466 R
     print(Ch_0, C_h_alpha, C_h_delta)
 
 
-def StickForce(acd = aircraft_data, alpha=0.0, delta=0.0, h=3000, V=60.0):
+def StickArm(acd = aircraft_data, alpha=0.0, delta=0.0, h=3000, V=60.0):
     alpha_rad = alpha * np.pi / 180.0
     delta_rad = delta * np.pi / 180.0
 
@@ -230,5 +230,5 @@ def AileronSizing(acd=aircraft_data):
 
 if __name__ == "__main__":
     #AileronDerivatives()
-    StickForce(acd=aircraft_data, alpha=0.0, delta=14.0,h=3000.0,V=60.0)
+    StickArm(acd=aircraft_data, alpha=0.0, delta=14.0,h=3000.0,V=60.0)
     #AileronSizing()
