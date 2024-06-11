@@ -69,7 +69,8 @@ def TailAero(l_H, acd=aircraft_data):
     deda = (
         (
             (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
-            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
+            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113)
+            * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
         )
         * acd["Aero"]["CLalpha"]
         / (pi * acd["Aero"]["AR"])
@@ -187,12 +188,10 @@ def StabControl(acd=aircraft_data):
 
 # negative values does not work because the nose gear will colapse, the begin value has to be larger than 0.05
 def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, step=10):
-
     # define the minimum value for Sh/S
     Sh_S_min = 10000
 
     for x_percentage in range(int(begin_value * 100), int(end_value * 100), step):
-
         # iterate such that the batteries and landing gear fits
         # print(x_percentage/100)
 
@@ -211,7 +210,6 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
 
         # loop to iterate for lh and find the optimal value with Sh
         while not lh_converged:
-
             # get the stability and control lines with the updated values
             StabSM, _, Control, Xcg, lh_sv = StabControl(acd=ac_datafile)
 

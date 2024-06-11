@@ -147,8 +147,6 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
     acd["Aileron"]["C_h_alpha"] = C_h_alpha
     acd["Aileron"]["C_h_delta"] = C_h_delta
 
-    print(Ch_0, C_h_alpha, C_h_delta)
-
 
 def StickArm(acd=aircraft_data, alpha=0.0, delta=0.0, h=3000, V=60.0):
     alpha_rad = alpha * np.pi / 180.0
@@ -183,14 +181,11 @@ def StickArm(acd=aircraft_data, alpha=0.0, delta=0.0, h=3000, V=60.0):
 
     acd["Aileron"]["chord_a"] = chord_a
     acd["Aileron"]["surface_a"] = surface_a
-    acd["Aileron"]["d_aileron"] = chord_a
+    acd["Aileron"]["d_aileron"] = d_aileron
     acd["Aileron"]["stick_arm"] = stick_arm
-
-    return acd
 
 
 def AileronSizing(acd=aircraft_data):
-
     # define slope of aileron effectiveness graph taken from ADSEE slides
     start_x = 0.2
     start_y = 0.4
@@ -204,7 +199,6 @@ def AileronSizing(acd=aircraft_data):
     design_found = False
 
     for pos in pos_lst:
-
         tau = slope * (pos - start_x) + start_y
 
         CL_delta_a = (

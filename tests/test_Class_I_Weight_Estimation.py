@@ -140,7 +140,6 @@ aircraft_data = {
 
 
 def test_Class_I_Weight_init():
-
     # Initialize the Class_I weight estimation object:
     class_I = WeightEstm(aircraft_data)
 

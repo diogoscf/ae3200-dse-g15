@@ -498,7 +498,6 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
 
 # iterate though lemac such that the x_lemac is larger than 3.2m and that the landing gear can fit with the batteries
 def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xcg_init=0.2, lemac_limit=3.2):
-
     # initialise the sizing parameter
     sizing = False
     bat_xcg = bat_xcg_init
@@ -506,7 +505,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
     # loop to get the optimised lemac and landing gear data with the batteries
     # in the right position and the lemac larger than 3.2m
     while not sizing:
-
         _, CGlist, xlemac, nose_check = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
 
         # check if the nose gear can be placed
@@ -527,7 +525,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
                 bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
                 and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
-
                 # if the sizing is correct, break the loop and return the optimised xlemac
                 # and update the xcg of the batteries
                 sizing = True

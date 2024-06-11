@@ -257,7 +257,8 @@ class Class_II_Weight:
         results["Cessna"] = 0.40 * self.W_F / self.K_fsp
         results["USAF"] = (
             2.49
-            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13) ** 1.21
+            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13)
+            ** 1.21
         )
         results["Torenbeek"] = 2 * (self.W_F / 5.87) ** 0.667
 
@@ -462,7 +463,6 @@ class Class_II_Weight:
 
     # iteration function between class I and class II
     def Iterarions_C2W(self, bat_percent):
-
         # set up the old MTOW and the new one for the iteration loop
         MTOW_new = 0
 
@@ -485,9 +485,18 @@ class Class_II_Weight:
             BatteryWeight = self.NewBatteryWeight(bat_percent)
             FuelWeight = self.NewFuelWeight(bat_percent)
 
-            mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h = (
-                aerodynamic_design(ac_data=self.dict)
-            )
+            (
+                mac_wing,
+                mac_HS,
+                c_root_wing,
+                c_tip_wing,
+                c_root_HS,
+                c_tip_HS,
+                S_Wing,
+                S_h,
+                b_Wing,
+                b_h,
+            ) = aerodynamic_design(ac_data=self.dict)
             self.dict["Aero"]["S_Wing"] = S_Wing
             self.dict["Aero"]["S_h"] = S_h
             self.dict["Aero"]["MAC_wing"] = mac_wing

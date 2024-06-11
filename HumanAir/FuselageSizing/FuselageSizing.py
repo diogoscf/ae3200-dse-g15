@@ -98,7 +98,6 @@ class FuselageSizing:
         return np.sqrt(l_lateral**2 + h**2)
 
     def l_battery(self, w_battery):
-
         return self.V_battery / (self.h_battery * w_battery)
 
     def w_battery(self, l_battery):
@@ -451,7 +450,6 @@ class FuselageSizing:
         return my_dict
 
     def below_position(self, s_gear, front_retractable=True):
-
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # print('w_battery', l_battery)
         # print('s_gear', s_gear)
