@@ -268,25 +268,21 @@ def get_critical_skin_buckling_stress(
         stress_critical_skin * t_skin * (b - 2 * we) + stress_crippling * (A_stringer + 2 * we * t_skin)
     ) / (t_skin * (b - 2 * we) + (A_stringer + 2 * we * t_skin))
 
-    # print(stress_crippling/1e6, sigma_yield/1e6, np.max(stress_critical_skin)/1e6, np.max(stress_critical)/1e6, np.min((b - 2 * we)), flush=True)
     stress_critical[(stress_critical_skin >= stress_crippling) | ((b - 2 * we) <= 0)] = stress_crippling
     # print(np.min(stress_critical)/1e6)
-    if np.min(stress_critical / 1e6) < 60:
-        idx = np.argmin(stress_critical)
-        # print(
-        #     "LOW VALUE:",
-        #     np.min(stress_critical / 1e6),
-        #     stress_critical_skin[idx] / 1e6,
-        #     stress_crippling / 1e6,
-        #     we,
-        #     b[idx],
-        #     (b - 2 * we)[idx],
-        #     (A_stringer + 2 * we * t_skin),
-        #     flush=True,
-        # )
-
-    # print(stress_crippling/1e6, sigma_yield/1e6, np.max(stress_critical_skin)/1e6, np.max(stress_critical)/1e6, flush=True)
-    # print("---")
+    # if np.min(stress_critical / 1e6) < 60:
+    #     idx = np.argmin(stress_critical)
+    #     # print(
+    #     #     "LOW VALUE:",
+    #     #     np.min(stress_critical / 1e6),
+    #     #     stress_critical_skin[idx] / 1e6,
+    #     #     stress_crippling / 1e6,
+    #     #     we,
+    #     #     b[idx],
+    #     #     (b - 2 * we)[idx],
+    #     #     (A_stringer + 2 * we * t_skin),
+    #     #     flush=True,
+    #     # )
 
     return stress_critical
 

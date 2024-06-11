@@ -54,7 +54,7 @@ class WingStructure:
         self.stringer_sections = ac_data["Geometry"]["wing_stringer_sections"]
 
         self.chord_distribution = self.calculate_chord_distribution()
-        self.spars = self.chord_distribution.reshape(-1,1) * self.spar_pos
+        self.spars = self.chord_distribution.reshape(-1, 1) * self.spar_pos
 
         # Assume spar thickness is uniformly decreasing from root to tip
         self.t_spar_dist = self.calc_spar_dist()
@@ -95,9 +95,9 @@ class WingStructure:
 
     def calc_spar_dist(self):
         return self.t1_spar + (self.t2_spar - self.t1_spar) / (self.cr - self.ct) * (self.chord_distribution - self.ct)
-    
+
     def calc_hmax_dist(self):
-        hmax_airfoil = np.max(self.airfoil_division[0][:,1])
+        hmax_airfoil = np.max(self.airfoil_division[0][:, 1])
         return hmax_airfoil * self.chord_distribution
 
     def calc_stringer_dist(self):
@@ -105,7 +105,7 @@ class WingStructure:
             raise ValueError("The number of stringer sections should be equal to the number of stringers per section")
 
         stringers = np.ones(self.nodes // 2)
-        stringer_section_ends = np.rint(np.cumsum(self.stringer_sections) * (len(stringers)//2)).astype(int)
+        stringer_section_ends = np.rint(np.cumsum(self.stringer_sections) * (len(stringers) // 2)).astype(int)
         stringer_section_starts = np.insert(stringer_section_ends[:-1], 0, 0)
         for i in range(len(self.stringer_sections)):
             start = stringer_section_starts[i]

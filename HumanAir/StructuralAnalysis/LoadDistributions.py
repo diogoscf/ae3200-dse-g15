@@ -165,8 +165,8 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_dat
             P_curr = P_next
             err_curr = err_next
             break
-        
-        if err_curr * err_next < 0: # found the bracket
+
+        if err_curr * err_next < 0:  # found the bracket
             step /= 2
             if abs(err_curr) < abs(err_next):
                 P_next = P_curr
