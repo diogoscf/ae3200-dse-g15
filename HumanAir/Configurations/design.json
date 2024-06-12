@@ -64,9 +64,9 @@
         "w_motor": 0.54,
         "l_motor": 0.176,
         "l_empty": 0.32,
-        "t_spar_tip": 0.005968679023148534,
-        "t_spar_root": 0.0005796329397553274,
-        "t_skin_wing": 0.002,
+        "t_spar_tip": 0.006944189477840185,
+        "t_spar_root": 0.005378972722462206,
+        "t_skin_wing": 0.001760777707100579,
         "spar_pos": [
             0.15,
             0.65
@@ -100,7 +100,7 @@
         "strut_section_area_m2": 0.005,
         "wing_stringer_number": [
             2,
-            58,
+            59,
             31
         ],
         "wing_stringer_sections": [
