@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import root_scalar, minimize_scalar
+from scipy.optimize import root_scalar#, minimize_scalar
 
 from helper import density
 import thrust_power
@@ -9,6 +9,8 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import aircraft_data
+
+import matplotlib.pyplot as plt
 
 # old span: 36.27269326905173
 #        "Fuel_engine_P_TO_W": 368000,
@@ -33,7 +35,7 @@ class Aircraft:
         # - variable pitch propeller (in takeoff run calculation)
             
         # settings
-        self.CL_climb_safetyfactor = 1.2 # from ADSEE I lecture 3
+        #self.CL_climb_safetyfactor = 1.2 # from ADSEE I lecture 3
         
         # performance
         self.V_cruise       = dat["Performance"]["Vc_m/s"]
@@ -45,8 +47,9 @@ class Aircraft:
         self.CD0_clean      = dat["Aero"]["CD0"]
         self.AR             = dat["Aero"]["AR"]
         self.e_clean        = dat["Aero"]["e"]
-        self.S              = dat["Aero"]["S_Wing"]
+        self.S_clean        = dat["Aero"]["S_Wing"]
         self.b              = dat["Aero"]["b_Wing"]
+        self.CL_Dmin        = 0.86
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
@@ -56,13 +59,30 @@ class Aircraft:
         self.CL_ground_land = dat["Flaps"]["CL_AoA0_takeoff"]
         self.number_of_engines = 1
         self.propeller_diameter = dat["Power_prop"]["Dp_m"]
-        self.spinner_diameter = 0.3
+        self.spinner_diameter = 0.3 # TODO: update
 
         self.wing_h_above_ground = dat["Geometry"]["fus_height_m"] + \
             dat["Landing_gear"]["Hs_m"] + dat["Landing_gear"]["Dwm_m"]/2
         
         self.retractable_gear = dat["Landing_gear"]["Retractable"]
+        
+        # if any of these statements are not true flap drag calculation has to
+        # be revised using roskam pt 6
+        if dat["Aero"]["QuarterChordSweep_Wing_deg"] != 0 or \
+            not np.isclose(dat["Flaps"]["cf_c"], 0.25) or \
+            dat["Flaps"]["deflection_takeoff"] != 45 or \
+            dat["Flaps"]["deflection_landing"] != 45 or \
+            dat["Flaps"]["flap_start"] > 0.3 or dat["Flaps"]["flap_start"] < 0.1 or \
+            dat["Flaps"]["flap_end"] > 0.75 or dat["Flaps"]["flap_end"] < 0.65 or \
+            not np.isclose(self.AR, 11):
+            raise Exception("Flap drag calculations need to be revised")
 
+        self.S_wf = dat["Flaps"]["Swf"]
+        self.Sprime_S_ld = dat["Flaps"]["Sprime_S_landing"]
+        self.Sprime_S_TO = dat["Flaps"]["Sprime_S_takeoff"]
+        self.flap_defl_TO = dat["Flaps"]["deflection_takeoff"]
+        self.flap_defl_ld = dat["Flaps"]["deflection_landing"]
+        
         # weights
         self.W_OE           = dat["CL2Weight"]["OEW"]
         self.W_MF           = dat["CL2Weight"]["Wfuel_N"] # max fuel weight
@@ -81,6 +101,8 @@ class Aircraft:
         self.takeoff_power_sealevel   = dat["Power_prop"]["Fuel_engine_P_TO_W"]
         self.eff_powertrain     = dat["Power_prop"]["eta_powertrain"]
         self.max_eff_prop       = dat["Power_prop"]["eta_p"]
+        self.fuel_cons_TO       = dat["Power_prop"]["Newton_fuel_per_W_per_S_TO"]
+        self.fuel_cons_flight   = dat["Power_prop"]["Newton_fuel_per_W_per_S_flight"]
         
         # calculated data
         self.LDmax = 0.5 * np.sqrt(np.pi*self.AR*self.e_clean/self.CD0_clean) # ruijgrok p107
@@ -92,6 +114,14 @@ class Aircraft:
         self.CD_L3D2max = 4 * self.CD0_clean # ruijgrok p107
         self.CL_L3D2max = (self.L3D2max * self.CD_L3D2max**2)**(1/3)
                 
+    def S(self, flaps="up"):
+        if flaps == "up":
+            return self.S_clean
+        elif flaps == "TO":
+            return self.S_clean * self.Sprime_S_TO
+        elif flaps == "land":
+            return self.S_clean * self.Sprime_S_ld
+    
     def CD(self, CL, gear="up", flaps="up", ground_effect_h=None): # this parabolic approximation is about accurate until CL=1 (ruijgrok p226)
         """ Parabolic estimation of C_D for given C_L for given gear/flaps conditions (default=clean) """
         
@@ -100,15 +130,6 @@ class Aircraft:
         CD0 = self.CD0_clean
         e = self.e_clean
         
-        if gear == "down" and self.retractable_gear:
-            CD0 += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
-            
-        if flaps == "TO":
-            CD0 += 0.003 # guess based on figure 9.25 nicolai p242
-            
-        elif flaps == "land":
-            CD0 += 0.0175 # guess based on figure 9.25 nicolai p242
-            
         # ground effect reduces induced drag, using nicolai section 10.2
         # (credit to Wieselberger for the equation), according to gudmundson
         # a good approximation for 0.033 < h_b < 0.25
@@ -117,8 +138,20 @@ class Aircraft:
             h_b = (self.wing_h_above_ground + ground_effect_h) / self.b
             sigma = (1 - 1.32 * h_b)/(1.05 + 7.4*h_b)
             sigma = max(sigma,0) # for around h_b > .75 sigma will become negative
+
+        if gear == "down" and self.retractable_gear:
+            CD0 += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
             
-        return CD0 + CL**2 / (np.pi * self.AR * e) * (1-sigma)
+        if flaps == "TO" or flaps == "land":
+            # roskam pt 6 p82 and further
+            delta_CL = self.CLmax_TO - self.CLmax_clean # assume constant delta CL (not according to Roskam but close enough)
+            delta_CDpro = 0.065 * self.S_wf/self.S_clean # induced drag
+            delta_CDind = 0.2**2 * delta_CL**2 # profile drag
+            delta_CDint = 0.4 * delta_CDpro # inteference drag
+
+            return CD0 + delta_CDint + delta_CDpro + (delta_CDind + (CL-self.CL_Dmin-delta_CL)**2 / (np.pi * self.AR * e)) * (1-sigma)
+        else:
+            return CD0 + (CL-self.CL_Dmin)**2 / (np.pi * self.AR * e) * (1-sigma)
     
     def P_shaft(self, h, dT, use_takeoff_power=False):
         return thrust_power.P_shaft(self, h, dT, use_takeoff_power=use_takeoff_power)
@@ -135,7 +168,7 @@ class Aircraft:
     def V_Dmin(self, W, h, dT):
         """ Calculates velocity corresponding with minimum drag in clean configuration """
         a = 1 / np.sqrt(self.CD0_clean * np.pi * self.AR * self.e_clean)
-        b = np.sqrt( W/self.S * 2/density(h, dT) * a ) # ruijgrok p224, same as V at (L/D)max
+        b = np.sqrt( W/self.S() * 2/density(h, dT) * a ) # ruijgrok p224, same as V at (L/D)max
         c = np.sqrt( W / (0.5 * density(h, dT) * self.S * self.CL_LDmax))
         if not np.isclose(b,c):
             print(f"V_D min error: {b:.2f} - {c:.2f}")
@@ -148,15 +181,15 @@ class Aircraft:
     def P_r_min(self, W, h, dT):
         """ Minimum possible value for  power required for given conditions in clean configuration,
             note that this assumes a small flight path angle. """
-        return W * np.sqrt(W/self.S * 2/density(h, dT) * 1/self.L3D2max) # ruijgrok p221
+        return W * np.sqrt(W/self.S() * 2/density(h, dT) * 1/self.L3D2max) # ruijgrok p221
         
     def RC_max(self, W, h, dT):
         """
         Calculates maximum possible climb rate for clean configuration in given
         condition. Assumes constant V.
         
-        Uses scipy.optimize.minimize_scalar to find the velocity with maximum
-        climb rate (to take into account non-constant power available.)
+        Returns 0 if the max climb rate is achieved with CL > 1, because then
+        the drag estimation is no longer accurate
 
         Parameters
         ----------
@@ -170,27 +203,44 @@ class Aircraft:
         Returns
         -------
         float
-            Maximum climb rate [m/s].
+            Maximum climb rate or 0 if CL>1 [m/s].
+        float
+            Speed at which max climb rate is reached or 0 if CL>1 [m/s]
 
         """
         rho = density(h, dT)
         
         min_speed = self.stall_speed(W, h, dT)
         max_speed = self.V_max(W, h, dT)
+        V_opt = 0
+        CL_opt = 0
+        RC_max = 0
         
-        rc_max = 0
-        
+        # rc_list = []
         def RC(V): # calculates climbrate *-1
-            CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
+            CL = W / (0.5 * rho * V**2 * self.S()) # small angle assumption, L=W cos(gamma) -> L=W
             CD = self.CD(CL)
-            P_r = V * (0.5 * rho * V**2 * self.S * CD)
+            P_r = V * (0.5 * rho * V**2 * self.S() * CD)
             P_a = self.P_a(h, dT, V=V)
-            return (P_a - P_r) / W
+            return (P_a - P_r) / W, CL
 
-        for V in np.arange(min_speed, max_speed+1, 1):
-            rc = RC(V)
-            if rc > rc_max:
-                rc_max = rc
+        # this iterates over V speeds in reverse order, as soon as CL becomes
+        # greater than 1 it stops and returns zero. This way this function
+        # return RC=0 V_opt=0 
+        for V in np.arange(min_speed, max_speed+1, 1)[::-1]:
+            rc, cl = RC(V)
+            # rc_list.append(rc)
+            if rc > RC_max:
+                V_opt = V
+                CL_opt = cl
+                RC_max = rc
+        print(f"RC CL = {CL_opt:.3f}")
+        # code for plotting RC-V graph
+        # plt.figure(figsize=(10,7))
+        # plt.plot(np.arange(min_speed, max_speed+1, 1), rc_list)
+        # plt.xlabel("Velocity [m/s]")
+        # plt.ylabel("Rate of climb")
+        # plt.show()
         
         # def RC(V): # calculates climbrate *-1
         #     CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
@@ -213,13 +263,13 @@ class Aircraft:
         #rc2 = (self.P_a(h, dT) - self.P_r_min(W, h, dT)) / W
         #print(f"RC {res.x:.2f} - {rc_max:.2f} - {rc2:.2f}")
         
-        return rc_max
+        return np.array([RC_max, V_opt])
     
     def climb_slope_max(self, W, h, dT, gear="up", flaps="up"):
         """
-        Calculates climb slope for given conditions, assuming
-        constant V. However because of the limitations of the drag calculations
-        it will keep the CL at 1 or below.
+        Calculates climb slope for given conditions, assuming constant V. The
+        drag is multiplied by 1.5 to account for high drag at high CL, however
+        this is not accurate at all.
         
         Note that CS23 requires the speed at which this is measured to be
         >= 1.2 * the stall speed in this config
@@ -244,30 +294,35 @@ class Aircraft:
         Returns
         -------
         float
-            Maximum climb slope ranging 0-100% [no unit].
+            Maximum climb slope ranging 0-100%.
 
         """
         rho = density(h, dT)
+        S = self.S(flaps=flaps)
         
-        #min_speed = 1.2 * self.stall_speed(W, h, dT, flaps=flaps) # according to CS23
-        min_speed = np.sqrt(W / (0.5 * rho * self.S * 1)) # CLmax = 1, beyond that no accurate results
+        min_speed = 1.2 * self.stall_speed(W, h, dT, flaps=flaps) # according to CS23
+        #min_speed = np.sqrt(W / (0.5 * rho * S * 1)) # CLmax = 1, beyond that no accurate results
         max_speed = self.V_max(W, h, dT)
-        
+
+        V_opt = 0
+        CL_opt = 0
         slope_max = 0
-        
+
         def slope(V): # calculates slope *-1
-            CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
-            CD = self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations
-            D = 0.5 * rho * V**2 * self.S * CD
+            CL = W / (0.5 * rho * V**2 * S) # small angle assumption, L=W cos(gamma) -> L=W
+            CD = 1.5*self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations, currently multiplied by 1.5 as adjustment
+            D = 0.5 * rho * V**2 * S * CD
             T = self.T(V, h, dT)
-            return (T - D) / W
+            return (T - D) / W, CL
 
         for V in np.arange(min_speed, max_speed+1, 1):
-            sl = slope(V)*100
+            sl, cl = slope(V)
             if sl > slope_max:
-                slope_max = sl
+                V_opt = V
+                CL_opt = cl
+                slope_max = sl*100
 
-                                
+        print(f"Slope CL = {CL_opt:.2f}; at speed {V_opt:.2f}; min speed {min_speed:.2f}")                        
         # def slope(V): # calculates slope *-1
         #     CL = min(1, W / (0.5 * rho * V**2 * self.S)) # small angle assumption, L=W cos(gamma) -> L=W
         #     CD = self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations
@@ -301,7 +356,7 @@ class Aircraft:
         # slope_max2 = 100* self.P_a(h, dT)/W * 1/np.sqrt(W/self.S * 2/density(h, dT) * 1/CL) - self.CD(CL, gear=gear, flaps=flaps)/CL
         # print(f"SL {res.x:.2f} - {slope_max:.2f} - {slope_max2:.2f}")
         
-        return slope_max
+        return np.array([slope_max, V_opt])
     
     def stall_speed(self, W, h, dT, flaps="up"):
         """
@@ -332,7 +387,7 @@ class Aircraft:
         elif flaps == "land":
             CL = self.CLmax_land
         
-        return np.sqrt(W / (0.5 * density(h, dT) * self.S * CL))
+        return np.sqrt(W / (0.5 * density(h, dT) * self.S(flaps=flaps) * CL))
     
     def V_max(self, W, h, dT, use_max_prop_eff=False):
         """
@@ -368,9 +423,9 @@ class Aircraft:
         def diff(V): # returns difference between power available and power required
             if type(V) is not np.float64:
                 V = V[0]
-            CL = W / (0.5 * rho * self.S * V**2)
+            CL = W / (0.5 * rho * self.S() * V**2)
             CD = self.CD(CL)
-            D = 0.5 * rho * self.S * CD * V**2
+            D = 0.5 * rho * self.S() * CD * V**2
             if use_max_prop_eff:
                 return self.P_a(h, dT) - D*V
             else:
@@ -405,8 +460,8 @@ class Aircraft:
             Power setting [0-1 and >1 if impossible].
 
         """
-        CL = W / (0.5 * density(h, dT) * V**2 * self.S)
-        D = 0.5 * density(h, dT) * V**2 * self.S * self.CD(CL)
+        CL = W / (0.5 * density(h, dT) * V**2 * self.S())
+        D = 0.5 * density(h, dT) * V**2 * self.S() * self.CD(CL)
         
         if CL > 1: return 0
         

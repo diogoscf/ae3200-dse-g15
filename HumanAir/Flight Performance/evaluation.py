@@ -5,51 +5,67 @@ import matplotlib.pyplot as plt
 
 def plot_variation():
     
-    # ***** design *****
-    TORA        = 500
-    elevation   = 750
-    temp_offset = 18
-    slope       = 0
-    surface     = "grass"
-    
-    # ***** aibai *****
-    TORA        = 415
-    elevation   = 2060
-    temp_offset = 25
-    slope       = -11
-    surface     = "grass"
-    
-    # ***** nomane *****
-    TORA        = 485
-    elevation   = 1810
-    temp_offset = 23
-    slope       = 0
-    surface     = "grass"
-    
-    acf = aircraft.Aircraft()
-    W_list = np.linspace(acf.W_OE, acf.W_MTO, 25)
-    
-    plt.figure(figsize=(8,5))
-    
-    for S in np.arange(20, 38, step=2):
+    for i in [1,2,3,4,5]:
+        if i == 1:
+            # ***** design *****
+            TORA        = 500
+            elevation   = 750
+            temp_offset = 18
+            slope       = 0
+            surface     = "grass"
+        elif i == 2:
+            # ***** aibai *****
+            TORA        = 415
+            elevation   = 2060
+            temp_offset = 25
+            slope       = -11
+            surface     = "grass"
+        elif i == 3:
+            # ***** nomane *****
+            TORA        = 485
+            elevation   = 1810
+            temp_offset = 23
+            slope       = 0
+            surface     = "grass"
+        if i == 4:
+            # **** sea level *****
+            TORA        = 500
+            elevation   = 0
+            temp_offset = 0
+            slope       = 0
+            surface     = "grass"
+        if i == 5:
+            # **** nairobi *****
+            TORA        = 500
+            elevation   = 1800
+            temp_offset = 21
+            slope       = 0
+            surface     = "grass"
         
         acf = aircraft.Aircraft()
-        acf.S = S
+        W_list = np.linspace(acf.W_OE, acf.W_MTO, 25)
         
-        TO_dist = []
+        plt.figure(figsize=(8,5))
         
-        for W in W_list:
-            TO_dist.append(acf.takeoff_ground_run(W, elevation, temp_offset, slope, surface)[0])
+        for S in np.arange(20, 38, step=2):
             
-        plt.plot(W_list, TO_dist, label=f"S={S} m^2")
-        
-    plt.title(f"Takeoff at {elevation}m ISA+{temp_offset}, {slope}% slope, {surface} runway")
-    plt.ylim(300, 900)
-    plt.ylabel("TO ground run [m]")
-    plt.xlabel("Gross takeoff weight [N]")
-    plt.axhline(TORA, color="black")
-    plt.legend()
-    plt.show()
+            acf = aircraft.Aircraft()
+            acf.S_clean = S
+            
+            TO_dist = []
+            
+            for W in W_list:
+                TO_dist.append(acf.takeoff_ground_run(W, elevation, temp_offset, slope, surface)[0])
+                
+            plt.plot(W_list, TO_dist, label=f"S={S} m^2")
+            
+        plt.title(f"Takeoff at {elevation}m ISA+{temp_offset}, {slope}% slope, {surface} runway")
+        #plt.ylim(300, 900)
+        plt.ylabel("TO ground run [m]")
+        plt.xlabel("Gross takeoff weight [N]")
+        plt.axhline(TORA, color="black")
+        plt.legend()
+        plt.show()
         
     
 
@@ -76,6 +92,13 @@ def vary_area():
     # temp_offset = 23
     # slope       = 0
     # surface     = "grass"
+    
+    # **** sea level *****
+    # TORA        = 500
+    # elevation   = 0
+    # temp_offset = 0
+    # slope       = 0
+    # surface     = "grass"
         
     
     for S in np.arange(20, 40, step=1):
@@ -84,18 +107,18 @@ def vary_area():
         
         #reduced_weight = acf.W_OE + acf.W_pl_no_pilot + acf.W_MF
         
-        acf.S = S
+        acf.S_clean = S
         
         climbrate = acf.RC_max(acf.W_MTO, 0, 0)
         gradient_TO  = acf.climb_slope_max(acf.W_MTO, 0, 0, gear="up", flaps="TO")
         gradient_ld  = acf.climb_slope_max(acf.W_MTO, 0, 0, gear="down", flaps="land")
-        V_S0      = acf.stall_speed(acf.W_MTO, 0, 0)
+        V_S0      = acf.stall_speed(acf.W_MTO, 0, 0, flaps="land")
         TO_dist   = acf.takeoff_ground_run(acf.W_MTO, elevation, temp_offset, slope, surface)
         land_dist = acf.landing_ground_distance(acf.W_MTO, elevation, temp_offset, -slope, surface, reversible_pitch=True)
         
-        pass_cr = "pass" if climbrate >= 5 else "FAIL"
-        pass_gr_TO = "pass" if gradient_TO >= 4 else "FAIL"
-        pass_gr_ld = "pass" if gradient_ld >= 2.5 else "FAIL"
+        pass_cr = "pass" if climbrate[0] >= 5 else "FAIL"
+        pass_gr_TO = "pass" if gradient_TO[0] >= 4 else "FAIL"
+        pass_gr_ld = "pass" if gradient_ld[0] >= 2.5 else "FAIL"
         pass_vs = "pass" if V_S0 <= 25 else "FAIL"
         pass_to = "pass" if TO_dist[0] <= TORA else "FAIL"
         pass_ld = "pass" if land_dist <= TORA else "FAIL"
@@ -103,9 +126,9 @@ def vary_area():
         
         print(f"""
               ****************** S = {S} ***********************
-              Climb rate          = {climbrate:>8.2f} m/s    {pass_cr}
-              Climb gradient TO   = {gradient_TO:>8.2f} %      {pass_gr_TO}
-              Climb gradient land = {gradient_ld:>8.2f} %      {pass_gr_ld}
+              Climb rate          = {climbrate[0]:>8.2f} m/s    {pass_cr}   at V={climbrate[1]:.2f} m/s
+              Climb gradient TO   = {gradient_TO[0]:>8.2f} %      {pass_gr_TO}   at V={gradient_TO[1]:.2f} m/s
+              Climb gradient land = {gradient_ld[0]:>8.2f} %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
               V_S0                = {V_S0:>8.2f} m/s    {pass_vs}
               Takeoff run         = {TO_dist[0]:>8.0f} m      {pass_to}
               Landing roll        = {land_dist:>8.0f} m      {pass_ld}
@@ -136,9 +159,16 @@ def vary_weight():
     # slope       = -6
     # surface     = "grass"
     
+    # **** sea level *****
+    # TORA        = 500
+    # elevation   = 0
+    # temp_offset = 0
+    # slope       = 0
+    # surface     = "grass"
+    
     acf = aircraft.Aircraft()
     
-    acf.S = 36
+    acf.S_clean = 33
 
     for W in np.arange(acf.W_OE, acf.W_MTO+500, step=500):
         
@@ -160,11 +190,9 @@ def vary_weight():
               """)
               
 if __name__ == "__main__":
-     #plot_variation()
+     plot_variation()
      vary_area()
-     vary_weight()
-     #acf = aircraft.Aircraft()
-     #print(acf.T(35, 750, 18, use_takeoff_power=True))
+     #vary_weight()
 
 # we can reduce wing area to 28m^2 if we
 # use 50% payload and 50% fuel for 750m ISA+15 takeoff

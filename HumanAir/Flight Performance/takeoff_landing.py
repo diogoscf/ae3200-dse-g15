@@ -3,6 +3,11 @@ from scipy.integrate import quad
 
 from helper import density
 
+# TODO: why is t/o (and landing?) so sensitive to S?
+
+# TO and landing calculations happen at low AoA thus current drag approximations
+# is fine.
+
 def takeoff_ground_run(acf, W, h, dT, slope, surface):
     """
     Calculates the take-off ground run for given conditions using the Ruijgrok
@@ -48,18 +53,17 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
 
     rho = density(h, dT)
     g = 9.80665
+    S = acf.S(flaps="TO")
     
-    CL_ground = acf.CL_ground_TO # C_L during ground run
+    CL_ground = acf.CL_ground_TO # C_L during ground run, note; larger than 1, but no other option than to use CD()
     CD_ground = acf.CD(CL_ground, gear="down", flaps="TO", ground_effect_h=20) # C_D during ground run
-    
-    
+    print(CD_ground)
     # Torenbeek estimates V_LOF to be 1.2*stall speed in T/O config
     # Gudmundsen estimates V_LOF to be 1.1*stall speed in T/O config
     # CS23 requires the rotation speed to be >=V_S1 and the speed at 15m >=1.2*V_S1
-    V_S_TO = np.sqrt(W / (0.5 * rho * acf.S * acf.CLmax_TO))
+    V_S_TO = np.sqrt(W / (0.5 * rho * S * acf.CLmax_TO))
     V_LOF = max(1.1 * V_S_TO, 30) # 30 was chosen as minium by control department as minimum
 
-    print(f"Takeoff V_LOF = {V_LOF:.2f}")
     xi = np.arctan(slope/100) # angle of slope
     
     if surface == "paved":
@@ -70,16 +74,14 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     def f(V):
         # gudmundsson eq 16.2-6 with acceleration from eq 16.2-9
         T = acf.T(V, h, dT)
-        D = 0.5 * rho * V**2 * acf.S * CD_ground
-        L = 0.5 * rho * V**2 * acf.S * CL_ground
+        D = 0.5 * rho * V**2 * S * CD_ground
+        L = 0.5 * rho * V**2 * S * CL_ground
         return V / (g/W * (T - D - mu_r*(W*np.cos(xi) - L) - W*np.sin(xi)))
     
     s_run, accuracy = quad(f, 0, V_LOF) # integrate from V=0 to V=V_LOF
     
     s_run += V_LOF # add one second of flight as margin
-    
-    print(np.sin(xi))
-    
+        
     if accuracy > 10**-3:
         raise Exception(f"Low accuracy in integrating takeoff distance: \
                         s_run = {s_run}, accuracy = {accuracy}. \
@@ -97,7 +99,7 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     
     # P_to = acf.P_a(h, dT, use_takeoff_power=True)
     # sigma = rho/1.225
-    # CD0 = acf.CD(0, gear="down", flaps="TO")
+    # CD0 = acf.CD(acf.CL_Dmin, gear="down", flaps="TO")
     # P_to_kg = P_to / g # formula requires kgm/s
     # W_kg = W / g # torenbeek uses kg
     
@@ -121,8 +123,8 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     
     # V = 0.707 * V_LOF # 0.707 to get the average velocity (when assuming const acceleration)
     # T = acf.T(V, h, dT, use_takeoff_power=True) # P_to / V
-    # D = 0.5 * rho * V**2 * acf.S * CD_ground
-    # L = 0.5 * rho * V**2 * acf.S * CL_ground
+    # D = 0.5 * rho * V**2 * S * CD_ground
+    # L = 0.5 * rho * V**2 * S * CL_ground
     # a = g/W * (T - D - 0.05*(W - L)) # avg acceleration - nicolai has no friction coefficient for dry grass so using ruijgrok's value
     # s_run3 = 0.5 * V_LOF**2 / a
     
@@ -163,8 +165,9 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
             
     rho = density(h, dT)
     g = 9.80665
-    
-    V_T = 1.1 * np.sqrt(W/( 0.5 * rho * acf.S * acf.CLmax_land)) # touchdown velocity 
+    S = acf.S(flaps="land")
+
+    V_T = 1.1 * np.sqrt(W/( 0.5 * rho * S * acf.CLmax_land)) # touchdown velocity 
 
     CL = acf.CL_ground_land # TODO: take into account ground effect
     CD = acf.CD(CL, gear="down", flaps="land", ground_effect_h=0)
@@ -182,8 +185,8 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
         T = 0.07 * acf.T(0, h, dT) # -+7% of static thrust according to gudmundsen
     
     V_avg = V_T / np.sqrt(2)   
-    L = 0.5 * rho * V_avg**2 * acf.S * CL
-    D = 0.5 * rho * V_avg**2 * acf.S * CD
+    L = 0.5 * rho * V_avg**2 * S * CL
+    D = 0.5 * rho * V_avg**2 * S * CD
     
     D_g = mu*(W*np.cos(xi)-L)*acf.weight_on_MLG # assumes zero pitching moment, W*cos was not in gudmundsen but in ruijgrok for takeoff, also added here
 
@@ -192,8 +195,8 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
     s_ground += 3 * V_T # add 2 seconds of overflight, 1 second of free roll at touchdown speed
     
    #  def f(V):
-   #      L = 0.5 * rho * V**2 * acf.S * CL
-   #      D = 0.5 * rho * V**2 * acf.S * CD
+   #      L = 0.5 * rho * V**2 * S * CL
+   #      D = 0.5 * rho * V**2 * S * CD
    #      D_g = mu*(W-L)*acf.weight_on_MLG # assumes zero pitching moment
    #      return (W/g * V) / (T - D - D_g - W*np.sin(xi))
    #  s_ground2, accuracy = quad(f, V_T, 0)

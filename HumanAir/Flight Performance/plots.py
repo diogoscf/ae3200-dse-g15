@@ -12,7 +12,7 @@ def plot_climb_rate(acf):
     dT = 0    
     
     h_list = np.arange(0, h_max, h_step)
-    RC_max = np.zeros(len(h_list))
+    RC_max = np.zeros(((len(h_list),2)))
     P_a = np.zeros(len(h_list))
     P_r_min = np.zeros(len(h_list))
 
@@ -26,14 +26,14 @@ def plot_climb_rate(acf):
         # service ceiling commonly defined as altitude with 100ft/min (0.508m/s) max climbrate
         # FAA Pilots Handbook of Aeronautical Knowledge
         # also Roskam pt 7 p129
-        if RC_max[i] < 0.508 and service_ceiling < 0.01 and i > 0:
+        if RC_max[i][0] < 0.508 and service_ceiling < 0.01 and i > 0:
             service_ceiling = h_list[i-1]
     
-    print(f"Sea level MTOW max climb rate, clean config: {RC_max[0]:.3f} m/s")
+    print(f"Sea level MTOW max climb rate, clean config: {RC_max[0][0]:.3f} m/s at V={RC_max[0][1]:.2f} m/s")
     print(f"Service ceiling, MTOW, clean config: {service_ceiling:.0f} m")
     
     plt.figure(figsize=(10,7))
-    plt.plot(RC_max, h_list, label="Maximum Climb Rate")
+    plt.plot(RC_max[:,0], h_list, label="Maximum Climb Rate")
     plt.plot(P_a/100000, h_list, color="g", label="Power available /100000")
     plt.plot(P_r_min/100000, h_list, color="r", label="Minimum required power /100000")
     plt.axhline(y=service_ceiling, color='grey', label="Service Ceiling")        
@@ -42,7 +42,7 @@ def plot_climb_rate(acf):
     plt.ylim(0,h_max)
     #plt.xlim(0,RC_max[0]*1.05)
     plt.legend()
-    plt.text(0, h_max+100, "Not accurate for high altitudes with C_L > 1")
+    plt.text(0, h_max+100, "RC=0 when CL>1")
     #plt.subplots_adjust(right=0.75)
     #plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
     plt.savefig("plots/climb_rate.svg")
@@ -54,9 +54,9 @@ def plot_climb_gradient(acf):
     dT = 0    
     
     h_list = np.arange(0, h_max, h_step)
-    max_gradient_clean = np.zeros(len(h_list))
-    max_gradient_TO = np.zeros(len(h_list))
-    max_gradient_land = np.zeros(len(h_list))
+    max_gradient_clean = np.zeros((len(h_list),2))
+    max_gradient_TO = np.zeros((len(h_list),2))
+    max_gradient_land = np.zeros((len(h_list),2))
 
     
     for i, h in enumerate(h_list):
@@ -64,20 +64,20 @@ def plot_climb_gradient(acf):
         max_gradient_TO[i] = acf.climb_slope_max(W, h, dT, gear="up", flaps="TO")
         max_gradient_land[i] = acf.climb_slope_max(W, h, dT, gear="down", flaps="land")
 
-    print(f"Sea level MTOW max climb gradient, clean config: {max_gradient_clean[0]:.3f} %")
-    print(f"Sea level MTOW max climb gradient, gear up, take-off flaps: {max_gradient_TO[0]:.3f} %")
-    print(f"Sea level MTOW max climb gradient, gear down, landing flaps: {max_gradient_land[0]:.3f} %")
+    print(f"Sea level MTOW max climb gradient, clean config: {max_gradient_clean[0][0]:.3f} % at V={max_gradient_clean[0][1]:.2f}")
+    print(f"Sea level MTOW max climb gradient, gear up, take-off flaps: {max_gradient_TO[0][0]:.3f} % at V={max_gradient_TO[0][1]:.2f}")
+    print(f"Sea level MTOW max climb gradient, gear down, landing flaps: {max_gradient_land[0][0]:.3f} % at V={max_gradient_land[0][1]:.2f}")
 
     plt.figure(figsize=(10,7))
-    plt.plot(max_gradient_clean, h_list, color="b", label="MTOW, gear up, flaps up")
-    plt.plot(max_gradient_TO, h_list, color="purple", label="MTOW, gear up, take-off flaps")
-    plt.plot(max_gradient_land, h_list, color="lightblue", label="MTOW, gear up, landing flaps")
-    plt.xlabel(r"Maximum Climb Gradient (%)")
+    plt.plot(max_gradient_clean[:,0], h_list, color="b", label="MTOW, gear up, flaps up")
+    plt.plot(max_gradient_TO[:,0], h_list, color="purple", label="MTOW, gear up, take-off flaps")
+    plt.plot(max_gradient_land[:,0], h_list, color="lightblue", label="MTOW, gear up, landing flaps")
+    plt.xlabel(r"Maximum Climb Gradient with CL<=1 (%)")
     plt.ylabel("Altitude (m)")
     plt.ylim(0,h_max)
-    plt.xlim(0,max(max_gradient_clean[0], max_gradient_TO[0], max_gradient_land[0])*1.05)
+    plt.xlim(0,max(max_gradient_clean[0][0], max_gradient_TO[0][0], max_gradient_land[0][0])*1.05)
     plt.legend()
-    plt.text(0, h_max+100, "Not accurate currently due to inaccurate C_D approximation for high C_L")
+    plt.text(0, h_max+100, "Not the actual max climb gradient since CL is capped at 1")
 
     #plt.subplots_adjust(right=0.75)
     #plt.legend(bbox_to_anchor=(1.01, 1), loc="upper left")
@@ -214,8 +214,9 @@ def plot_thrust(acf):
 
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
-    plot_climb_rate(acf)
-    plot_climb_gradient(acf)
+    #print(acf.RC_max(acf.W_MTO, 750, 18))
+    #plot_climb_rate(acf)
+    #plot_climb_gradient(acf)
     #plot_stall_speed(acf)
     #plot_cruise_power_setting(acf)
     #plot_take_off_performance(acf)
