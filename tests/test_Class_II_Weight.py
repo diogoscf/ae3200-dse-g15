@@ -88,7 +88,6 @@ aircraft_data = {
 
 
 def test_class_II_weight_init():
-
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
@@ -192,7 +191,6 @@ def test_wing_weight():
 
 
 def test_empennage_weight():
-
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
@@ -250,7 +248,6 @@ def test_fuselage_weight():
 
 
 def test_nacelle_weight():
-
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
@@ -298,7 +295,6 @@ def test_structure_weight_total():
 
 
 def test_fuel_system_weight():
-
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 

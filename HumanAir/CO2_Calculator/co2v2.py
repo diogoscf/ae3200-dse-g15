@@ -231,7 +231,6 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
     )  # Cessna 206 emissions per year measured in tons assuming a target_value CO2 reduction
 
     if check_over_time:
-
         year_max = 0
 
         for introduction_year in delta_year:
