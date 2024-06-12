@@ -50,7 +50,7 @@ class FuselageSizing:
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
-    def __init__(self, ac_data=aircraft_data, bat_xcg=0.1):
+    def __init__(self, ac_data=aircraft_data, bat_xcg=None):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
         self.h_engine = ac_data["Geometry"]["h_engine"]  # height of engine [m]
@@ -206,6 +206,7 @@ class FuselageSizing:
     def plot_side_drawing(self, s_gear):
         fig, ax = plt.subplots()
 
+        battery_center = self.bat_xcg * self.length_fus()
         y_floor = self.y_floorheight()
         y_engine = y_floor + self.h_floor
         ax.axhline(y=0, color="gray", linewidth=0.3)
@@ -449,7 +450,7 @@ class FuselageSizing:
         my_dict["backwall"] = (my_dict["tailcone"][-1], my_dict["tailcone"][-1] + FuselageSizing.t_fuse)
         return my_dict
 
-    def below_position(self, s_gear, front_retractable=True):
+    def below_position(self, s_gear):
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # print('w_battery', l_battery)
         # print('s_gear', s_gear)
@@ -458,10 +459,13 @@ class FuselageSizing:
         my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
         my_dict["nose landing gear"] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut)
         my_dict["main landing gear"] = (self.l_long_main - self.length_main_strut(s_gear=0.1), self.l_long_main)
-        my_dict["battery"] = (
-            self.l_end_nose_land() + FuselageSizing.s,
-            self.l_end_nose_land() + FuselageSizing.s + l_battery,
-        )
+
+        battery_center = self.bat_xcg * self.length_fus()
+        my_dict["battery"] = (battery_center - l_battery / 2, battery_center + l_battery / 2)
+        # my_dict["battery"] = (
+        #     self.l_end_nose_land() + FuselageSizing.s,
+        #     self.l_end_nose_land() + FuselageSizing.s + l_battery,
+        # )
         # print(my_dict['battery'][0], my_dict['battery'][1])
         return my_dict
 
@@ -492,8 +496,8 @@ if __name__ == "__main__":
     print(fuselage_size.below_position(0.1))
     print(fuselage_size.battery_dim(0.1))
     # print(fuselage_size.bottom_width(0.1))
-    fuselage_size.plot_side_drawing(s_gear=0.1)
-    fuselage_size.plot_front_view(s_gear=0.1)
+    # fuselage_size.plot_side_drawing(s_gear=0.1)
+    # fuselage_size.plot_front_view(s_gear=0.1)
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init
     print(total)

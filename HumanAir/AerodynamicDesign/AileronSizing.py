@@ -53,7 +53,7 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
     # Step 1: find the control derivative w.r.t AoA
 
     # set parameters based on Roskam VI for 2D AoA derivative
-    print("Check the parameter set in AileronStickForce if the geometry of the aileron change.")
+    print("Check the parameter set in AileronStickForce if the geometry of the aileron changes")
     # RN = 7 * 10**6  # use the 10^7 line from Roskam
     # Y_90 = 1.272 / 100 * 100  # from CATIA
     # Y_99 = 0.199 / 100 * 100  # from CATIA
