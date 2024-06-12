@@ -76,7 +76,7 @@ class FuselageSizing:
         self.w_motor = ac_data["Geometry"]["w_motor"]
         self.l_motor = ac_data["Geometry"]["l_motor"]
         self.l_empty = ac_data["Geometry"]["l_empty"]
-        
+
         self.bat_xcg = bat_xcg
 
     def n_row(self):
