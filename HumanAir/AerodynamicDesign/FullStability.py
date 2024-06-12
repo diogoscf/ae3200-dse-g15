@@ -66,17 +66,26 @@ def TailAero(l_H, acd=aircraft_data):
     # Downwash Gradient supposedly from Slingerland whoever that may be
     r = l_H * 2 / acd["Aero"]["b_Wing"]
     mtv = 0 * 2 / acd["Aero"]["b_Wing"]
-    deda = (((r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
-            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2))))
-        * acd["Aero"]["CLalpha"]/ (pi * acd["Aero"]["AR"]))
+    deda = (
+        (
+            (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
+            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
+        )
+        * acd["Aero"]["CLalpha"]
+        / (pi * acd["Aero"]["AR"])
+    )
 
     return VhVcorr, deda
 
 
 def Liftrate(l_H, acd=aircraft_data):
     # Tail lift rate
-    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"]))
-    ClaH = (2 * pi * acd["Aero"]["AR_HS"] / (2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2))))
+    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (
+        0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"])
+    )
+    ClaH = (
+        2 * pi * acd["Aero"]["AR_HS"] / (2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2)))
+    )
 
     # Aircraft less tail lift rate
     Snet = Geometry(acd)[1]

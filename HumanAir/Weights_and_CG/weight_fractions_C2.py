@@ -5,7 +5,7 @@ from math import tan, sqrt, floor, ceil
 import time
 import os
 import matplotlib.pyplot as plt
-from sympy import *
+from sympy import symbols, solve
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -127,7 +127,7 @@ def find_lg(nose_loading, aftcg, wcg, ac_datafile=aircraft_data, max_load_nose=N
         # Set minimum strut height as 60% of wheel diameter for clearance
         if H_strike < 0.6 * Dw_m:
             H_strike = 0.6 * Dw_m
-            i=0
+            i = 0
 
     H_s = H_strike
     # Determine minimum wheel base required for tip-over protection
@@ -305,11 +305,12 @@ def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
 
     return Combined_CG, Combined_mass, Combined_FullCG
 
+
 def TailAero_copy(l_H, acd=aircraft_data):
     # (copy from FullStability.py)
     # Get and convert values to imp*rial
     taper_h = acd["Aero"]["Taper_HS"]
-    Cr_h = 3 / 2 * acd["Aero"]["MAC_HS"] * ((1 + taper_h) / (1 + taper_h * taper_h ** 2))  # Root chord of stabiliser
+    Cr_h = 3 / 2 * acd["Aero"]["MAC_HS"] * ((1 + taper_h) / (1 + taper_h * taper_h**2))  # Root chord of stabiliser
     Cpw = Cr_h * (1 - (1 - taper_h) * acd["Power_prop"]["Dp_m"] / acd["Aero"]["b_h"])  # Chord at prop wash edge
     Shslip = (Cr_h + Cpw) * acd["Power_prop"]["Dp_m"] / 2 * 10.7639104  # Tail area affected by prop wash
     Sh = acd["Aero"]["S_h"] * 10.7639104
@@ -329,11 +330,17 @@ def TailAero_copy(l_H, acd=aircraft_data):
     # Downwash Gradient supposedly from Slingerland whoever that may be
     r = l_H * 2 / acd["Aero"]["b_Wing"]
     mtv = 0 * 2 / acd["Aero"]["b_Wing"]
-    deda = (((r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
-            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2))))
-        * acd["Aero"]["CLalpha"]/ (np.pi * acd["Aero"]["AR"]))
+    deda = (
+        (
+            (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
+            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
+        )
+        * acd["Aero"]["CLalpha"]
+        / (np.pi * acd["Aero"]["AR"])
+    )
 
     return VhVcorr, deda
+
 
 def Rotation_check(Weightlist, wcg, xlemac, FullCGlist, acd=aircraft_data):
     # Get air density at 750m take-off altitude and ISA offset
@@ -345,7 +352,9 @@ def Rotation_check(Weightlist, wcg, xlemac, FullCGlist, acd=aircraft_data):
     Sh = acd["Aero"]["S_h"]  # Tail surface area
     l_w = wcg[2, 1] - (xlemac + 1 / 4 * acd["Aero"]["MAC_wing"])  # Wing C.P. distance to aft gear (point of rotation)
     lH_lg = acd["Stability"]["QCW_to_QCh"] - l_w  # Stabiliser distance to aft gear
-    H_pwtrT = 0.5 * acd["Geometry"]["fus_height_m"] + acd["Landing_gear"]["Hs_m"] + 0.5*acd["Landing_gear"]["Dwm_m"] # Height of thrust application
+    H_pwtrT = (
+        0.5 * acd["Geometry"]["fus_height_m"] + acd["Landing_gear"]["Hs_m"] + 0.5 * acd["Landing_gear"]["Dwm_m"]
+    )  # Height of thrust application
     Tto = 6003
 
     # Find tail effectiveness
@@ -359,31 +368,55 @@ def Rotation_check(Weightlist, wcg, xlemac, FullCGlist, acd=aircraft_data):
     )
     Cmacflap = acd["Flaps"]["mu2_takeoff"] * (
         -acd["Flaps"]["mu1_takeoff"] * acd["Flaps"]["deltaCLmax_takeoff"] * acd["Flaps"]["cprime_c_takeoff"]
-        - (acd["Flaps"]["CL_AoA0_takeoff"] + acd["Flaps"]["deltaCLmax_takeoff"] * (1 - acd["Flaps"]["Swf"] / acd["Aero"]["S_Wing"]))
-        * 1 / 8 * acd["Flaps"]["cprime_c_takeoff"] * (acd["Flaps"]["cprime_c_takeoff"] - 1))
+        - (
+            acd["Flaps"]["CL_AoA0_takeoff"]
+            + acd["Flaps"]["deltaCLmax_takeoff"] * (1 - acd["Flaps"]["Swf"] / acd["Aero"]["S_Wing"])
+        )
+        * 1
+        / 8
+        * acd["Flaps"]["cprime_c_takeoff"]
+        * (acd["Flaps"]["cprime_c_takeoff"] - 1)
+    )
     Cmw_TO = Cmacw + Cmacflap
 
     # Tail lift rate
-    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"]))
-    ClaH = (2 * np.pi * acd["Aero"]["AR_HS"] / (
-                2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2))))
+    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (
+        0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"])
+    )
+    ClaH = (
+        2
+        * np.pi
+        * acd["Aero"]["AR_HS"]
+        / (2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2)))
+    )
 
     # Magic formula that is 100% correct: outputs maximum allowable nose loading for weight conditions
     # Just pray it works, derive it yourself if you don't believe me
     tail_lift = []
     # Weightlist in [kg]
     for i in range(len(Weightlist)):
-        tail_lift.append(1/lH_lg*(acd["Flaps"]["CL_AoA0_takeoff"]*1/2*rho*Vto**2*S*l_w-Tto*H_pwtrT-Weightlist[i]*9.81*(wcg[2, 1] - FullCGlist[i])+Cmw_TO*1/2*rho*Vto**2*S*acd["Aero"]["MAC_wing"]))
+        tail_lift.append(
+            1
+            / lH_lg
+            * (
+                acd["Flaps"]["CL_AoA0_takeoff"] * 1 / 2 * rho * Vto**2 * S * l_w
+                - Tto * H_pwtrT
+                - Weightlist[i] * 9.81 * (wcg[2, 1] - FullCGlist[i])
+                + Cmw_TO * 1 / 2 * rho * Vto**2 * S * acd["Aero"]["MAC_wing"]
+            )
+        )
 
     # Find Elevator effectiveness
-    CLH_corr = 2*np.array(tail_lift)/(rho*Sh*(VhVcorr*Vto)**2)
-    e0 = deda * 6.5 # Downwash at zero angle of attack [deg]
+    CLH_corr = 2 * np.array(tail_lift) / (rho * Sh * (VhVcorr * Vto) ** 2)
+    e0 = deda * 6.5  # Downwash at zero angle of attack [deg]
     a_H = acd["Stability"]["i_H_deg"] - e0
-    tau_e = np.abs((np.min(CLH_corr)+ClaH*np.radians(a_H))/(ClaH*np.radians(acd["Stability"]["Elevator_deflection_deg"])))
+    tau_e = np.abs(
+        (np.min(CLH_corr) + ClaH * np.radians(a_H)) / (ClaH * np.radians(acd["Stability"]["Elevator_deflection_deg"]))
+    )
 
     # Find sizing through fitted polynomial
-    x = symbols('x')
-    CeC = solve(-6.624*x**4 + 12.07*x**3 - 8.292*x**2 + 3.295*x + 0.004942-tau_e, x)[0]
+    x = symbols("x")
+    CeC = solve(-6.624 * x**4 + 12.07 * x**3 - 8.292 * x**2 + 3.295 * x + 0.004942 - tau_e, x)[0]
     Elev = True
     if CeC > 0.4:
         Elev = False
@@ -394,6 +427,7 @@ def Rotation_check(Weightlist, wcg, xlemac, FullCGlist, acd=aircraft_data):
     print(acd["Stability"]["Hinge_chord_elevator"])
 
     return Elev
+
 
 def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False):
     # Set desired distance of nosewheel from nose [m]
