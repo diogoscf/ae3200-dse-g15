@@ -150,7 +150,6 @@ class WeightEstm:
 
 
 if __name__ == "__main__":
-
     data = WeightEstm(aircraft_data)
 
     bat = 0.11

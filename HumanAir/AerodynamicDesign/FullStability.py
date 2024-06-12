@@ -1,7 +1,7 @@
 # import pandas as pd
 import numpy as np
 import sys
-from math import tan, sqrt, pi
+from math import tan, sqrt, pi, atan
 
 # import time
 import os
@@ -80,7 +80,9 @@ def TailAero(l_H, acd=aircraft_data):
 
 def Liftrate(l_H, acd=aircraft_data):
     # Tail lift rate
-    SweepHS_05 = -4 / acd["Aero"]["AR_HS"] * (0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"]))
+    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (
+        0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"])
+    )
     ClaH = (
         2 * pi * acd["Aero"]["AR_HS"] / (2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2)))
     )
@@ -187,12 +189,10 @@ def StabControl(acd=aircraft_data):
 
 # negative values does not work because the nose gear will colapse, the begin value has to be larger than 0.05
 def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, step=10):
-
     # define the minimum value for Sh/S
     Sh_S_min = 10000
 
     for x_percentage in range(int(begin_value * 100), int(end_value * 100), step):
-
         # iterate such that the batteries and landing gear fits
         # print(x_percentage/100)
 
@@ -211,7 +211,6 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
 
         # loop to iterate for lh and find the optimal value with Sh
         while not lh_converged:
-
             # get the stability and control lines with the updated values
             StabSM, _, Control, Xcg, lh_sv = StabControl(acd=ac_datafile)
 
@@ -316,6 +315,16 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
     ac_datafile["Aero"]["c_tip_HS"] = dummy_dict["Aero"]["c_tip_HS"]
     ac_datafile["Aero"]["MAC_HS"] = dummy_dict["Aero"]["MAC_HS"]
     ac_datafile["Stability"]["QCW_to_QCh"] = dummy_dict["Stability"]["QCW_to_QCh"]
+
+    tan_LE_sweep = tan(0) - 4 / ac_datafile["Aero"]["AR_HS"] * (
+        (-3 / 4) * (1 - ac_datafile["Aero"]["Taper_HS"]) / (1 + ac_datafile["Aero"]["Taper_HS"])
+    )
+    quarter_chord_sweep = atan(
+        tan_LE_sweep
+        + ac_datafile["Aero"]["c_root_HS"] / (2 * ac_datafile["Aero"]["b_h"]) * (ac_datafile["Aero"]["Taper_HS"] - 1)
+    )
+    ac_datafile["Aero"]["QuarterChordSweep_HS_deg"] = quarter_chord_sweep * 180 / np.pi
+    print("DA")
 
     # plot the optimised xcg for the landing gear
     Plotting(acd=ac_datafile, show=False)

@@ -45,7 +45,6 @@ def import_data(file_path):
 
 
 def import_data2(file_name):
-
     data = {}
     script_dir = os.path.dirname(os.path.abspath(__file__))
 

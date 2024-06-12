@@ -90,7 +90,6 @@ def objective_function(params):
 
 # compute the gradient of the cost function for a specific parameter
 def compute_gradient_for_parameter(param_name, param_value):
-
     params_up = params.copy()
     params_down = params.copy()
 

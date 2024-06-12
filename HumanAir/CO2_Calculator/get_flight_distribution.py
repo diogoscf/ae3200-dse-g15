@@ -9,7 +9,6 @@ import pickle
 
 
 def fit_log_normal(mean, median):
-
     mu = np.log(median)
     sigma = np.sqrt(2 * np.log(mean / median))
 

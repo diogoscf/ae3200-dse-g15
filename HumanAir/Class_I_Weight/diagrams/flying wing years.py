@@ -9,7 +9,6 @@ from sklearn.linear_model import LinearRegression  # type: ignore[import-untyped
 
 
 def plot_Payload_MTOW_vs_years(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW = np.array(
         [
@@ -67,7 +66,6 @@ def plot_Payload_MTOW_vs_years(combined=True, show=None, save=None, ax=None):
 
 
 def plot_Payload_OEW_vs_years(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     OEW = np.array(
         [
