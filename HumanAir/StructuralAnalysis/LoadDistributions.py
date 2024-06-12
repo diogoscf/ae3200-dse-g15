@@ -56,20 +56,23 @@ def weight_distribution(c, wing_structure, ac_data=aircraft_data):
 
     # Fuel is located between the struts
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
+    span = ac_data["Aero"]["b_Wing"]
     nodes_half_wing = c.shape[0] // 2
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
     extra = 0 if c.shape[0] % 2 == 0 else 1
-    c_between_struts = c[(nodes_half_wing - n_before_strut) : (nodes_half_wing + n_before_strut + extra)]
+    idx_between_struts = (nodes_half_wing - n_before_strut, nodes_half_wing + n_before_strut + extra)
+    c_between_struts = c[idx_between_struts[0] : idx_between_struts[1]]
+    enclosed_area = wing_structure.enclosed_area_dist[idx_between_struts[0] : idx_between_struts[1]]
 
-    W_structure = wing_structure.weight()
+    W_structure = wing_structure.weight_dist()
 
-    # Assume fuel weight is distributed with airfoil area, i.e. with chord^2
-    W_avg_fuel = fuelweight / c_between_struts.shape[0]
-    W_fuel = W_avg_fuel * c_between_struts**2 / (np.mean(c_between_struts**2))
+    # Fuel weight distributed with wingbox enclosed area
+    W_avg_fuel = fuelweight / (span * strut_loc)  # [N/m]
+    W_fuel = W_avg_fuel * enclosed_area / (np.mean(enclosed_area))
     diff = c.shape[0] - c_between_struts.shape[0]
     W_fuel = np.pad(W_fuel, pad_width=diff // 2, mode="constant")
-    # print(np.sum(W_fuel))
 
+    # [N/m]
     return (
         W_structure + W_fuel,
         W_fuel,

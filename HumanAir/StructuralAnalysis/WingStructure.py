@@ -67,6 +67,8 @@ class WingStructure:
 
         self.hmax_dist = self.calc_hmax_dist()
 
+        self.enclosed_area_dist = self.calc_enclosed_area_dist()
+
     # def import_data(self):
     #     df = pd.read_csv(self.file_path, sep="\s+", header=None, names=["x", "y"], skiprows=1)
     #     return df
@@ -241,8 +243,8 @@ class WingStructure:
         I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar * 3 + h_rearspar * 3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
-    
-    def weight(self):
+
+    def weight_dist(self):
         _, h_s1s2 = self.h_s1s2()
         l_box_up, l_box_down = self.d_s1s2()
         h_frontspar = h_s1s2[:, 0].flatten()
@@ -252,11 +254,17 @@ class WingStructure:
         w_bottom = l_box_down.flatten()  # width of bottom "straight" skin, as a function of y
         wtot = w_bottom + w_top
 
-        W_spar = np.sum(self.material_rho * self.t_spar_dist * htot * self.nodes)
-        W_skin = np.sum(self.material_rho * self.t_skin * wtot * self.nodes)
-        W_stringers = np.sum(self.material_rho * self.stringer_area * self.stringer_dist * self.nodes)
+        W_spar = self.material_rho * self.t_spar_dist * htot
+        W_skin = self.material_rho * self.t_skin * wtot
+        W_stringers = self.material_rho * self.stringer_area * self.stringer_dist
         weight = W_skin + W_spar + W_stringers
-        return weight
+        return weight  # [N/m]
+
+    def calc_enclosed_area_dist(self):
+        _, h_s1s2 = self.h_s1s2()
+        h_frontspar = h_s1s2[:, 0].flatten()
+        h_rearspar = h_s1s2[:, 1].flatten()
+        return (h_frontspar + h_rearspar) / 2 * (self.spar_pos[1] - self.spar_pos[0]) * self.chord_distribution
 
 
 if __name__ == "__main__":

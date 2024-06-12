@@ -6,6 +6,7 @@ import sys
 import os
 import matplotlib.pyplot as plt  # noqa: F401
 import time
+import copy
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -63,15 +64,44 @@ def get_weight(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_secti
     W_skin = np.sum(rho * t_skin * wtot * len_nodes)
     W_stringers = np.sum(rho * A_stringer * stringers_at_nodes * len_nodes)
     weight = W_skin + W_spar + W_stringers
+
     return weight
 
 
-def objective(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node):
+n_iter = 0
+time_at_last_iter = None
+
+
+def objective(
+    variables,
+    htot,
+    wtot,
+    rho,
+    len_nodes,
+    A_stringer,
+    stringer_sections_halfspan,
+    n_halfspan,
+    centre_node,
+    verbose=False,
+):
     weight = get_weight(
         variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node
     )
     obj_val = (weight - 40) / 100  # Lowest possible is around 60 kg
     # print(obj_val, flush=True)
+
+    if verbose:
+        global n_iter, time_at_last_iter
+        n_iter += 1
+        if time_at_last_iter is None:
+            time_at_last_iter = time.time()
+
+        if n_iter % 10 == 0:
+            now = time.time()
+            if time_at_last_iter is not None:
+                print(n_iter, f"{weight:.2f}", f"{(now - time_at_last_iter):.2f}s (10 iter)", flush=True)
+                time_at_last_iter = now
+
     return obj_val
 
 
@@ -153,24 +183,70 @@ def unstack_variables(variables):
         no_stringers * CONVERSION_FACTOR_STRINGERS,
     )
 
+
+def compare_approximate(first, second):
+    """Return whether two dicts of arrays are roughly equal"""
+    if not isinstance(first, type(second)):
+        # print("different types", type(first), type(second), flush=True)
+        return False
+
+    if not isinstance(first, dict):
+        if isinstance(first, np.ndarray):
+            return np.allclose(first, second)
+
+        return first == second
+
+    if first.keys() != second.keys():
+        # print("different keys", first.keys(), second.keys(), flush=True)
+        return False
+
+    for key in first:
+        if not isinstance(first[key], type(second[key])):
+            # print(key, first[key], second[key], flush=True)
+            return False
+
+        if isinstance(first[key], dict):
+            if not compare_approximate(first[key], second[key]):
+                return False
+            continue
+
+        if isinstance(first[key], (np.ndarray, float)):
+            if not np.allclose(first[key], second[key]):
+                # print(key, first[key], second[key], flush=True)
+                return False
+            continue
+
+        # print(type(first[key]), type(second[key]), isinstance(first[key], np.ndarray), flush=True)
+        if first[key] != second[key]:
+            # print(key, first[key], second[key], flush=True)
+            return False
+
+    return True
+
+
 # Caching for SPEEEEEEEEEEEEEEEEEEEED
 CURRENT_AC_DATA = None
 CURRENT_LOADS = None
+
+
 def get_loads_from_acdata(ac_data, nlim, nodes, L_cruise, D_cruise, M_cruise):
     global CURRENT_AC_DATA, CURRENT_LOADS
-    if CURRENT_AC_DATA == ac_data:
+    if compare_approximate(ac_data, CURRENT_AC_DATA):
         return CURRENT_LOADS
-    
+
     wing_structure = WingStructure(ac_data, airfoil_shape, nodes)
-    
+
     Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
         L_cruise, D_cruise, M_cruise, wing_structure, ac_data=ac_data, load_factor=nlim
     )
 
+    # print(nlim, np.max(np.abs(L_cruise)), np.max(np.abs(Vz)), np.max(np.abs(Mx)), flush=True)
+
     CURRENT_LOADS = Vx, Vy, Vz, Mx, My, Mz
-    CURRENT_AC_DATA = ac_data
+    CURRENT_AC_DATA = copy.deepcopy(ac_data)
 
     return Vx, Vy, Vz, Mx, My, Mz
+
 
 # def MOI_from_variables(*args):
 #     return constraint_data_from_variables(*args)[0]
@@ -400,6 +476,7 @@ def run_optimiser(
     nodes=401,
     maxiter=None,
     full_return=False,
+    verbose=False,
 ):
     """
     Function to run the optimization of the wing structure
@@ -450,7 +527,10 @@ def run_optimiser(
     l_box_up, l_box_down = l_box_up[(l_box_up.shape[0] // 2) :], l_box_down[(l_box_down.shape[0] // 2) :]
     chord_dist = wing_structure.chord_distribution
     y_points = wing_structure.ypts
-    chord_dist_halfspan, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
+    chord_dist_halfspan, y_points_halfspan = (
+        chord_dist[(chord_dist.shape[0] // 2) :],
+        y_points[(y_points.shape[0] // 2) :],
+    )
 
     hmax = wing_structure.hmax_dist.flatten()  # maximum height of the wingbox, as a function of y
     hmax = hmax[(hmax.shape[0] // 2) :]
@@ -591,7 +671,7 @@ def run_optimiser(
     # Perform the optimization
     len_node_segment = wing_structure.b / (2 * n_halfspan)
 
-    solver_options = {"maxiter": maxiter} if maxiter is not None else {}
+    solver_options = {"maxiter": maxiter, "disp": True} if maxiter is not None else {"disp": True}
 
     objective_args = (
         htot,
@@ -602,6 +682,7 @@ def run_optimiser(
         stringer_sections_halfspan,
         n_halfspan,
         centre_node,
+        verbose,
     )
 
     solution = minimize(
@@ -618,7 +699,7 @@ def run_optimiser(
     optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers = unstack_variables(
         solution.x
     )
-    weight = get_weight(solution.x, *objective_args)
+    weight = get_weight(solution.x, *objective_args[:-1])
     print(solution.message)
     # I = get_I(optimized_t_spar, optimized_t_skin, optimized_no_stringers, wing_structure.stringer_area)
     # deflection = get_deflection(I, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
@@ -661,7 +742,7 @@ if __name__ == "__main__":
         max_deflect,
         max_rib_dist,
         hmax,
-    ) = run_optimiser(aircraft_data, nodes=1000, maxiter=10000, max_deflect=1.7, full_return=True)
+    ) = run_optimiser(aircraft_data, nodes=1000, maxiter=1000, max_deflect=1.7, full_return=True, verbose=True)
     # print(max_rib_dist)
 
     # MOI, y, M, E
@@ -673,6 +754,12 @@ if __name__ == "__main__":
     )
 
     Vx, Vy, Vz, Mx, My, Mz = loads
+
+    plt.plot(y_points_halfspan, MOI_args[-3][-len(y_points_halfspan) :], "r-", label="Lift")
+    plt.plot(y_points_halfspan, Vz, "b-", label="Vz")
+    plt.grid()
+    plt.legend()
+    plt.show()
 
     deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
     axial_forces = get_axial_forces(Mx, Vy, MOI, h_frontspar / 2, stringers_at_nodes, A_stringer)
