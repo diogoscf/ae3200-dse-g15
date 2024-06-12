@@ -194,7 +194,7 @@ def AileronSizing(acd=aircraft_data):
     slope = (end_y - start_y) / (end_x - start_x)
 
     # positon of aileron hinge can be varied but always needs to be placed behind
-    pos_lst = np.arange(0.25, 0.36, 0.05)
+    pos_lst = np.arange(0.25, 0.76, 0.05)
 
     design_found = False
 
@@ -238,6 +238,7 @@ def AileronSizing(acd=aircraft_data):
             acd["Aileron"]["CL_P"] = CL_P
             acd["Aileron"]["turn_time"] = turn_time
             acd["Aileron"]["hinge_position"] = pos
+            #print(acd["Aileron"])
             break
 
     if design_found:
@@ -248,5 +249,5 @@ def AileronSizing(acd=aircraft_data):
 
 if __name__ == "__main__":
     # AileronDerivatives()
-    StickArm(acd=aircraft_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
-    # AileronSizing()
+    #StickArm(acd=aircraft_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
+    AileronSizing()
