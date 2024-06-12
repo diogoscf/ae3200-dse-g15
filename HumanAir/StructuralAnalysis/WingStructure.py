@@ -45,13 +45,14 @@ class WingStructure:
         self.t2_spar = ac_data["Geometry"]["t_spar_root"]  # [m] thickness at the root
         self.t_skin = ac_data["Geometry"]["t_skin_wing"]  # [m] thickness of skin
         self.spar_pos = np.array(ac_data["Geometry"]["spar_pos"])  # position of spars
-        self.stringer_area = ac_data["Geometry"]["wing_stringer_area_m"]  # [m2] area of stringers
+        self.stringer_area = ac_data["Geometry"]["wing_stringer_area_m2"]  # [m2] area of stringers
         self.cr = ac_data["Aero"]["c_root_wing"]
         self.ct = self.cr * self.taper_ratio
         self.b = ac_data["Aero"]["b_Wing"]
         self.ypts = np.linspace(-self.b / 2, self.b / 2, self.nodes)
         self.stringer_number = ac_data["Geometry"]["wing_stringer_number"]
         self.stringer_sections = ac_data["Geometry"]["wing_stringer_sections"]
+        self.material_rho = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["rho"]
 
         self.chord_distribution = self.calculate_chord_distribution()
         self.spars = self.chord_distribution.reshape(-1, 1) * self.spar_pos
@@ -240,6 +241,22 @@ class WingStructure:
         I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar * 3 + h_rearspar * 3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
+    
+    def weight(self):
+        _, h_s1s2 = self.h_s1s2()
+        l_box_up, l_box_down = self.d_s1s2()
+        h_frontspar = h_s1s2[:, 0].flatten()
+        h_rearspar = h_s1s2[:, 1].flatten()
+        htot = h_frontspar + h_rearspar
+        w_top = l_box_up.flatten()  # width of top "straight" skin, as a function of y
+        w_bottom = l_box_down.flatten()  # width of bottom "straight" skin, as a function of y
+        wtot = w_bottom + w_top
+
+        W_spar = np.sum(self.material_rho * self.t_spar_dist * htot * self.nodes)
+        W_skin = np.sum(self.material_rho * self.t_skin * wtot * self.nodes)
+        W_stringers = np.sum(self.material_rho * self.stringer_area * self.stringer_dist * self.nodes)
+        weight = W_skin + W_spar + W_stringers
+        return weight
 
 
 if __name__ == "__main__":

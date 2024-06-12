@@ -14,7 +14,7 @@ from HumanAir.StructuralAnalysis.LoadDistributions import (
     InternalLoads,
     force_distribution,
     moment_distribution,
-    weight_distribution,
+    # weight_distribution,
     interpolate_Cl_Cd_Cm,
     get_deflection,
 )
@@ -84,9 +84,9 @@ def get_axial_forces(Mx, Vy, MOI, h_max, stringers_at_nodes, A_stringer):
     return P
 
 
-def get_shear_stress(Vz, My, Q, MOI, area, t_spar):
+def get_shear_stress(Vz, My, Q, MOI, enclosed_area, t_spar):
     shear_from_transverse = Vz * Q / (MOI * t_spar)
-    shear_from_torsion = My / (2 * area * t_spar)
+    shear_from_torsion = My / (2 * enclosed_area * t_spar)
     return shear_from_transverse + shear_from_torsion
 
 
@@ -110,12 +110,12 @@ def get_I(t_spar, t_skin, no_stringers, A_stringer, w_top, w_bottom, h_avemax, h
     return MOI
 
 
-def get_A(t_skin, t_spar, no_stringers, A_stringer, spar_pos, h_frontspar, h_rearspar):
+def get_A(t_skin, t_spar, no_stringers, A_stringer, spar_pos, h_frontspar, h_rearspar, chord_dist):
     A = (
         h_frontspar * t_spar
         + h_rearspar * t_spar
         + no_stringers * A_stringer
-        + 2 * t_skin * (spar_pos[1] - spar_pos[0])
+        + 2 * t_skin * (spar_pos[1] - spar_pos[0]) * chord_dist
     )
     return A
 
@@ -153,9 +153,27 @@ def unstack_variables(variables):
         no_stringers * CONVERSION_FACTOR_STRINGERS,
     )
 
+# Caching for SPEEEEEEEEEEEEEEEEEEEED
+CURRENT_AC_DATA = None
+CURRENT_LOADS = None
+def get_loads_from_acdata(ac_data, nlim, nodes, L_cruise, D_cruise, M_cruise):
+    global CURRENT_AC_DATA, CURRENT_LOADS
+    if CURRENT_AC_DATA == ac_data:
+        return CURRENT_LOADS
+    
+    wing_structure = WingStructure(ac_data, airfoil_shape, nodes)
+    
+    Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
+        L_cruise, D_cruise, M_cruise, wing_structure, ac_data=ac_data, load_factor=nlim
+    )
 
-def MOI_from_variables(*args):
-    return constraint_data_from_variables(*args)[0]
+    CURRENT_LOADS = Vx, Vy, Vz, Mx, My, Mz
+    CURRENT_AC_DATA = ac_data
+
+    return Vx, Vy, Vz, Mx, My, Mz
+
+# def MOI_from_variables(*args):
+#     return constraint_data_from_variables(*args)[0]
 
 
 def constraint_data_from_variables(
@@ -167,9 +185,16 @@ def constraint_data_from_variables(
     h_frontspar,
     h_rearspar,
     n_halfspan,
+    n_fullspan,
     stringer_sections_halfspan,
     spar_pos,
+    chord_dist,
     centre_node,
+    ac_data,
+    nlim,
+    L_cruise,
+    D_cruise,
+    M_cruise,
 ):
     t_spar_root, t_spar_tip, t_skin, no_stringers = unstack_variables(variables)
 
@@ -182,21 +207,32 @@ def constraint_data_from_variables(
     MOI = get_I(t_spar, t_skin, stringers_at_nodes, A_stringer, w_top, w_bottom, h_avemax, h_frontspar, h_rearspar)
 
     Q = get_Q(t_spar, h_frontspar, h_rearspar)
-    area = get_A(t_skin, t_spar, stringers_at_nodes, A_stringer, spar_pos, h_frontspar, h_rearspar)
+    area = get_A(t_skin, t_spar, stringers_at_nodes, A_stringer, spar_pos, h_frontspar, h_rearspar, chord_dist)
 
-    return MOI, stringers_at_nodes, t_spar, t_skin, Q, area
+    enclosed_area = (h_frontspar + h_rearspar) / 2 * (spar_pos[1] - spar_pos[0]) * chord_dist
+
+    ac_data["Geometry"]["t_spar_root"] = t_spar_root
+    ac_data["Geometry"]["t_spar_tip"] = t_spar_tip
+    ac_data["Geometry"]["t_skin_wing"] = t_skin
+    ac_data["Geometry"]["wing_stringer_number"] = no_stringers
+
+    loads = get_loads_from_acdata(ac_data, nlim, n_fullspan, L_cruise, D_cruise, M_cruise)
+
+    return MOI, stringers_at_nodes, t_spar, t_skin, Q, area, enclosed_area, loads
 
 
-def deflection_constraint(variables, y, Mx, max_deflect, E, MOI_args):
-    MOI = MOI_from_variables(variables, *MOI_args)
+def deflection_constraint(variables, y, max_deflect, E, MOI_args):
+    MOI, *_, loads = constraint_data_from_variables(variables, *MOI_args)
+    Mx = loads[3]
     deflection = get_deflection(MOI, y, Mx, E)
     # print(np.max(deflection), flush=True)
     return (max_deflect - np.max(deflection)) / max_deflect
 
 
-def stringer_buckling_constraint(variables, Mx, Vy, A_stringer, hmax, I_stringer, L_eff, E, MOI_args):
+def stringer_buckling_constraint(variables, A_stringer, hmax, I_stringer, L_eff, E, MOI_args):
     P_cr = (np.pi) ** 2 * E * I_stringer / L_eff**2  # critical force at which stringer will buckle
-    MOI, stringers = constraint_data_from_variables(variables, *MOI_args)[:2]
+    MOI, stringers, *_, loads = constraint_data_from_variables(variables, *MOI_args)[:2]
+    Vy, Mx = loads[1], loads[3]
 
     # compressive stress
     P = get_axial_forces(Mx, Vy, MOI, hmax, stringers, A_stringer)
@@ -204,23 +240,25 @@ def stringer_buckling_constraint(variables, Mx, Vy, A_stringer, hmax, I_stringer
     return (P_cr - np.max(P)) / P_cr
 
 
-def tensile_failure_constraint(variables, Mx, Vy, hmax, sigma_yield, MOI_args):
-    MOI, *_, area = constraint_data_from_variables(variables, *MOI_args)
+def tensile_failure_constraint(variables, hmax, sigma_yield, MOI_args):
+    MOI, *_, area, _, loads = constraint_data_from_variables(variables, *MOI_args)
+    Vy, Mx = loads[1], loads[3]
     sigma = get_max_axial_stress(Mx, Vy, MOI, hmax, area)
     # print((sigma_yield - np.max(sigma)) / sigma_yield, variables, flush=True)
     return (sigma_yield - np.max(sigma)) / sigma_yield
 
 
-def shear_buckling_constraint(variables, Vz, My, E, nu, h_rearspar, MOI_args, ks=9.5):
+def shear_buckling_constraint(variables, E, nu, h_rearspar, MOI_args, ks=9.5):
     # inertia
-    MOI, _, t_spar, _, Q, area = constraint_data_from_variables(variables, *MOI_args)
+    MOI, _, t_spar, _, Q, _, enclosed_area, loads = constraint_data_from_variables(variables, *MOI_args)
+    Vz, My = loads[2], loads[4]
 
     # critical shear stress
     # critical height between the two spars is shorter spar
     shear_critical = (np.pi) ** 2 * ks * E / (12 * (1 - nu) ** 2) * (t_spar / h_rearspar) ** 2
 
     # shear
-    shear = np.abs(get_shear_stress(Vz, My, Q, MOI, area, t_spar))
+    shear = np.abs(get_shear_stress(Vz, My, Q, MOI, enclosed_area, t_spar))
 
     idx = np.argmin((shear_critical - shear))
     # print(np.pi, ks, E, nu, t_spar[idx], h_rearspar[idx], shear_critical[idx])
@@ -289,8 +327,6 @@ def get_critical_skin_buckling_stress(
 
 def stiffened_skin_buckling_constraint(
     variables,
-    Vy,
-    Mx,
     spar_pos,
     A_stringer,
     hmax,
@@ -304,7 +340,7 @@ def stiffened_skin_buckling_constraint(
     C_stiffener=0.425,
     C_we=4,
 ):
-    MOI, stringers_at_nodes, _, t_skin, _, area = constraint_data_from_variables(variables, *MOI_args)
+    MOI, stringers_at_nodes, _, t_skin, _, area, _, loads = constraint_data_from_variables(variables, *MOI_args)
     stress_critical = get_critical_skin_buckling_stress(
         spar_pos,
         stringers_at_nodes,
@@ -320,6 +356,8 @@ def stiffened_skin_buckling_constraint(
         C_we=C_we,
     )
 
+    Vy, Mx = loads[1], loads[3]
+
     stress_applied = get_max_axial_stress(Mx, Vy, MOI, hmax, area)
 
     # print(np.max(stress_applied), stress_critical[(np.argmax(np.abs(stress_critical)))], flush=True)
@@ -334,9 +372,9 @@ def get_force_distributions(AoA, altitude, Vc, Cl_data, Cdi_data, Cm_data, chord
 
     M_cruise = moment_distribution(AoA, altitude, Vc, chord_dist, Cm_data, ac_data=ac_data)
 
-    W, W_fuel, idxs, _ = weight_distribution(chord_dist, ac_data=ac_data)
+    # W, W_fuel, idxs, _ = weight_distribution(chord_dist, wing_structure, ac_data=ac_data)
 
-    return L_cruise, D_cruise, M_cruise, W, W_fuel, idxs
+    return L_cruise, D_cruise, M_cruise  # , W, W_fuel, idxs
 
 
 last_time = time.time()
@@ -412,7 +450,7 @@ def run_optimiser(
     l_box_up, l_box_down = l_box_up[(l_box_up.shape[0] // 2) :], l_box_down[(l_box_down.shape[0] // 2) :]
     chord_dist = wing_structure.chord_distribution
     y_points = wing_structure.ypts
-    _, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
+    chord_dist_halfspan, y_points_halfspan = chord_dist[(chord_dist.shape[0] // 2) :], y_points[(y_points.shape[0] // 2) :]
 
     hmax = wing_structure.hmax_dist.flatten()  # maximum height of the wingbox, as a function of y
     hmax = hmax[(hmax.shape[0] // 2) :]
@@ -463,13 +501,13 @@ def run_optimiser(
 
     material = ac_data["Geometry"]["wingbox_material"]
 
-    L_cruise, D_cruise, M_cruise, W, W_fuel, idxs = get_force_distributions(
+    L_cruise, D_cruise, M_cruise = get_force_distributions(
         AoA, altitude, ac_data["Performance"]["Vc_m/s"], Cl_DATA, Cdi_DATA, Cm_DATA, chord_dist, ac_data=ac_data
     )
 
-    Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
-        L_cruise, D_cruise, M_cruise, wing_structure, ac_data=ac_data, load_factor=nlim
-    )
+    # Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
+    #     L_cruise, D_cruise, M_cruise, wing_structure, ac_data=ac_data, load_factor=nlim
+    # )
 
     centre_node = nodes % 2 == 1
 
@@ -485,16 +523,23 @@ def run_optimiser(
         h_frontspar,
         h_rearspar,
         n_halfspan,
+        nodes,
         stringer_sections_halfspan,
         wing_structure.spar_pos,
+        chord_dist_halfspan,
         centre_node,
+        ac_data,
+        nlim,
+        L_cruise,
+        D_cruise,
+        M_cruise,
     ]
 
     constraints = [
         {
             "type": "ineq",
             "fun": deflection_constraint,
-            "args": (y_points_halfspan, Mx, max_deflect, ac_data["Materials"][material]["E"], MOI_args),
+            "args": (y_points_halfspan, max_deflect, ac_data["Materials"][material]["E"], MOI_args),
         },
         # Rene says no stringer (column) buckling
         # {
@@ -514,14 +559,12 @@ def run_optimiser(
         {
             "type": "ineq",
             "fun": tensile_failure_constraint,
-            "args": (Mx, Vy, hmax, ac_data["Materials"][material]["sigma_y"], MOI_args),
+            "args": (hmax, ac_data["Materials"][material]["sigma_y"], MOI_args),
         },
         {
             "type": "ineq",
             "fun": stiffened_skin_buckling_constraint,
             "args": (
-                Vy,
-                Mx,
                 wing_structure.spar_pos,
                 wing_structure.stringer_area,
                 hmax,
@@ -537,8 +580,6 @@ def run_optimiser(
             "type": "ineq",
             "fun": shear_buckling_constraint,
             "args": (
-                Vz,
-                My,
                 ac_data["Materials"][material]["E"],
                 ac_data["Materials"][material]["poisson_ratio"],
                 h_rearspar,
@@ -590,10 +631,6 @@ def run_optimiser(
             optimized_no_stringers,
             weight,
             y_points_halfspan,
-            Mx,
-            My,
-            Vy,
-            Vz,
             MOI_args,
             wing_structure.stringer_area,
             wing_structure.spar_pos,
@@ -616,10 +653,6 @@ if __name__ == "__main__":
         optimized_no_stringers,
         weight,
         y_points_halfspan,
-        Mx,
-        My,
-        Vy,
-        Vz,
         MOI_args,
         A_stringer,
         spar_pos,
@@ -634,15 +667,17 @@ if __name__ == "__main__":
     # MOI, y, M, E
     material = aircraft_data["Geometry"]["wingbox_material"]
 
-    MOI, stringers_at_nodes, t_spar, t_skin, Q, area = constraint_data_from_variables(
+    MOI, stringers_at_nodes, t_spar, t_skin, Q, area, enclosed_area, loads = constraint_data_from_variables(
         stack_variables(optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers),
         *MOI_args,
     )
 
+    Vx, Vy, Vz, Mx, My, Mz = loads
+
     deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
     axial_forces = get_axial_forces(Mx, Vy, MOI, h_frontspar / 2, stringers_at_nodes, A_stringer)
     axial_stresses = get_max_axial_stress(Mx, Vy, MOI, hmax, area)
-    shear = np.abs(get_shear_stress(Vz, My, Q, MOI, area, t_spar))
+    shear = np.abs(get_shear_stress(Vz, My, Q, MOI, enclosed_area, t_spar))
 
     max_force_allowed = (
         (np.pi) ** 2
@@ -668,9 +703,9 @@ if __name__ == "__main__":
     E = aircraft_data["Materials"][material]["E"]
     shear_critical = (np.pi) ** 2 * ks * E / (12 * (1 - nu) ** 2) * (t_spar / h_rearspar) ** 2
 
-    idx = np.argmin((shear_critical - shear))
-    print("------ FINAL ---------")
-    print(np.pi, ks, E, nu, t_spar[idx], h_rearspar[idx], shear_critical[idx])
+    # idx = np.argmin((shear_critical - shear))
+    # print("------ FINAL ---------")
+    # print(np.pi, ks, E, nu, t_spar[idx], h_rearspar[idx], shear_critical[idx])
     # print(shear_critical[idx] / 1e6, shear[idx] / 1e6, ((shear_critical - shear) / shear_critical)[idx], flush=True)
 
     print("Total time taken:", time.time() - start, "s")

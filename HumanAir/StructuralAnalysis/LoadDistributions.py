@@ -51,8 +51,7 @@ def moment_distribution(AoA, altitude, V, chord_dist, Cm_DATA, ac_data=aircraft_
     return M
 
 
-def weight_distribution(c, ac_data=aircraft_data):
-    structureweight = ac_data["CL2Weight"]["Wing Weight"]
+def weight_distribution(c, wing_structure, ac_data=aircraft_data):
     fuelweight = ac_data["CL2Weight"]["Wfuel_N"]
 
     # Fuel is located between the struts
@@ -62,10 +61,7 @@ def weight_distribution(c, ac_data=aircraft_data):
     extra = 0 if c.shape[0] % 2 == 0 else 1
     c_between_struts = c[(nodes_half_wing - n_before_strut) : (nodes_half_wing + n_before_strut + extra)]
 
-    # Assume structure weight is distributed with chord
-    # This is not a very good assumption, but it should be conservative
-    W_avg_structure = structureweight / c.shape[0]
-    W_structure = W_avg_structure * c / (np.mean(c))
+    W_structure = wing_structure.weight()
 
     # Assume fuel weight is distributed with airfoil area, i.e. with chord^2
     W_avg_fuel = fuelweight / c_between_struts.shape[0]
@@ -226,12 +222,12 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_dat
     return Vz_strut, Vy_strut, V_strut
 
 
-def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1, vmax=0):
+def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1):
     y_points = wing_structure.ypts
     nodes = wing_structure.nodes
     chord_dist = wing_structure.chord_distribution
 
-    W, *_ = weight_distribution(chord_dist, ac_data=ac_data)
+    W, *_ = weight_distribution(chord_dist, wing_structure, ac_data=ac_data)
     nodes_half_wing = nodes // 2
     # b_half = ac_data["Aero"]["b_Wing"] / 2
     sweep = ac_data["Aero"]["QuarterChordSweep_Wing_deg"]
