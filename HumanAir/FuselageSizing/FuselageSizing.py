@@ -50,7 +50,7 @@ class FuselageSizing:
     t_fuse = 0.04  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
-    def __init__(self, ac_data=aircraft_data, bat_xcg=None):
+    def __init__(self, ac_data=aircraft_data, bat_xcg=0.1):
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
         self.h_engine = ac_data["Geometry"]["h_engine"]  # height of engine [m]
@@ -206,7 +206,7 @@ class FuselageSizing:
     def plot_side_drawing(self, s_gear):
         fig, ax = plt.subplots()
 
-        battery_center = self.bat_xcg * self.length_fus()
+        self.battery_center = self.bat_xcg * self.length_fus()
         y_floor = self.y_floorheight()
         y_engine = y_floor + self.h_floor
         ax.axhline(y=0, color="gray", linewidth=0.3)
@@ -297,7 +297,7 @@ class FuselageSizing:
                 facecolor="none",
             )
             battery = patches.Rectangle(
-                (self.l_long_main, FuselageSizing.t_fuse),
+                (self.battery_center - l_battery/2, FuselageSizing.t_fuse),
                 l_battery,
                 self.h_battery,
                 linewidth=0.5,
@@ -329,7 +329,7 @@ class FuselageSizing:
                 facecolor="none",
             )
             battery = patches.Rectangle(
-                (self.l_end_nose_land() + FuselageSizing.t_fuse, FuselageSizing.t_fuse),
+                (self.battery_center - l_battery/2, FuselageSizing.t_fuse),
                 l_battery,
                 self.h_battery,
                 linewidth=0.5,
@@ -493,10 +493,10 @@ if __name__ == "__main__":
 
     fuselage_size = FuselageSizing(ac_data=aircraft_data)
     # print(fuselage_size.above_position())
-    print(fuselage_size.below_position(0.1))
-    print(fuselage_size.battery_dim(0.1))
+    # print(fuselage_size.below_position(0.1))
+    # print(fuselage_size.battery_dim(0.1))
     # print(fuselage_size.bottom_width(0.1))
-    # fuselage_size.plot_side_drawing(s_gear=0.1)
+    fuselage_size.plot_side_drawing(s_gear=0.5)
     # fuselage_size.plot_front_view(s_gear=0.1)
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init

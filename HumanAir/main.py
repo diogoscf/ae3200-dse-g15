@@ -746,16 +746,19 @@ if __name__ == "__main__":
 
     # run the fuselage sizing script
     if run_fuselage_sizing:
+
         # initialise the gear clearance
         s_gear = 0.2
 
         # load the design.json file
         fuselage_sizing_dict = load_json_file("design.json")
 
+        xcg_bat = fuselage_sizing_dict["Stability"]["Xcg_battery_m"] / fuselage_sizing_dict["Geometry"]["fus_length_m"]
+
         logging.info(" Calculating the fuselage dimension")
 
         # get the fuselage sizing class
-        fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict)
+        fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg = xcg_bat)
 
         # show all of the dimensions of the fuselage
         print("Top Width", round(fuselage_size.top_width(), 2), "[m]")
