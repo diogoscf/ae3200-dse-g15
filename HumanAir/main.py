@@ -20,6 +20,10 @@ from HumanAir.Class_I_Weight.Class_I_Weight_Estimation import WeightEstm as Weig
 from HumanAir.LoadingDiagram.Main import WP_WS
 from HumanAir.Weights_and_CG.weight_fractions import iterate_cg_lg
 from HumanAir.AerodynamicDesign.Aerodynamics_Main import aerodynamic_design
+from HumanAir.AerodynamicDesign.FlapsDesign import flaps_design
+from HumanAir.AerodynamicDesign.FullStability import TailIteration
+from HumanAir.AerodynamicDesign.AileronSizing import AileronSizing, StickArm, AileronDerivatives
+from HumanAir.AerodynamicDesign.WeathercockStability import VerticalTailSizing
 from HumanAir.FinancialAnalysis.conceptual_financial_analysis import hourly_operating_cost
 from HumanAir.Class_II_Weight.Class_II_Weight import RunClassII
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight as ClassIIWeight
@@ -46,7 +50,6 @@ def setup_logging():
 
 
 def load_json_file(file_name):
-
     "Getting the design.json file"
     # Get the directory of the current script
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -83,7 +86,6 @@ def create_parameters_lists():
 
 
 def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_step=0.001):
-
     # tune the parameters with a reasonable range
     # A_lst = np.arange(7.0, 18.51, 0.5)
     # eta_p_lst = np.arange(0.80, 0.851, 0.05)
@@ -94,9 +96,16 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
     # V_cruise_lst = np.arange(60, 65.1, 1)
     # climbrate_lst = np.arange(2.5, 5.01, 0.5)
 
-    A_lst, eta_p_lst, Clmax_clean_lst, Clmax_TO_lst, Clmax_Land_lst, Cd0_lst, V_cruise_lst, climbrate_lst = (
-        parameter_func()
-    )
+    (
+        A_lst,
+        eta_p_lst,
+        Clmax_clean_lst,
+        Clmax_TO_lst,
+        Clmax_Land_lst,
+        Cd0_lst,
+        V_cruise_lst,
+        climbrate_lst,
+    ) = parameter_func()
 
     # calculate the total numbers of iterations
     total_iterations = (
@@ -125,7 +134,6 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
                         for Clmax_Land in Clmax_Land_lst:
                             for Cd0 in Cd0_lst:
                                 for V_cruise in V_cruise_lst:
-
                                     # update the endurance based on v cruise
                                     ac_data["Performance"]["endurance"] = 1111200 / V_cruise / 3600
 
@@ -150,9 +158,10 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
                                         p.climbrate = climbrate
 
                                         # initialise the loading diagram to get W/P and W/S
-                                        ac_data["Performance"]["W/P_N/W"], ac_data["Performance"]["W/S_N/m2"] = (
-                                            WP_WS().calculate_optimal_point()
-                                        )
+                                        (
+                                            ac_data["Performance"]["W/P_N/W"],
+                                            ac_data["Performance"]["W/S_N/m2"],
+                                        ) = WP_WS().calculate_optimal_point()
 
                                         # initialise the class I weight estimation
                                         WeightEstm = WeightEstimation(ac_data)
@@ -167,7 +176,6 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
                                         # set the condition to find the first point with co2 ratio > 50
                                         ok = 0
                                         for step in range(len(bat)):
-
                                             # calculate the power required cruise
                                             ac_data["Power_prop"]["P_req_cruise_W"] = (
                                                 ac_data["Performance"]["P_cruise/P_TO"]
@@ -200,7 +208,6 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
                                             )
 
                                             if co2_ratio * 100 > 15 and ok == 0:
-
                                                 idx += 1
                                                 ok = 1
 
@@ -248,7 +255,6 @@ def Generate(p, ac_data, run=False, parameter_func=create_parameters_lists, bat_
 
 
 def calculate_weighted_score(point_data, weights):
-
     # setting the worst optimal data
     worst_optimal_data = {
         "A": 9.5,
@@ -339,11 +345,10 @@ def find_optimal_design(
 
 "Main Function to run the program"
 if __name__ == "__main__":
-
     # set up the conditions to run the program
     run_generate = False
     run_classI = False
-    run_classII = False
+    run_classII = True
     run_fuselage_sizing = True
 
     # initialise the logging
@@ -478,7 +483,7 @@ if __name__ == "__main__":
                     ac_data,
                     checkwingplanform=False,
                     checkflowparameters=False,
-                    checkstability=True,
+                    checkstability=False,
                     checkhsplanform=False,
                 )[0]
 
@@ -509,7 +514,6 @@ if __name__ == "__main__":
                     break
 
             if answer.lower() == "y":
-
                 # print the range of the cg
                 print(f"Xcg Range is between: {round(min(CGlist), 2)} and {round(max(CGlist), 2)} [m]")
 
@@ -532,14 +536,23 @@ if __name__ == "__main__":
                 find_optimal_stability = True
 
                 # get the aerodynamic specifications and save them to the dictionary
-                mac_wing, mac_HS, c_root_wing, c_tip_wing, c_root_HS, c_tip_HS, S_Wing, S_h, b_Wing, b_h = (
-                    aerodynamic_design(
-                        ac_data,
-                        checkwingplanform=True,
-                        checkflowparameters=False,
-                        checkstability=True,
-                        checkhsplanform=True,
-                    )
+                (
+                    mac_wing,
+                    mac_HS,
+                    c_root_wing,
+                    c_tip_wing,
+                    c_root_HS,
+                    c_tip_HS,
+                    S_Wing,
+                    S_h,
+                    b_Wing,
+                    b_h,
+                ) = aerodynamic_design(
+                    ac_data,
+                    checkwingplanform=True,
+                    checkflowparameters=False,
+                    checkstability=True,
+                    checkhsplanform=True,
                 )
 
                 # updating the aerodynamic data in the dictionary
@@ -597,7 +610,6 @@ if __name__ == "__main__":
 
     # run the class 2 estimation
     if run_classII:
-
         # initialise the class I weight estimation
         WeightEstm = ClassIIWeight(ac_data=ac_data)
 
@@ -619,7 +631,6 @@ if __name__ == "__main__":
 
         # loop to find the best battery percentage after the class 2 weight estimation
         for step in range(len(bat)):
-
             # calculate the power required cruise
             ac_data["Power_prop"]["P_req_cruise_W"] = (
                 ac_data["Performance"]["P_cruise/P_TO"] * np.exp(coeff_exp[1]) * np.exp(coeff_exp[0] * bat[step])
@@ -689,9 +700,10 @@ if __name__ == "__main__":
         improvement_co2(first_level=first_level, second_level=second_level, check_over_time=True)
 
         # calculate the loading distribution diagrams
-        class_2_dictionary["Performance"]["n_max"], class_2_dictionary["Performance"]["n_min"] = (
-            calc_nmax_nmin_manoeuvre(class_2_dictionary["Weights"]["MTOW_N"])
-        )
+        (
+            class_2_dictionary["Performance"]["n_max"],
+            class_2_dictionary["Performance"]["n_min"],
+        ) = calc_nmax_nmin_manoeuvre(class_2_dictionary["Weights"]["MTOW_N"])
 
         # logging.info(" Calculating the loading distribution diagram")
 
@@ -699,6 +711,30 @@ if __name__ == "__main__":
         # load_distribution_diagram(ac_data=class_2_dictionary)
 
         # logging.info(" Calculating the loading distribution diagram successful")
+        logging.info(" Sizing the flaps")
+
+        # sizing the flaps
+        flaps_design(ac_data=class_2_dictionary)
+
+        logging.info(" Calculating flap position and design succesfully")
+        logging.info(" Sizing the ailerons")
+
+        # sizing the ailerons and the stick arm forces
+        AileronSizing(acd=class_2_dictionary)
+        AileronDerivatives(acd=class_2_dictionary)
+        StickArm(acd=class_2_dictionary, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
+
+        logging.info(" Calculating aileron position and design succesfully")
+        logging.info(" Sizing the vertical tail")
+
+        # size the vertical tail
+        VerticalTailSizing(acd=class_2_dictionary)
+        logging.info(" Sizing the vertical tail successful")
+        logging.info(" Sizing the horizontal tail")
+
+        # size the horizontal tail
+        TailIteration(ac_datafile=class_2_dictionary)
+        logging.info(" Sizing the horizontal tail successful")
 
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")
@@ -711,7 +747,6 @@ if __name__ == "__main__":
 
     # run the fuselage sizing script
     if run_fuselage_sizing:
-
         # initialise the gear clearance
         s_gear = 0.2
 
