@@ -86,7 +86,7 @@ def calculate_manoeuvre_velocities(
     Vc_ms : float, optional
         The cruising speed in m/s. Taken from `aircraft_data` if not provided.
     rho : float, optional
-        The air density. If not provided, it will be calculated using `h` or by defauly at sea-level.
+        The air density. If not provided, it will be calculated using `h` or by default at sea-level.
     h : float, optional
         The altitude in meters. If not provided, it will be set to sea level.
 
