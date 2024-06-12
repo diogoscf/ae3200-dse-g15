@@ -25,7 +25,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 257272.76790293524,
+        "E_bat_Wh": 257295.50063119116,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -35,13 +35,13 @@
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
         "eta_p": 0.8500000000000001,
-        "bat": 0.131,
-        "P_req_cruise_W": 238542.0231279792,
+        "bat": 0.13,
+        "P_req_cruise_W": 241262.9185485953,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 298177.528909974,
+        "P_req_TO_W": 301578.6481857441,
         "Dp_m": 2.286
     },
     "Geometry": {
