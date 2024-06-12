@@ -175,20 +175,37 @@ class Aircraft:
         """
         rho = density(h, dT)
         
+        min_speed = self.stall_speed(W, h, dT)
+        max_speed = self.V_max(W, h, dT)
+        
+        rc_max = 0
+        
         def RC(V): # calculates climbrate *-1
-            CL = W / (0.5 * rho * V**2 * self.S)
+            CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
             CD = self.CD(CL)
             P_r = V * (0.5 * rho * V**2 * self.S * CD)
             P_a = self.P_a(h, dT, V=V)
-            return -(P_a - P_r) / W # minus so that minimize() will maximize
+            return (P_a - P_r) / W
+
+        for V in np.arange(min_speed, max_speed+1, 1):
+            rc = RC(V)
+            if rc > rc_max:
+                rc_max = rc
         
-        bounds = [self.stall_speed(W, h, dT), self.V_max(W, h, dT)]
-        if bounds[0] > bounds[1]:
-            return 0
+        # def RC(V): # calculates climbrate *-1
+        #     CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
+        #     CD = self.CD(CL)
+        #     P_r = V * (0.5 * rho * V**2 * self.S * CD)
+        #     P_a = self.P_a(h, dT, V=V)
+        #     return -(P_a - P_r) / W # minus so that minimize() will maximize
         
-        res = minimize_scalar(RC, bounds=bounds, method="bounded") # minus to convert back to positive
-        rc_max = -res.fun
+        # bounds = [self.stall_speed(W, h, dT), self.V_max(W, h, dT)]
+        # if bounds[0] > bounds[1]:
+        #     return 0
         
+        # res = minimize_scalar(RC, bounds=bounds, method="bounded") # minus to convert back to positive
+        # rc_max = -res.fun
+                
         #
         # alternate method, does not take into account varying prop efficiency,
         # result is almost the same
@@ -200,8 +217,12 @@ class Aircraft:
     
     def climb_slope_max(self, W, h, dT, gear="up", flaps="up"):
         """
-        Calculates maximum possuble climb slope for given conditions, assuming
-        constant V.
+        Calculates climb slope for given conditions, assuming
+        constant V. However because of the limitations of the drag calculations
+        it will keep the CL at 1 or below.
+        
+        Note that CS23 requires the speed at which this is measured to be
+        >= 1.2 * the stall speed in this config
         
         Takes into account lower power available at low speeds, and since the
         max climb slope is achieved at high CL (=low speeds) this method gives
@@ -228,22 +249,47 @@ class Aircraft:
         """
         rho = density(h, dT)
         
+        #min_speed = 1.2 * self.stall_speed(W, h, dT, flaps=flaps) # according to CS23
+        min_speed = np.sqrt(W / (0.5 * rho * self.S * 1)) # CLmax = 1, beyond that no accurate results
+        max_speed = self.V_max(W, h, dT)
+        
+        slope_max = 0
+        
         def slope(V): # calculates slope *-1
-            CL = W / (0.5 * rho * V**2 * self.S)
-            CD = self.CD(CL, gear=gear, flaps=flaps)
+            CL = W / (0.5 * rho * V**2 * self.S) # small angle assumption, L=W cos(gamma) -> L=W
+            CD = self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations
             D = 0.5 * rho * V**2 * self.S * CD
             T = self.T(V, h, dT)
-            return -(T - D) / W # minus so that minimize() will maximize
-        
-        bounds = [self.stall_speed(W, h, dT), self.V_max(W, h, dT)]
-        if bounds[0] > bounds[1]:
-            return 0
-        
-        res = minimize_scalar(slope, bounds=bounds, method="bounded") # minus to convert back to positive
-        slope_max = np.tan(np.arcsin(-res.fun)) *100 # result is sin(gamma), we need tan(gamma)
+            return (T - D) / W
 
+        for V in np.arange(min_speed, max_speed+1, 1):
+            sl = slope(V)*100
+            if sl > slope_max:
+                slope_max = sl
+
+                                
+        # def slope(V): # calculates slope *-1
+        #     CL = min(1, W / (0.5 * rho * V**2 * self.S)) # small angle assumption, L=W cos(gamma) -> L=W
+        #     CD = self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations
+        #     D = 0.5 * rho * V**2 * self.S * CD
+        #     T = self.T(V, h, dT)
+        #     return -(T - D) / W # minus so that minimize() will maximize
+        
+        # min_speed = 1.2 * self.stall_speed(W, h, dT, flaps=flaps) # according to CS23
+        # max_speed = self.V_max(W, h, dT)
+        
+        # if min_speed > max_speed:
+        #     return 0 # this happends when h > ceiling, just return 0
+        
+        
+        # res = minimize_scalar(slope, bounds=[min_speed, max_speed], method="bounded") # minus to convert back to positive
+        # slope_max = np.tan(np.arcsin(-res.fun)) * 100 # result is sin(gamma), we need tan(gamma)
+
+        # if res.x < min_speed:
+        #     raise Exception(f"Speed for climb slope = {res.x:.2f}, which less than minimum {min_speed:.2f}.")
+        
         #
-        # alternate method for testing (does not take into account varying prop eff)
+        # alternate method for testing (does not take into account varying prop eff and thus returns too high max slope)
         #
         
         # if flaps == "up":

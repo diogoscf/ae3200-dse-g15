@@ -14,6 +14,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
 sys.path.append(project_root)
 
+import aircraft_data
+
 from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
 import HumanAir.LoadingDiagram.Equations as eq
 import HumanAir.LoadingDiagram.Plotting as plot
@@ -132,6 +134,14 @@ class WP_WS:
 
     #  ========== 2: Plot Lines =========="""
     def plot(self, saving=None):
+        
+        acf = aircraft_data.aircraft_data
+        W = acf["CL2Weight"]["MTOW_N"]
+        S = acf["Aero"]["S_Wing"]
+        P = acf["Power_prop"]["Fuel_engine_P_max_cont_W"]
+        our_design = [W/S, W/P]
+        
+        
         optimal_point = self.calculate_optimal_point()
 
         plt.figure(figsize=(10, 7))
@@ -153,6 +163,7 @@ class WP_WS:
         # plt.scatter(WS[index],Cruise_y[index], label="Chosen Design Point", s=100, color='red')
         plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color="blue")
         plt.scatter(optimal_point[1], optimal_point[0], label="Design Point", s=100, color="green")
+        plt.scatter(our_design[0], our_design[1], label="Current Design", s=100, color="orange")
         plt.xlabel(r"W/S (N/$m^2$)")
         plt.ylabel("W/P (N/W)")
         plt.ylim(0, 0.25)

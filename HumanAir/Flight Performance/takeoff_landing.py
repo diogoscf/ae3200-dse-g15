@@ -9,7 +9,8 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     method (p372-376).
     
     Does not take rotation phase into account, simply calculates distance from
-    V=0 to V=lift off speed.
+    V=0 to V=lift off speed, but adds one second of flight at V_LOF as margin, so as to
+    not take off at the very end of the runway.
     
     It is inaccurate for high postive slopes and will throw an exception when
     the integration error estimate exceeds 0.001 m.
@@ -36,13 +37,14 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
         Integration absolute error estimate [m]
 
     """
-    
-    # TODO: multiply by safety factor to ensure takeoff not at very end of runway?
-    
+        
     # TODO: ground effect currently only accounted for by reduced induced drag
     # there is a good discussion on ground effect in  
     # Fundamentals of Aircraft and Airship Design: Volume 1 by nicolai
     # pages 257-260
+    # not taking into account ground effect
+    # for T/O = conservative
+    # for landing = non-conservative but not limiting...
 
     rho = density(h, dT)
     g = 9.80665
@@ -51,13 +53,13 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     CD_ground = acf.CD(CL_ground, gear="down", flaps="TO", ground_effect_h=20) # C_D during ground run
     
     
-    # Torenbeek estimates V_LOF to be 1.2*stall speed in T/O 
-    # configuration. This is a conservative estimate since CS23 requires the
-    # rotation speed to be >=V_S1 or >=1.05*V_MC and the speed at 15m >=1.2*V_S1
+    # Torenbeek estimates V_LOF to be 1.2*stall speed in T/O config
+    # Gudmundsen estimates V_LOF to be 1.1*stall speed in T/O config
+    # CS23 requires the rotation speed to be >=V_S1 and the speed at 15m >=1.2*V_S1
     V_S_TO = np.sqrt(W / (0.5 * rho * acf.S * acf.CLmax_TO))
-    V_LOF = max(1.2 * V_S_TO, 0)#35) # 35 at 750+18 was chosen by control department as minimum
-    # TODO: check if 35 is really required
-    print(V_LOF)
+    V_LOF = max(1.1 * V_S_TO, 30) # 30 was chosen as minium by control department as minimum
+
+    print(f"Takeoff V_LOF = {V_LOF:.2f}")
     xi = np.arctan(slope/100) # angle of slope
     
     if surface == "paved":
@@ -66,13 +68,17 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
         mu_r = 0.05 # short cut grass, ruijgrok p372
     
     def f(V):
-        # eq 16.2-6 with acceleration from eq 16.2-9
+        # gudmundsson eq 16.2-6 with acceleration from eq 16.2-9
         T = acf.T(V, h, dT)
         D = 0.5 * rho * V**2 * acf.S * CD_ground
         L = 0.5 * rho * V**2 * acf.S * CL_ground
         return V / (g/W * (T - D - mu_r*(W*np.cos(xi) - L) - W*np.sin(xi)))
     
     s_run, accuracy = quad(f, 0, V_LOF) # integrate from V=0 to V=V_LOF
+    
+    s_run += V_LOF # add one second of flight as margin
+    
+    print(np.sin(xi))
     
     if accuracy > 10**-3:
         raise Exception(f"Low accuracy in integrating takeoff distance: \
@@ -179,11 +185,11 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
     L = 0.5 * rho * V_avg**2 * acf.S * CL
     D = 0.5 * rho * V_avg**2 * acf.S * CD
     
-    D_g = mu*(W-L)*acf.weight_on_MLG # assumes zero pitching moment
+    D_g = mu*(W*np.cos(xi)-L)*acf.weight_on_MLG # assumes zero pitching moment, W*cos was not in gudmundsen but in ruijgrok for takeoff, also added here
 
     s_ground = - V_T**2 * W / (2 * g * (T - D - D_g - W * np.sin(xi))) # gudmundsen eq 22-2 and 22-13
     
-    s_ground += 3* V_T # add 2 seconds of overflight, 1 second of free roll at touchdown speed
+    s_ground += 3 * V_T # add 2 seconds of overflight, 1 second of free roll at touchdown speed
     
    #  def f(V):
    #      L = 0.5 * rho * V**2 * acf.S * CL
