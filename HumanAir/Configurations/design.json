@@ -63,7 +63,52 @@
         "h_aisle": 1.524,
         "w_motor": 0.54,
         "l_motor": 0.176,
-        "l_empty": 0.32
+        "l_empty": 0.32,
+        "t_spar_tip": 0.006944189477840185,
+        "t_spar_root": 0.005378972722462206,
+        "t_skin_wing": 0.001760777707100579,
+        "spar_pos": [
+            0.15,
+            0.65
+        ],
+        "wing_stringer_area_m2": 0.000171,
+        "wing_stringer_MOI_m4": 1.458e-08,
+        "wing_stringer_thickness_m": 0.003,
+        "wing_stringer_small_length_m": 0.03,
+        "wing_rib_pos": [
+            0.05,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.35,
+            0.4,
+            0.45,
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.72,
+            0.79,
+            0.86,
+            0.93,
+            1
+        ],
+        "strut_loc_b/2": 0.6,
+        "strut_loc_MAC": 0.25,
+        "strut_section_area_m2": 0.005,
+        "wing_stringer_number": [
+            2,
+            59,
+            31
+        ],
+        "wing_stringer_sections": [
+            0.4,
+            0.3,
+            0.3
+        ],
+        "wingbox_material": "Aluminium"
     },
     "Aero": {
         "CLmax_clean": 2.2,
@@ -251,5 +296,13 @@
         "Electric Motor Weight": 384.552,
         "Passenger Mass": 84,
         "Luggage Mass": 16.8
+    },
+    "Materials": {
+        "Aluminium": {
+            "rho": 2710,
+            "E": 68900000000.0,
+            "sigma_y": 276000000.0,
+            "poisson_ratio": 0.33
+        }
     }
 }
