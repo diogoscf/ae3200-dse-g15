@@ -33,7 +33,7 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
             break
 
     if Pmw > tyres[-1, 2]:
-        print("WARNING: NO TYRE AVAILBLE")
+        print("WARNING: NO TYRE AVAILABLE")
         con = input("Continue? (y/n): ")
         if con == "n":
             sys.exit("Too heavy for landing gear")
@@ -53,6 +53,9 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
             ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
         ) * np.tan(np.radians(18))
         iter = abs(H_s / H_strike - 1)
+        if H_strike < 0.6 * Dw_m:
+            H_strike = 0.6 * Dw_m
+            iter = 0
 
     H_s = H_strike
     l_n = l_m * Pmg / Pnw
@@ -79,11 +82,10 @@ def component_mass(ac_datafile=aircraft_data):
     fracs = pd.read_csv(fracs_file, index_col=0).to_numpy()
 
     # Convert weights to kg and with contingency
-    # TODO: Change to actual datafile
-    MTOW_cont = ac_datafile["Weights"]["MTOW_N"] / 9.81 * ac_datafile["Contingency"]
-    OEW_cont = ac_datafile["Weights"]["OEW_N"] / 9.81 * ac_datafile["Contingency"]
-    Wbat_cont = ac_datafile["Weights"]["Wbat_N"] / 9.81 * ac_datafile["Contingency"]
-    Ww_cont = ac_datafile["Weights"]["Ww_N"] / 9.81 * ac_datafile["Contingency"]
+    MTOW_cont = ac_datafile["Weights"]["MTOW_N"] / 9.81
+    OEW_cont = ac_datafile["Weights"]["OEW_N"] / 9.81
+    Wbat_cont = ac_datafile["Weights"]["Wbat_N"] / 9.81
+    Ww_cont = ac_datafile["Weights"]["Ww_N"] / 9.81
 
     # Set up known fractions
     OEW_frac = OEW_cont / MTOW_cont
@@ -127,19 +129,19 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
 
     # Get fractions, weights, cg
     wcg = component_mass(ac_datafile)
-    WF_cont = ac_datafile["Weights"]["Wfuel_N"] / 9.81 * ac_datafile["Contingency"]
-    WPL_cont = ac_datafile["Weights"]["Wpl_des_kg"] * ac_datafile["Contingency"]
+    WF_cont = ac_datafile["Weights"]["Wfuel_N"] / 9.81
+    WPL_cont = ac_datafile["Weights"]["Wpl_des_kg"]
 
     # Get preliminary moving CG locations from the nose
     Xcg_pld = 0.5 * ac_datafile["Geometry"]["fus_length_m"]
-    Xcg_f = ac_datafile["Geometry"]["XLEMAC_m"] + 0.4 * ac_datafile["Geometry"]["MGC_m"]
+    Xcg_f = ac_datafile["Geometry"]["XLEMAC_m"] + 0.4 * ac_datafile["Aero"]["MAC_wing"]
 
     # Get preliminary component CG locations
-    CGw_MAC = 0.4 * ac_datafile["Geometry"]["MGC_m"]
+    CGw_MAC = 0.4 * ac_datafile["Aero"]["MAC_wing"]
     wcg[2, 0] = ac_datafile["Geometry"]["XLEMAC_m"] + CGw_MAC  # Wing
     wcg[2, 2] = 0.05 * ac_datafile["Geometry"]["fus_length_m"]  # Powertrain
     wcg[2, 4] = 0.4 * ac_datafile["Geometry"]["fus_length_m"]  # Fuselage
-    wcg[2, 5] = 0.95 * ac_datafile["Geometry"]["fus_length_m"]  # Empennage
+    wcg[2, 5] = 1.0 * ac_datafile["Geometry"]["fus_length_m"]  # Empennage
     wcg[2, 6] = 0.4 * ac_datafile["Geometry"]["fus_length_m"]  # Fixed equipment
     wcg[2, 7] = 0.4 * ac_datafile["Geometry"]["fus_length_m"]  # Battery
 
@@ -169,7 +171,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
         # Get CG excursion positions
         xlemacold = xlemac
         Xcg_OEW = np.average(wcg[2, 0:8], weights=wcg[1, 0:8])
-        Xcg_f = xlemac + 0.4 * ac_datafile["Geometry"]["MGC_m"]
+        Xcg_f = xlemac + 0.4 * ac_datafile["Aero"]["MAC_wing"]
         CGlist = [
             Xcg_OEW,
             (Xcg_OEW * wcg[1, -1] + Xcg_pld * WPL_cont) / (wcg[1, -1] + WPL_cont),
@@ -201,8 +203,8 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
         # Update X LEMAC
         wcg[2, -1] = Xcg_OEW
         cgwg = np.average(wcg[2, 0:2] - xlemac, weights=wcg[1, 0:2])
-        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8]) + ac_datafile["Geometry"]["MGC_m"] * (
-            (cgwg / ac_datafile["Geometry"]["MGC_m"]) * np.sum(wcg[1, 0:2]) / np.sum(wcg[1, 2:8])
+        xlemac = np.average(wcg[2, 2:8], weights=wcg[1, 2:8]) + ac_datafile["Aero"]["MAC_wing"] * (
+            (cgwg / ac_datafile["Aero"]["MAC_wing"]) * np.sum(wcg[1, 0:2]) / np.sum(wcg[1, 2:8])
             - PERCENTAGE * (1 + np.sum(wcg[1, 0:2]) / np.sum(wcg[1, 2:8]))
         )
         wcg[2, 0] = CGw_MAC + xlemac

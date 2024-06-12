@@ -59,7 +59,7 @@ def calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, commuter_ac=
 
     WS_Nm2 = aircraft_data["Performance"]["W/S_N/m2"]
 
-    MGC_m = aircraft_data["Geometry"]["MGC_m"]
+    MGC_m = aircraft_data["Aero"]["MAC_wing"]
     clalpha = aircraft_data["Aero"]["CLalpha"]
 
     CLmax_clean = aircraft_data["Aero"]["CLmax_clean"]
@@ -308,9 +308,17 @@ def plot_gust_diagram(
 if __name__ == "__main__":
     Vc_ms, Vd_ms, _, V_S1, _, _ = calculate_manoeuvre_velocities(aircraft_data)
 
-    n_max, n_min, V_B, n_cruise_pve, n_cruise_nve, n_dive_pve, n_dive_nve, n_B_pve, n_B_nve = (
-        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000, temp_offset=18)
-    )
+    (
+        n_max,
+        n_min,
+        V_B,
+        n_cruise_pve,
+        n_cruise_nve,
+        n_dive_pve,
+        n_dive_nve,
+        n_B_pve,
+        n_B_nve,
+    ) = calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000, temp_offset=18)
 
     plot_gust_diagram(
         Vc_ms,
