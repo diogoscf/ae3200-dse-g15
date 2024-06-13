@@ -489,9 +489,9 @@ def static_trimmed_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, V, q, W, C_M_AC
     """
     # Define matrices
     K_s = np.array([[K_h, 0], [0, K_theta]])
-    K_a = np.array([[0, -S * C_L_alpha], [0, S * C_L_alpha * (0.5 + a) * V]])
-    F_st_alpha0 = np.array([[-S * C_L_alpha], [S * C_L_alpha * (0.5 + a) * V]])
-    F_st_M_AC = np.array([[0], [S * C_M_AC * 2 * V]])
+    K_a = np.array([[0, -S * C_L_alpha], [0, S * C_L_alpha * (0.5 + a) * B]])
+    F_st_alpha0 = np.array([[-S * C_L_alpha], [S * C_L_alpha * (0.5 + a) * B]])
+    F_st_M_AC = np.array([[0], [S * C_M_AC * 2 * B]])
 
     # Iterative aeroelastic trim solution
     tol1 = 1
@@ -719,7 +719,19 @@ if __name__ == "__main__":
             print("########################################################################################")
             print("GOOD NEWS: No flutter occurs over all mass configurations and operating regimes")
             print("########################################################################################")
-
+            flutter_diagram(
+                m_airfoil,
+                I_theta,
+                S_theta,
+                1.225, # just plot the flutter diagram at sea level
+                K_h,
+                K_theta,
+                C_L_alpha,
+                Sw,
+                a,
+                B,
+                V_arr = np.linspace(eps, 400 * 1.15, 500),
+            )
         # If flutter:
         else:
             # Plot flutter diagram for this configuration
