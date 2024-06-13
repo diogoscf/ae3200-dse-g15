@@ -302,7 +302,8 @@
             "rho": 2710,
             "E": 68900000000.0,
             "sigma_y": 276000000.0,
-            "poisson_ratio": 0.33
+            "poisson_ratio": 0.33,
+            "sigma_ult": 310e6
         }
     }
 }
