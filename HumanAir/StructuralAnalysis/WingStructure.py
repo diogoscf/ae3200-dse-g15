@@ -56,6 +56,7 @@ class WingStructure:
         self.total_structural_weight = ac_data["Structures"]["structural_wing_weight"]
         self.material_E = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["E"]
         self.material_G = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["G"]
+        self.w_fuselage = ac_data["Geometry"]["fus_width_m"]
 
         self.chord_distribution = self.calculate_chord_distribution()
         self.spars = self.chord_distribution.reshape(-1, 1) * self.spar_pos
@@ -111,7 +112,7 @@ class WingStructure:
             raise ValueError("The number of stringer sections should be equal to the number of stringers per section")
 
         stringers = np.ones(self.nodes // 2)
-        stringer_section_ends = np.rint(np.cumsum(self.stringer_sections) * (len(stringers) // 2)).astype(int)
+        stringer_section_ends = np.rint(np.cumsum(self.stringer_sections) * (len(stringers))).astype(int)
         stringer_section_starts = np.insert(stringer_section_ends[:-1], 0, 0)
         for i in range(len(self.stringer_sections)):
             start = stringer_section_starts[i]
@@ -120,7 +121,7 @@ class WingStructure:
             stringers[start:end] = self.stringer_number[i]
 
         middle = [] if self.nodes % 2 == 0 else [self.stringer_number[0]]
-        stringers = np.concatenate([stringers, middle, np.flip(stringers)])
+        stringers = np.concatenate([np.flip(stringers), middle, stringers])
 
         return stringers
 

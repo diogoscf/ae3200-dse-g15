@@ -401,7 +401,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 if __name__ == "__main__":
     stress_ult = aircraft_data["Materials"]["Aluminium"]["sigma_ult"] / 1e6
     nodes = 501
-    load_factor = 2
+    load_factor = 1.5
     AoA = 0
     altitude = 0
 
@@ -450,6 +450,8 @@ if __name__ == "__main__":
 
     axial_stresses = get_max_axial_stress(Mx, Vy, wing_structure.Ixx()[nodes // 2 :], hmax, area)
     stress_max = np.max(np.abs(axial_stresses)) / 1e6
+
+    print(stress_max, stress_ult)
 
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)

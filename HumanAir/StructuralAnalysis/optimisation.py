@@ -33,7 +33,7 @@ from HumanAir.aircraft_data import (
 # force_dist_params = None # Check whether parameters to get the distribution have changed
 
 
-def get_stringers_at_nodes(stringer_sections, no_stringers, nodes_halfspan, centre_node=True):
+def get_stringers_at_nodes(stringer_sections, no_stringers, nodes_halfspan):
     if len(stringer_sections) != len(no_stringers):
         raise ValueError("The number of stringer sections should be equal to the number of stringers per section")
 
@@ -46,25 +46,64 @@ def get_stringers_at_nodes(stringer_sections, no_stringers, nodes_halfspan, cent
         # print(start, end)
         stringers[start:end] = no_stringers[i]
 
-    if centre_node:
-        stringers = np.append(stringers, no_stringers[-1])
-
     return stringers
 
 
-def get_weight(variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node):
+def full_skin_weight(t_skin, chord_dist, rho, non_fus_idx, airfoil_shape=airfoil_shape):
+    """
+    Calculate the weight of the skin of the wing
+
+    Parameters
+    ----------
+    t_skin : float
+        Thickness of the skin [m]
+    chord_dist : np.array
+        Distribution of the chord length along the wing [m]
+    rho : float
+        Density of the material [kg/m^3]
+    non_fus_idx : int
+        Index of the first non-fuselage node
+    airfoil_shape : pd.DataFrame
+        DataFrame containing the coordinates of the airfoil shape
+
+    Returns
+    -------
+    W_skin : np.array
+        Weight of the skin at each node [N]
+    """
+
+    x_vals = airfoil_shape["x"].values
+    y_vals = airfoil_shape["y"].values
+    l_skin = np.sum(np.sqrt(np.diff(x_vals) ** 2 + np.diff(y_vals) ** 2))
+    W_skin = rho * l_skin * t_skin * chord_dist[non_fus_idx:]
+    return W_skin
+
+
+def get_weight(
+    variables,
+    htot,
+    rho,
+    len_nodes,
+    A_stringer,
+    stringer_sections_halfspan,
+    n_halfspan,
+    chord_dist,
+    non_fus_idx,
+    print_skin=False,
+):
     t_spar_tip, t_spar_root, t_skin, no_stringers = unstack_variables(variables)
-    stringers_at_nodes = get_stringers_at_nodes(
-        stringer_sections_halfspan, no_stringers, n_halfspan, centre_node=centre_node
-    )
+    stringers_at_nodes = get_stringers_at_nodes(stringer_sections_halfspan, no_stringers, n_halfspan)
 
     t_spar = np.linspace(t_spar_root, t_spar_tip, n_halfspan)
 
     W_spar = np.sum(rho * t_spar * htot * len_nodes)
-    W_skin = np.sum(rho * t_skin * wtot * len_nodes)
+    # W_skin = rho * t_skin * Sw # Two sides, but half a wing
+    W_skin = np.sum(full_skin_weight(t_skin, chord_dist, rho, non_fus_idx, airfoil_shape=airfoil_shape) * len_nodes)
     W_stringers = np.sum(rho * A_stringer * stringers_at_nodes * len_nodes)
     weight = W_skin + W_spar + W_stringers
 
+    if print_skin:
+        print(W_skin)
     return weight
 
 
@@ -75,17 +114,17 @@ time_at_last_iter = None
 def objective(
     variables,
     htot,
-    wtot,
     rho,
     len_nodes,
     A_stringer,
     stringer_sections_halfspan,
     n_halfspan,
-    centre_node,
+    chord_dist,
+    non_fus_idx,
     verbose=False,
 ):
     weight = get_weight(
-        variables, htot, wtot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, centre_node
+        variables, htot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, chord_dist, non_fus_idx
     )
     obj_val = (weight - 40) / 100  # Lowest possible is around 60 kg
     # print(obj_val, flush=True)
@@ -265,18 +304,15 @@ def constraint_data_from_variables(
     stringer_sections_halfspan,
     spar_pos,
     chord_dist,
-    centre_node,
     ac_data,
     nlim,
     L_cruise,
     D_cruise,
     M_cruise,
 ):
-    t_spar_root, t_spar_tip, t_skin, no_stringers = unstack_variables(variables)
+    t_spar_tip, t_spar_root, t_skin, no_stringers = unstack_variables(variables)
 
-    stringers_at_nodes = get_stringers_at_nodes(
-        stringer_sections_halfspan, no_stringers, n_halfspan, centre_node=centre_node
-    )
+    stringers_at_nodes = get_stringers_at_nodes(stringer_sections_halfspan, no_stringers, n_halfspan)
 
     t_spar = np.linspace(t_spar_root, t_spar_tip, n_halfspan)
 
@@ -297,10 +333,10 @@ def constraint_data_from_variables(
     return MOI, stringers_at_nodes, t_spar, t_skin, Q, area, enclosed_area, loads
 
 
-def deflection_constraint(variables, y, max_deflect, E, MOI_args):
+def deflection_constraint(variables, y, max_deflect, E, w_fuselage, MOI_args):
     MOI, *_, loads = constraint_data_from_variables(variables, *MOI_args)
     Mx = loads[3]
-    deflection = get_deflection(MOI, y, Mx, E)
+    deflection = get_deflection(MOI, y, Mx, E, w_fuselage)
     # print(np.max(deflection), flush=True)
     return (max_deflect - np.max(deflection)) / max_deflect
 
@@ -469,7 +505,7 @@ def print_time():
 # TODO: Make the AoA taken from aircraft_data, need to implement it in the json
 def run_optimiser(
     ac_data=aircraft_data,
-    AoA=-5.0,
+    AoA=0.0,
     altitude=None,
     nlim=None,
     max_deflect=1.7,
@@ -514,9 +550,10 @@ def run_optimiser(
     """
 
     altitude = ac_data["Performance"]["Altitude_Cruise_m"] if altitude is None else altitude
-    nlim = ac_data["Performance"]["n_ult"] / 1.5 if nlim is None else nlim
+    nlim = ac_data["Performance"]["n_max"] if nlim is None else nlim
 
-    n_halfspan = nodes // 2
+    extra = 1 if nodes % 2 == 1 else 0
+    n_halfspan = (nodes // 2) + extra
 
     # Initialize Wing Structure Class
     wing_structure = WingStructure(ac_data, airfoil_shape, nodes)
@@ -544,7 +581,10 @@ def run_optimiser(
     h_avemax = htot / 4  # averaged "max" height from the central line, as a function of y
     w_top = l_box_up.flatten()  # width of top "straight" skin, as a function of y
     w_bottom = l_box_down.flatten()  # width of bottom "straight" skin, as a function of y
-    wtot = w_bottom + w_top  # total width, just for calculation ease
+    # wtot = w_bottom + w_top  # total width, just for calculation ease
+
+    w_fuselage = ac_data["Geometry"]["fus_width_m"] / 2  # width of the fuselage (we are interested in half)
+    non_fus_idx = np.argmin(np.abs(y_points_halfspan - w_fuselage))  # index of the first non-fuselage node
 
     # E = 68e9  # Young's Modulus for aluminium (Pa)
     # sigma_yield = 40e6  # Yield strength for aluminium (Pa)
@@ -553,8 +593,8 @@ def run_optimiser(
     # no_string = [50, 30, 20]
 
     # Initial guess for thickness of spar
-    t_spar = wing_structure.t_spar_dist.flatten()
-    t_spar_root0, t_spar_tip0 = t_spar[0], t_spar[-1]
+    # t_spar = wing_structure.t_spar_dist.flatten()
+    t_spar_tip0, t_spar_root0 = wing_structure.t1_spar, wing_structure.t2_spar
     t_skin0 = wing_structure.t_skin
     stringer_sections_halfspan = wing_structure.stringer_sections
     no_string = wing_structure.stringer_number
@@ -562,7 +602,7 @@ def run_optimiser(
     # Constant skin thickness [m]
     # t_skin0 = wing_structure.t_skin * np.ones(t_spar0.shape)
     # no_stringers0 = get_stringers_at_nodes(
-    #     stringer_sections_halfspan, no_string, n_halfspan, centre_node=(nodes % 2 == 1)
+    #     stringer_sections_halfspan, no_string, n_halfspan
     # )
     # Initial guess
     # Spar thickness uniformly decreases from root to tip, skin thickness is constant
@@ -589,8 +629,6 @@ def run_optimiser(
     #     L_cruise, D_cruise, M_cruise, wing_structure, ac_data=ac_data, load_factor=nlim
     # )
 
-    centre_node = nodes % 2 == 1
-
     rib_dists = np.diff(ac_data["Geometry"]["wing_rib_pos"], prepend=0.0, append=1.0)
     max_rib_dist_m = np.max(rib_dists) * wing_structure.b / 2
 
@@ -607,7 +645,6 @@ def run_optimiser(
         stringer_sections_halfspan,
         wing_structure.spar_pos,
         chord_dist_halfspan,
-        centre_node,
         ac_data,
         nlim,
         L_cruise,
@@ -619,7 +656,7 @@ def run_optimiser(
         {
             "type": "ineq",
             "fun": deflection_constraint,
-            "args": (y_points_halfspan, max_deflect, ac_data["Materials"][material]["E"], MOI_args),
+            "args": (y_points_halfspan, max_deflect, ac_data["Materials"][material]["E"], w_fuselage, MOI_args),
         },
         # Rene says no stringer (column) buckling
         # {
@@ -675,13 +712,13 @@ def run_optimiser(
 
     objective_args = (
         htot,
-        wtot,
         ac_data["Materials"][material]["rho"],
         len_node_segment,
         wing_structure.stringer_area,
         stringer_sections_halfspan,
         n_halfspan,
-        centre_node,
+        chord_dist_halfspan,
+        non_fus_idx,
         verbose,
     )
 
@@ -699,8 +736,8 @@ def run_optimiser(
     optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers = unstack_variables(
         solution.x
     )
-    weight = get_weight(solution.x, *objective_args[:-1])
-    print(solution.message)
+    weight = get_weight(solution.x, *objective_args[:-1], print_skin=True)
+    # print(solution.message)
     # I = get_I(optimized_t_spar, optimized_t_skin, optimized_no_stringers, wing_structure.stringer_area)
     # deflection = get_deflection(I, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
 
@@ -720,6 +757,7 @@ def run_optimiser(
             max_deflect,
             max_rib_dist_m,
             hmax,
+            w_fuselage,
         )
 
     return optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers, weight
@@ -742,7 +780,8 @@ if __name__ == "__main__":
         max_deflect,
         max_rib_dist,
         hmax,
-    ) = run_optimiser(aircraft_data, nodes=1000, maxiter=1000, max_deflect=1.7, full_return=True, verbose=True)
+        w_fuselage,
+    ) = run_optimiser(aircraft_data, nodes=501, maxiter=1000, max_deflect=1.7, full_return=True, verbose=True)
     # print(max_rib_dist)
 
     # MOI, y, M, E
@@ -755,13 +794,7 @@ if __name__ == "__main__":
 
     Vx, Vy, Vz, Mx, My, Mz = loads
 
-    plt.plot(y_points_halfspan, MOI_args[-3][-len(y_points_halfspan) :], "r-", label="Lift")
-    plt.plot(y_points_halfspan, Vz, "b-", label="Vz")
-    plt.grid()
-    plt.legend()
-    plt.show()
-
-    deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"])
+    deflection = get_deflection(MOI, y_points_halfspan, Mx, aircraft_data["Materials"][material]["E"], w_fuselage)
     axial_forces = get_axial_forces(Mx, Vy, MOI, h_frontspar / 2, stringers_at_nodes, A_stringer)
     axial_stresses = get_max_axial_stress(Mx, Vy, MOI, hmax, area)
     shear = np.abs(get_shear_stress(Vz, My, Q, MOI, enclosed_area, t_spar))
@@ -796,6 +829,12 @@ if __name__ == "__main__":
     # print(shear_critical[idx] / 1e6, shear[idx] / 1e6, ((shear_critical - shear) / shear_critical)[idx], flush=True)
 
     print("Total time taken:", time.time() - start, "s")
+
+    plt.figure()
+    plt.plot(y_points_halfspan, MOI_args[-3][-len(y_points_halfspan) :], "r-", label="Lift")
+    plt.plot(y_points_halfspan, Vz, "b-", label="Vz")
+    plt.grid()
+    plt.legend()
 
     plt.figure()
     plt.plot(y_points_halfspan, deflection, "g-", label="Deflection")
