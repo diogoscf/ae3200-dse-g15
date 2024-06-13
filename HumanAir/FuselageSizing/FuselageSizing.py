@@ -85,12 +85,16 @@ class FuselageSizing:
         self.l_main_lateral = ac_data["Landing_gear"]["ymin_m"]  # main landing gear position when opened
         self.l_long_nose = ac_data["Landing_gear"]["Xnw_m"]  # nose landing gear longitudinal position
         self.l_long_main = ac_data["Landing_gear"]["Xmw_m"]  # main landing gear longitudinal position
-        self.h_main_strut = ac_data["Landing_gear"]["l_s_m"] + 1 / 2 * self.D_main  # height of main strut [m]
         self.h_main = ac_data["Landing_gear"]["Wtm_m"]  # height of main tire [m]
+
+        self.h_main_strut = ac_data["Landing_gear"]["l_s_m"] + 1 / 2 * self.h_main  # height of main strut [m]
+
         self.h_nose_strut = (
             ac_data["Landing_gear"]["l_s_n"]
-            + tan(5 * np.pi / 180) * (ac_data["Landing_gear"]["l_s_m"] + ac_data["Landing_gear"]["l_s_n"])
-            + 1 / 2 * self.D_nose
+            + tan(5 * np.pi / 180) * (ac_data["Landing_gear"]["lm_m"] + ac_data["Landing_gear"]["ln_m"])
+            + 1 / 2 * self.h_nose
+            + self.D_main
+            - self.D_nose
         )  # height of nose strut [m]
 
     def n_row(self):
@@ -220,6 +224,8 @@ class FuselageSizing:
     def plot_side_drawing(self, s_gear, ac_data=aircraft_data):
         ac_data["Landing_gear"]["length_main_strut"] = self.length_main_strut(s_gear=0.1)
         ac_data["Landing_gear"]["length_nose_strut"] = self.h_nose_strut
+        ac_data["Landing_gear"]["Hs_nose"] = self.h_nose_strut - self.h_nose / 2
+        ac_data["Landing_gear"]["Hs_main"] = self.h_main_strut - self.h_main / 2
         fig, ax = plt.subplots()
 
         self.battery_center = self.bat_xcg * self.length_fus()
@@ -590,6 +596,10 @@ if __name__ == "__main__":
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init
     # print(fuselage_size.h_nose_strut)
+    print(fuselage_size.h_nose_strut)
+    print("1")
+    print(fuselage_size.h_main_strut)
+    print("2")
     print(fuselage_size.length_main_strut(0.1))
 
 

@@ -120,4 +120,4 @@ def flaps_design(ac_data=aircraft_data):
 
 if __name__ == "__main__":
     dict_test = flaps_design()
-    print(dict_test["Flaps"])
+    # print(dict_test["Flaps"])

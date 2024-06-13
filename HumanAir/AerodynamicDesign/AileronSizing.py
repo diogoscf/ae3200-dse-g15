@@ -238,7 +238,7 @@ def AileronSizing(acd=aircraft_data):
             acd["Aileron"]["CL_P"] = CL_P
             acd["Aileron"]["turn_time"] = turn_time
             acd["Aileron"]["hinge_position"] = pos
-            print(acd["Aileron"])
+            # print(acd["Aileron"])
             break
 
     if design_found:
