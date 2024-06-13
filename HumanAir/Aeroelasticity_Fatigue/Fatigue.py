@@ -216,7 +216,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                             )
                         )
                         break
-            Nf_actual = Nf/4
+            Nf_actual = Nf / 4
 
             # plot the experimental data curve
             plt.figure()
@@ -393,4 +393,4 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 if __name__ == "__main__":
     fatigue_life(Sult=310, alpha=0.161, Smax=59, verification=False, Experimental_SN=False)
     fatigue_life(Sult=310, alpha=0.161, Smax=59, verification=False, Experimental_SN=True)
-    fatigue_life(Sult = 310, alpha = 0.161, verification=True)
+    fatigue_life(Sult=310, alpha=0.161, verification=True)
