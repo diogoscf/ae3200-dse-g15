@@ -88,7 +88,8 @@ def Reversal(h, K_theta, CL_alpha, CM_ac_beta, B, rho):
     CL_beta = 2 * (
         np.sqrt(1 - h**2) + np.arccos(h)
     )  # The lift variation with deflection of the control surface (aileron).
-    q = -CL_beta * K_theta / (CL_alpha * CM_ac_beta * 2 * B * (2 * B))
+    q = CL_beta * K_theta / (CL_alpha * CM_ac_beta * 2 * B * (2 * B))
+
     V_rev = np.sqrt(2 * q / rho)
     return V_rev
 
@@ -193,7 +194,7 @@ def flutter_analysis(m, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a
             # (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value.
             # We can therefore discard the second and fourth eigenvalues in the array p
             # (which are the conjugates of p[0] and p[2] respectively).
-            p_save.append([p[0], p[2]])
+            p_save.append([p[1], p[3]])
         # Convert p_save to a numpy array for easier manipulation
         p_save = np.array(p_save)
 
@@ -314,7 +315,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
         # (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value.
         # We can therefore discard the second and fourth eigenvalues in the array p
         # (which are the conjugates of p[0] and p[2] respectively).
-        p_save.append([p[0], p[2]])
+        p_save.append([p[1], p[3]])
     # Convert p_save to a numpy array for easier manipulation
     p_save = np.array(p_save)
 
@@ -664,13 +665,13 @@ if __name__ == "__main__":
     ctip = wing_structure.ct
     chord_typical_section = croot + typical_section * (ctip - croot)
 
-    shear_centre_dist = 0.15 * chord_typical_section + 0.5  # TODO: This
+    shear_centre_dist = 0.15 * chord_typical_section + 0.41  # TODO: This
     B = chord_typical_section / 2  # Half-chord length of the typical section
     a = -(B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
 
     wingspan = wing_structure.b
     m_airfoil = wing_structure.total_structural_weight / wingspan / G
-    Sw = wing_structure.Sw
+    Sw = wing_structure.Sw / wingspan  # Wing surface area per unit span
 
     AoA = 0  # angle of attack at which to get the Cm_ac
     C_M_AC = np.interp(typical_section * wingspan / 2, Cm_data_wing[AoA]["y_span"], Cm_data_wing[AoA]["coefficient"])

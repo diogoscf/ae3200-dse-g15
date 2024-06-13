@@ -469,5 +469,7 @@ if __name__ == "__main__":
     #     * 180
     #     / np.pi
     # )
-    # plt.plot(y_points_plot, twist)
+
+    # deflection = get_deflection(wing_structure_data.Ixx()[nodes // 2 :], y_points_plot, Mx, aircraft_data["Materials"][aircraft_data["Geometry"]["wingbox_material"]]["E"])
+    # plt.plot(y_points_plot, deflection)
     # plt.show()
