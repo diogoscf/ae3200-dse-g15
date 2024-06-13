@@ -382,9 +382,6 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
         plt.show()
 
 
-
-
-
 if __name__ == "__main__":
     fatigue_life(Sult=500, alpha=0.1, Smax=120, verification=False, Experimental_SN=False)
     fatigue_life(Sult=500, alpha=0.1, Smax=120, verification=False, Experimental_SN=True)
