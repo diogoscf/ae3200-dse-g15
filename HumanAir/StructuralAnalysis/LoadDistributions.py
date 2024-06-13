@@ -25,11 +25,14 @@ from HumanAir.isa import isa
 #     return chord_length, y
 
 
-def get_deflection(MOI, y, M, E):
-    integrand = M / MOI
+# NOTE: w_fuselage is the full width, it will be divided by 2
+def get_deflection(MOI, y, M, E, w_fuselage):
+    non_fus_idx = np.argmin(np.abs(y - (w_fuselage/2)))
+    integrand = M[non_fus_idx:] / MOI[non_fus_idx:]
     # print(np.sum(I), np.sum(M), np.sum(integrand))
-    dvdy = -1 / E * integrate.cumulative_trapezoid(integrand, y, initial=0)
-    v = -integrate.cumulative_trapezoid(dvdy, y, initial=0)
+    dvdy = -1 / E * integrate.cumulative_trapezoid(integrand, y[non_fus_idx:], initial=0)
+    v = -integrate.cumulative_trapezoid(dvdy, y[non_fus_idx:], initial=0)
+    v = np.concatenate((np.zeros(non_fus_idx), v))
     return v
 
 
@@ -122,19 +125,19 @@ def read_points_from_load_dist(L_cruise, W_cruise, W_fuel, idxs):
     return a, b, c, d, e, f
 
 
-def strut_error_calculation(P, Vz, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut):
-    Vz_strut = P * np.cos(theta_strut)
+def strut_error_calculation(P, Vz, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut, w_fuselage):
+    Vz_strut = P * np.sin(theta_strut)
     Vz = Vz.copy()
     Vz[:n_before_strut] += Vz_strut  # [N]
     Mx = -integrate.cumulative_trapezoid(np.flip(Vz * y_points_halfspan), y_points_halfspan, initial=0)
     Mx = Mx[::-1]
-    v_wing = get_deflection(MOI, y_points_halfspan, Mx, E)[n_before_strut]
+    v_wing = get_deflection(MOI, y_points_halfspan, Mx, E, w_fuselage)[n_before_strut]
     v_strut = Vz_strut * l_strut / (A_strut * E)
 
     return v_wing - v_strut
 
 
-def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_data=aircraft_data):
+def strut_force(MOI, y_points_halfspan, Vz_orig, w_fuselage, max_iter=1000, tol=1e-6, ac_data=aircraft_data):
     strut_loc = ac_data["Geometry"]["strut_loc_b/2"]
     nodes_half_wing = len(y_points_halfspan)
     n_before_strut = np.rint(nodes_half_wing * strut_loc).astype(int)
@@ -154,7 +157,7 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_dat
 
     def strut_error_calc_w_args(p):
         return strut_error_calculation(
-            p, Vz_orig, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut
+            p, Vz_orig, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut, w_fuselage
         )
 
     P_curr = 0
@@ -226,8 +229,11 @@ def strut_force(MOI, y_points_halfspan, Vz_orig, max_iter=1000, tol=1e-6, ac_dat
         # P = P_new
 
     V_strut = P_curr
-    Vz_strut = P_curr * np.cos(theta_strut)
-    Vy_strut = P_curr * np.sin(theta_strut)
+    Vz_strut = P_curr * np.sin(theta_strut)
+    Vy_strut = P_curr * np.cos(theta_strut)
+
+    # print(V_strut)
+    # print(l_strut)
 
     return Vz_strut, Vy_strut, V_strut
 
@@ -259,6 +265,7 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1)
         wing_structure.Ixx()[nodes_half_wing:],
         y_points[nodes_half_wing:],
         Vz,
+        wing_structure.w_fuselage,
         max_iter=100,
         tol=1e-6,
         ac_data=ac_data,

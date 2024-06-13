@@ -621,7 +621,7 @@ def calculate_K_theta(wing_structure, typical_section):
     )
 
     deflection = get_deflection(
-        wing_structure.Ixx()[(wing_structure.nodes // 2) :], y_points_halfspan, M, wing_structure.material_E
+        wing_structure.Ixx()[(wing_structure.nodes // 2) :], y_points_halfspan, M, wing_structure.material_E, wing_structure.w_fuselage
     )
 
     return P / deflection[idx_section]
