@@ -53,6 +53,9 @@ class WingStructure:
         self.stringer_number = ac_data["Geometry"]["wing_stringer_number"]
         self.stringer_sections = ac_data["Geometry"]["wing_stringer_sections"]
         self.material_rho = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["rho"]
+        self.total_structural_weight = ac_data["Structures"]["structural_wing_weight"]
+        self.material_E = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["E"]
+        self.material_G = ac_data["Materials"][ac_data["Geometry"]["wingbox_material"]]["G"]
 
         self.chord_distribution = self.calculate_chord_distribution()
         self.spars = self.chord_distribution.reshape(-1, 1) * self.spar_pos
@@ -243,6 +246,24 @@ class WingStructure:
         I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar * 3 + h_rearspar * 3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
+
+    def torsional_constant(self):
+        t_spar = self.t_spar_dist
+        t_skin = self.t_skin
+        enclosed_area = self.enclosed_area_dist
+
+        _, h_s1s2 = self.h_s1s2()
+        l_box_up, l_box_down = self.d_s1s2()
+
+        h_frontspar = h_s1s2[:, 0]
+        h_rearspar = h_s1s2[:, 1]
+        htot = (h_frontspar + h_rearspar).flatten()
+        w_top = l_box_up.flatten()
+        w_bottom = l_box_down.flatten()
+        wtot = w_bottom + w_top
+
+        J = 4 * (enclosed_area**2) / ((htot / t_spar) + (wtot / t_skin))
+        return J
 
     def weight_dist(self):
         _, h_s1s2 = self.h_s1s2()

@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 from sympy import symbols, Matrix, det, Poly
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from HumanAir.aircraft_data import aircraft_data, Cl_data_wing, Cm_data_wing
+from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cm_data_wing
 from HumanAir.isa import isa
 from HumanAir.Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities
-
-# from HumanAir.StructuralAnalysis.LoadDistributions import load_distribution
+from HumanAir.StructuralAnalysis.WingStructure import WingStructure
+from HumanAir.StructuralAnalysis.LoadDistributions import get_deflection, get_twist
 
 
 """
@@ -273,7 +273,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
         non-dimensionalized by the half-chord length.
     B : float
         Half-chord length of the typical section (not wingspan!!!)
-    V_arr : numpy array
+    V_arr : np.ndarray
         Array containing all airspeeds you would like to analyse aircraft flutter for. Should be 0 to V_dive * 1.15
         (+15% for certification, according to Dr. Roeland De Breuker)
 
@@ -584,7 +584,8 @@ def calculate_zero_lift_AoA(CLdata, typical_section_span):
     CL_above = None
     CL_below = None
     alpha_below = None
-    for alpha in CLdata.keys().sort(reverse=True):
+
+    for alpha in sorted(list(CLdata.keys()))[::-1]:
         CL_at_alpha = np.interp(typical_section_span, CLdata[alpha]["y_span"], CLdata[alpha]["coefficient"])
         if CL_at_alpha > 0:
             CL_above = CL_at_alpha
@@ -598,10 +599,58 @@ def calculate_zero_lift_AoA(CLdata, typical_section_span):
     return alpha_0L * np.pi / 180
 
 
+def calculate_torsional_constant(wing_structure, typical_section=0.7):
+    J_dist = wing_structure.torsional_constant()
+    J_section = np.interp(typical_section * wing_structure.b / 2, wing_structure.ypts, J_dist)
+
+    return J_section
+
+
+def calculate_K_theta(wing_structure, typical_section):
+    y_points_halfspan = wing_structure.ypts[(wing_structure.nodes // 2) :]
+
+    P = 1  # applied at typical section
+    M = np.zeros(y_points_halfspan.shape[0])
+    idx_section = np.ceil(y_points_halfspan.shape[0] * typical_section).astype(int)
+    M[:idx_section] = np.interp(
+        y_points_halfspan[:idx_section],
+        [0, typical_section * wing_structure.b / 2],
+        [P * (wing_structure.b / 2) * typical_section, 0],
+    )
+
+    deflection = get_deflection(
+        wing_structure.Ixx()[(wing_structure.nodes // 2) :], y_points_halfspan, M, wing_structure.material_E
+    )
+
+    return P / deflection[idx_section]
+
+
+def calculate_K_h(wing_structure, typical_section):
+    y_points_halfspan = wing_structure.ypts[(wing_structure.nodes // 2) :]
+
+    T = 1  # applied at typical section
+    T_dist = np.zeros(y_points_halfspan.shape[0])
+    idx_section = np.ceil(y_points_halfspan.shape[0] * typical_section).astype(int)
+    T_dist[:idx_section] = T
+
+    twist = get_twist(
+        wing_structure.torsional_constant()[(wing_structure.nodes // 2) :],
+        y_points_halfspan,
+        T_dist,
+        wing_structure.material_G,
+    )
+    plt.plot(y_points_halfspan, twist)
+    plt.show()
+
+    return T / twist[idx_section]
+
+
 if __name__ == "__main__":
     analyze = (
         "flutter"  # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
     )
+
+    wing_structure = WingStructure(aircraft_data, airfoil_shape, 501)
 
     C_L_alpha = aircraft_data["Aero"]["CLalpha"]
     sea_level_altitude = 0  # Sea-level is constraining for flutter analysis
@@ -609,37 +658,39 @@ if __name__ == "__main__":
     altitude = sea_level_altitude  # Sea-level is constraining for flutter analysis
     rho = isa(altitude)[2]
     rho_cruise = isa(cruise_altitude)[2]
-    calculate_zero_lift_AoA(Cl_data_wing)
     MTOW = aircraft_data["CL2Weight"]["MTOW_N"]
 
     typical_section = 0.7  # 70% of the wing span
-    croot = aircraft_data["Aero"]["c_root_wing"]
-    ctip = aircraft_data["Aero"]["c_tip_wing"]
+    croot = wing_structure.cr
+    ctip = wing_structure.ct
     chord_typical_section = croot + typical_section * (ctip - croot)
 
-    shear_centre_dist = ...  # TODO: This
+    shear_centre_dist = 0  # TODO: This
     B = chord_typical_section / 2  # Half-chord length of the typical section
     a = (B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
 
-    wingspan = aircraft_data["Aero"]["b_wing"]
-    m_airfoil = aircraft_data["Structures"]["structural_wing_weight"] / wingspan
-    Sw = aircraft_data["Aero"]["S_wing"]
+    wingspan = wing_structure.b
+    m_airfoil = wing_structure.total_structural_weight / wingspan
+    Sw = wing_structure.Sw
 
     AoA = 0  # angle of attack at which to get the Cm_ac
-    C_M_AC = np.interp(typical_section * wingspan, Cm_data_wing[AoA]["y_span"], Cm_data_wing[AoA]["coefficient"])
-    alpha_0L = calculate_zero_lift_AoA(Cl_data_wing, typical_section * wingspan)
+    C_M_AC = np.interp(typical_section * wingspan / 2, Cm_data_wing[AoA]["y_span"], Cm_data_wing[AoA]["coefficient"])
+    alpha_0L = calculate_zero_lift_AoA(Cl_data_wing, typical_section * wingspan / 2)
 
-    CM_ac_beta = ...  # TODO: This
+    hinge_dist = (0.5 - (aircraft_data["Aileron"]["hinge_position"] - 0.05)) / B  # distance to half chord
 
-    hinge_dist = 0.5 - (aircraft_data["Aileron"]["hinge_position"] - 0.05)  # distance to half chord
+    Ch_delta_aileron = aircraft_data["Aileron"]["C_h_delta"]
+    CL_delta_aileron = aircraft_data["Aileron"]["CL_delta_a"]
+    moment_arm = -Ch_delta_aileron / CL_delta_aileron
+    CM_ac_beta = CL_delta_aileron * (0.75 - (aircraft_data["Aileron"]["hinge_position"] - 0.05) + moment_arm)
 
-    I_theta = ...  # TODO: This (this is J)
-    K_theta = ...  # TODO: This (for bending (P / deflection))
-    K_h = ...  # TODO: This (for twist (T / twist))
+    I_theta = calculate_torsional_constant(wing_structure, typical_section)
+    K_theta = calculate_K_theta(wing_structure, typical_section)
+    K_h = calculate_K_h(wing_structure, typical_section)
 
-    S_theta = (
-        ...
-    )  # Static moment related to the elastic axis (m * x_theta * b) (the moment due to the wing weight that constantly acts about the elastic axis of the wing).
+    S_theta = -(shear_centre_dist - (B / 2)) * (m_airfoil)  # assume wing weight is applied at c/4
+    # Static moment related to the elastic axis (m * x_theta)
+    # (the moment due to the wing weight that constantly acts about the elastic axis of the wing).
 
     V_cruise, V_dive, *_ = calculate_manoeuvre_velocities(aircraft_data)
     q_cruise = 1 / 2 * rho * V_cruise**2
