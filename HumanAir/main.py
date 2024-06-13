@@ -349,7 +349,7 @@ if __name__ == "__main__":
     run_generate = False
     run_classI = False
     run_classII = True
-    run_fuselage_sizing = True
+    run_fuselage_sizing = False
 
     # initialise the logging
     setup_logging()
