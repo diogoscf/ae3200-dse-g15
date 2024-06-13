@@ -27,7 +27,7 @@ from HumanAir.isa import isa
 
 # NOTE: w_fuselage is the full width, it will be divided by 2
 def get_deflection(MOI, y, M, E, w_fuselage):
-    non_fus_idx = np.argmin(np.abs(y - (w_fuselage/2)))
+    non_fus_idx = np.argmin(np.abs(y - (w_fuselage / 2)))
     integrand = M[non_fus_idx:] / MOI[non_fus_idx:]
     # print(np.sum(I), np.sum(M), np.sum(integrand))
     dvdy = -1 / E * integrate.cumulative_trapezoid(integrand, y[non_fus_idx:], initial=0)
@@ -125,7 +125,9 @@ def read_points_from_load_dist(L_cruise, W_cruise, W_fuel, idxs):
     return a, b, c, d, e, f
 
 
-def strut_error_calculation(P, Vz, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut, w_fuselage):
+def strut_error_calculation(
+    P, Vz, n_before_strut, theta_strut, y_points_halfspan, MOI, E, l_strut, A_strut, w_fuselage
+):
     Vz_strut = P * np.sin(theta_strut)
     Vz = Vz.copy()
     Vz[:n_before_strut] += Vz_strut  # [N]
