@@ -236,16 +236,84 @@ class WingStructure:
         )
 
     def Ixx(self):
-        h_mid, h_s1s2 = self.h_s1s2()
+        _, h_s1s2 = self.h_s1s2()
         l_box_up, l_box_down = self.d_s1s2()
         h_frontspar = h_s1s2[:, 0].flatten()
         h_rearspar = h_s1s2[:, 1].flatten()
         htot = h_frontspar + h_rearspar
         h_avemax = htot / 4
         I_stringer = self.stringer_area * self.stringer_dist * h_avemax**2
-        I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar * 3 + h_rearspar * 3)
+        I_spar = 1 / 12 * self.t_spar_dist * (h_frontspar**3 + h_rearspar**3)
         I_skin = self.t_skin * (l_box_down + l_box_up) * h_avemax**2
         return I_stringer + I_spar + I_skin
+
+    def shear_centre(self):
+        Ixx = self.Ixx()
+        V = 1
+
+        _, h_s1s2 = self.h_s1s2()
+        h_frontspar = h_s1s2[:, 0]
+        h_rearspar = h_s1s2[:, 1]
+
+        spar_distance = self.spars[:, 1] - self.spars[:, 0]
+
+        l_ab = h_rearspar
+        l_dc = h_frontspar
+        l_ad = l_bc = np.sqrt((spar_distance) ** 2 + ((h_frontspar - h_rearspar) / 2) ** 2)
+        beta = np.arctan((h_frontspar - h_rearspar) / (2 * spar_distance))  # in rad
+
+        qab_part = V / Ixx * (-(l_bc**3) * np.sin(beta) / 6 + l_dc * l_bc**2 / 4)
+
+        qad_part = (
+            V
+            / Ixx
+            * (
+                l_ab**3 / 4
+                - l_ab**3 / 6
+                + self.t_skin / self.t_spar_dist * (l_dc * l_ab * l_bc / 2 - l_ab * l_ad**2 * np.sin(beta) / 2)
+            )
+        )
+        qdc_part = (
+            V
+            / Ixx
+            * (-(l_ad**2) * l_ab / 4 - l_ad**3 / 6 * np.sin(beta) + l_dc * l_ad**2 / 2 - l_ad**3 * np.sin(beta) / 2)
+        )
+        qbc_part = (
+            V
+            / Ixx
+            * (
+                -(l_dc**3) / 4
+                + l_dc**3 / 6
+                + self.t_skin / self.t_spar_dist * (-(l_ad**2) * l_dc * np.sin(beta) + l_dc * (l_dc - l_ab) * l_ad / 2)
+            )
+        )
+
+        qs0 = -(
+            (qab_part + qad_part + qdc_part + qbc_part)
+            / (l_ab / self.t_spar_dist + l_ad / self.t_skin + l_dc / self.t_spar_dist + l_bc / self.t_skin)
+        )
+
+        A_tra = (l_ab + l_dc) / 2 * (self.spars[:, 1] - self.spars[:, 0])
+
+        # Shear centre
+        eta = (
+            2 * A_tra * qs0
+            + (self.spars[:, 1] - self.spars[:, 0])
+            * V
+            / Ixx
+            * (
+                self.t_spar_dist * (l_ab**3 / 4 - l_ab**3 / 6)
+                + self.t_skin * (l_dc * l_ad * l_ab / 2 - l_ad**2 * np.sin(beta) * l_ab / 2)
+            )
+            + V
+            / Ixx
+            * l_dc
+            * self.t_skin
+            * np.cos(beta)
+            * (-l_ab * l_ad**2 / 4 - l_ad**3 / 6 * np.sin(beta) + l_dc * l_ad**2 / 2 - l_bc**3 * np.sin(beta) / 2)
+        ) / V
+
+        return eta + self.spars[:, 0]  # distance from LE
 
     def torsional_constant(self):
         t_spar = self.t_spar_dist
