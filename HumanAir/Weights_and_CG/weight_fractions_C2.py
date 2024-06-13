@@ -561,7 +561,7 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
         # check if the nose gear can be placed
         if not rotate:
             # print("Nose gear collapsed, increasing battery xcg")
-            bat_xcg += 0.05
+            bat_xcg += 0.01
 
         # check if the xlemac is acceptable
         elif xlemac > lemac_limit and rotate:
@@ -574,8 +574,9 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
             # check if the sizings are not overlapping
             if (
                 bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
-                and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
+                # and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
+                #print("DA")
                 # if the sizing is correct, break the loop and return the optimised xlemac
                 # and update the xcg of the batteries
                 sizing = True
@@ -589,30 +590,31 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
                 ac_data["Stability"]["Cg_Front"] = (min(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
 
             # check if the battery fits after the main landing gear
-            elif bellow_position["main landing gear"][1] + 0.05 < bellow_position["battery"][0] :
-                # if the sizing is correct, break the loop and return the optimised xlemac
-                # and update the xcg of the batteries
-                sizing = True
-
-                # update the lemac and the xcg of the batteries
-                ac_data["Geometry"]["XLEMAC_m"] = xlemac
-                ac_data["Stability"]["Xcg_battery_m"] = bat_xcg * ac_data["Geometry"]["fus_length_m"]
-
-                # update the cg limits
-                ac_data["Stability"]["Cg_Aft"] = (max(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
-                ac_data["Stability"]["Cg_Front"] = (min(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
+            # elif bellow_position["main landing gear"][1] + 0.05 < bellow_position["battery"][0]:
+            #     #print("NU")
+            #     # if the sizing is correct, break the loop and return the optimised xlemac
+            #     # and update the xcg of the batteries
+            #     sizing = True
+            #
+            #     # update the lemac and the xcg of the batteries
+            #     ac_data["Geometry"]["XLEMAC_m"] = xlemac
+            #     ac_data["Stability"]["Xcg_battery_m"] = bat_xcg * ac_data["Geometry"]["fus_length_m"]
+            #
+            #     # update the cg limits
+            #     ac_data["Stability"]["Cg_Aft"] = (max(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
+            #     ac_data["Stability"]["Cg_Front"] = (min(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
 
             # if the sizing is not correct, increase the battery xcg
             else:
-                bat_xcg += 0.05
+                bat_xcg += 0.01
 
         # if the xlemac is not acceptable, increase the battery xcg
         elif xlemac < lemac_limit:
-            bat_xcg += 0.05
+            bat_xcg += 0.01
 
         # if the xlemac is acceptable, but no rotation, increase the battery xcg
         else:
-            bat_xcg += 0.05
+            bat_xcg += 0.01
 
         # if it gets over an unrealistic value, break the loop
         if bat_xcg > 0.8:

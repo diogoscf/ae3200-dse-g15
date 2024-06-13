@@ -760,6 +760,9 @@ if __name__ == "__main__":
         # get the fuselage sizing class
         fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg = xcg_bat)
 
+
+        # fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg=xcg_bat)
+
         # show all of the dimensions of the fuselage
         print("Top Width", round(fuselage_size.top_width(), 2), "[m]")
         print("Bottom Width", round(fuselage_size.bottom_width(s_gear=s_gear), 2), "[m]")
@@ -776,8 +779,17 @@ if __name__ == "__main__":
         print("Nose Strut Length", round(fuselage_size.h_nose_strut, 2), "[m]")
 
         # plot the side and front view
-        fuselage_size.plot_side_drawing(s_gear=0.2)
+        fuselage_size.plot_side_drawing(s_gear=0.2, ac_data=fuselage_sizing_dict)
         fuselage_size.plot_front_view(s_gear=0.2)
+
+        # save the updated dictionary
+        design_json_path = os.path.join(script_dir, "Configurations", "design.json")
+        logging.info(" Design.json saved at: " + design_json_path)
+
+        with open(design_json_path, "w") as f:
+            json.dump(fuselage_sizing_dict, f, indent=4)
+
+        logging.info(" Program finished successfully")
 
         logging.info(" Calculating the fuselage dimension successful")
 

@@ -27,16 +27,16 @@ def flaps_design(ac_data=aircraft_data):
     deltaCLmax_takeoff = CLmax_TO - CLmax_clean
     CLalpha_clean = 0.1096  # update this if available after CFD simulations
 
-    Swf = ac_data["Aero"]["S_Wing"] * deltaCLmax_land / 0.9 / 0.9  # plain flap has a deltaCLmax_land=0.9
+    Swf = ac_data["Aero"]["S_Wing"] * deltaCLmax_land / 1.3 / 0.9  # plain flap has a deltaCLmax_land=0.9 and simple slotted has 1.3
 
     if Swf > 0.8 * ac_data["Aero"]["S_Wing"]:
         raise Exception("Not enough space for flaps")
 
     # find location of flap over wing
-    flap_start = ac_data["Geometry"]["fus_width_m"] / 2 + 0.1 * ac_data["Aero"]["b_Wing"] / 2
+    flap_start = ac_data["Geometry"]["fus_width_m"] / 2 + 0.05 * ac_data["Aero"]["b_Wing"] / 2
 
     # binary search to find the end point of the flap
-    start = 1.9
+    start = flap_start
 
     flap_end_lst = np.arange(start + 0.1, ac_data["Aero"]["b_Wing"] / 2, 0.01)
 
@@ -57,8 +57,8 @@ def flaps_design(ac_data=aircraft_data):
     ac_data["Flaps"]["Swf"] = Swf  # update dictionary
     ac_data["Flaps"]["cf_c"] = cf_c
 
-    delta_alphaL0_landing_airfoil = -15  # assumed value taken from ADSEE-II
-    delta_alphaL0_takeoff_airfoil = -10  # assumed value taken from ADSEE-II
+    delta_alphaL0_landing_airfoil = -20  # assumed value taken from ADSEE-II
+    delta_alphaL0_takeoff_airfoil = -15  # assumed value taken from ADSEE-II
     alphaL0_airfoil = -7.85
 
     # calculate with how much the lift curve shifts to the left
@@ -70,9 +70,9 @@ def flaps_design(ac_data=aircraft_data):
     deflection_takeoff = ac_data["Flaps"]["deflection_takeoff"]
 
     # define deltac/cf vs flap deflection curve using ADSEE-II
-    plain_flap_slope = (0.17 - 0.0) / (45 - 0)  # based on the graph from ADSEE-II summaries
-    starting_point_y = 0.0  # at 10 degree flap deployment
-    starting_point_x = 0  # at 10 degree flap deployment
+    plain_flap_slope = (0.4 - 0.2) / (45 - 15)  # based on the graph from ADSEE-II summaries
+    starting_point_y = 0.2  # at 10 degree flap deployment
+    starting_point_x = 15  # at 10 degree flap deployment
 
     # get cprime/c ratio
     cprime_c_landing = 1 + cf_c * (starting_point_y + (deflection_landing - starting_point_x) * plain_flap_slope)
@@ -86,10 +86,10 @@ def flaps_design(ac_data=aircraft_data):
 
     # calculate required AoA in order to land and take-off
     AoA_landing = (CLmax_clean + deltaCLmax_land) / CLalpha_flapped_landing - abs(
-        alphaL0_airfoil + delta_alphaL0_landing
+        alphaL0_airfoil + delta_alphaL0_landing + 5
     )
     AoA_takeoff = (CLmax_clean - CLmax_Land + CLmax_TO + deltaCLmax_land) / CLalpha_flapped_takeoff - abs(
-        alphaL0_airfoil + delta_alphaL0_takeoff
+        alphaL0_airfoil + delta_alphaL0_takeoff  + 5
     )
 
     # Calculate
@@ -113,6 +113,9 @@ def flaps_design(ac_data=aircraft_data):
     ac_data["Flaps"]["Sprime_S_landing"] = Sprime_S_landing
     ac_data["Flaps"]["Sprime_S_takeoff"] = Sprime_S_takeoff
 
+    #return ac_data
 
-if __name__ == "__main__":
+
+if __name__ == "_main_":
     dict_test = flaps_design()
+    print(dict_test["Flaps"])
