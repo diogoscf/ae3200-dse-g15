@@ -14,6 +14,7 @@ from HumanAir.isa import isa
 from HumanAir.Vn_Diagrams.loading_diagram import calculate_manoeuvre_velocities
 from HumanAir.StructuralAnalysis.WingStructure import WingStructure
 from HumanAir.StructuralAnalysis.LoadDistributions import get_deflection, get_twist
+from HumanAir.unit_conversions import G
 
 
 """
@@ -663,12 +664,12 @@ if __name__ == "__main__":
     ctip = wing_structure.ct
     chord_typical_section = croot + typical_section * (ctip - croot)
 
-    shear_centre_dist = 0.15 * chord_typical_section + 0.65  # TODO: This
+    shear_centre_dist = 0.15 * chord_typical_section + 0.5  # TODO: This
     B = chord_typical_section / 2  # Half-chord length of the typical section
     a = -(B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
 
     wingspan = wing_structure.b
-    m_airfoil = wing_structure.total_structural_weight / wingspan
+    m_airfoil = wing_structure.total_structural_weight / wingspan / G
     Sw = wing_structure.Sw
 
     AoA = 0  # angle of attack at which to get the Cm_ac
