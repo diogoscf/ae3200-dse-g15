@@ -50,9 +50,9 @@ def import_aero_data(file_name):
 airfoil_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "wing_airfoil.txt")
 airfoil_shape = pd.read_csv(airfoil_filepath, sep="\\s+", header=None, names=["x", "y"], skiprows=1)
 
-cl_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "Wing_LocalLiftCoeff.txt")
-cm_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "Wing_TotalCm.txt")
-cdi_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "Wing_InducedDrag.txt")
+cl_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "26-Wing_LocalLiftCoeff.txt")
+cm_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "26-Wing_TotalCm.txt")
+cdi_wing_filepath = os.path.join(os.path.dirname(__file__), "AerodynamicData", "26-Wing_InducedDrag.txt")
 
 Cl_data_wing = import_aero_data(cl_wing_filepath)
 Cm_data_wing = import_aero_data(cm_wing_filepath)
