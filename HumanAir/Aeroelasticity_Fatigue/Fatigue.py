@@ -1,5 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from HumanAir.aircraft_data import aircraft_data, airfoil_shape, Cl_data_wing, Cdi_data_wing, Cm_data_wing
+from HumanAir.StructuralAnalysis.WingStructure import WingStructure
+from HumanAir.StructuralAnalysis.optimisation import get_max_axial_stress, get_A, get_force_distributions
+from HumanAir.StructuralAnalysis.LoadDistributions import InternalLoads, interpolate_Cl_Cd_Cm
 
 
 def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False, Experimental_SN=False):
@@ -60,27 +68,27 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
                 # Compute intersection point
                 if Smax is not None:
-                    x = (np.log(Smax) - np.log(Sult)) / (
+                    i = (np.log(Smax) - np.log(Sult)) / (
                         (np.log(alpha * Sult) - np.log(Sult)) / (np.log(N_max) - np.log(N_min))
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(x) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
-                plt.plot(np.exp(x1), np.exp(S1), "b")
+                plt.plot(np.exp(x), np.exp(S), "b")
                 if Smax is not None:
                     # Plot intersection point
-                    plt.plot(np.exp(x), Smax, "ro")
-                    plt.plot([np.exp(x), np.exp(x)], [0, Smax], "r--")
-                    plt.plot([0, np.exp(x)], [Smax, Smax], "r--")
+                    plt.plot(np.exp(i), Smax, "ro")
+                    plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
+                    plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
                     # Plot the coodinate of the intersection point next to the point,
                     # with a slight offset using numerical values
                     plt.text(
-                        np.exp(x),
+                        np.exp(i),
                         Smax,
-                        "({:.2e}, {:.2e})".format(np.exp(x), Smax),
+                        "({:.2e}, {:.2e})".format(np.exp(i), Smax),
                         fontsize=12,
                         verticalalignment="bottom",
                     )
@@ -123,27 +131,27 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
                 # Compute intersection point
                 if Smax is not None:
-                    x = (np.log(Smax) - np.log(Sult)) / (
+                    i = (np.log(Smax) - np.log(Sult)) / (
                         (np.log(alpha * Sult) - np.log(Sult)) / (np.log(N_max) - np.log(N_min))
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(x) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
-                plt.plot(np.exp(x1), np.exp(S1), "b")
+                plt.plot(np.exp(x), np.exp(S), "b")
                 if Smax is not None:
                     # Plot intersection point
-                    plt.plot(np.exp(x), Smax, "ro")
-                    plt.plot([np.exp(x), np.exp(x)], [0, Smax], "r--")
-                    plt.plot([0, np.exp(x)], [Smax, Smax], "r--")
+                    plt.plot(np.exp(i), Smax, "ro")
+                    plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
+                    plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
                     # Plot the coodinate of the intersection point next to the point,
                     # with a slight offset using numerical values
                     plt.text(
-                        np.exp(x),
+                        np.exp(i),
                         Smax,
-                        "({:.2e}, {:.2e})".format(np.exp(x), Smax),
+                        "({:.2e}, {:.2e})".format(np.exp(i), Smax),
                         fontsize=12,
                         verticalalignment="bottom",
                     )
@@ -216,6 +224,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                             )
                         )
                         break
+            Nf_actual = Nf / 4
 
             # plot the experimental data curve
             plt.figure()
@@ -236,7 +245,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                 plt.text(
                     0.95,
                     0.95,
-                    f"lifetime: {Nf} flights",
+                    f"lifetime: {Nf_actual} flights",
                     transform=plt.gca().transAxes,
                     fontsize=14,
                     verticalalignment="top",
@@ -353,8 +362,8 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
             ]
         )
         data[:, 1] = data[:, 1] * 1e6
-        Sult = 500 * 1e6
-        alpha = 0.1
+        Sult = Sult * 1e6
+        alpha = alpha
         N_min = 100
         N_max = 1e6
         # From N = 0 to N = N_min
@@ -377,9 +386,9 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
         # Plot the S-N curve
         plt.figure()
-        plt.plot(np.exp(x), np.exp(S), "b")
+        plt.plot(np.exp(x), np.exp(S), "b-")
         # plot the experimental data curve
-        plt.plot(data[:, 0], data[:, 1])
+        plt.plot(data[:, 0], data[:, 1], "g-")
         plt.xscale("log")
         plt.yscale("log")
         plt.xlabel("Number of cycles")
@@ -390,4 +399,58 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
 
 if __name__ == "__main__":
-    fatigue_life(Smax=300, Experimental_SN=True)
+    stress_ult = aircraft_data["Materials"]["Aluminium"]["sigma_ult"] / 1e6
+    nodes = 501
+    load_factor = 2
+    AoA = 0
+    altitude = 0
+
+    wing_structure = WingStructure(aircraft_data, airfoil_shape, nodes)
+
+    # t_skin, t_spar, no_stringers, A_stringer, spar_pos, h_frontspar, h_rearspar, chord_dist
+    _, h_s1s2 = wing_structure.h_s1s2()
+    # l_box_up, l_box_down = wing_structure.d_s1s2()
+
+    h_s1s2 = h_s1s2[nodes // 2 :]
+    # l_box_up, l_box_down = l_box_up[nodes//2:], l_box_down[nodes//2:]
+    # ypts_halfspan =  wing_structure.ypts[nodes//2:]
+
+    hmax = wing_structure.hmax_dist[nodes // 2 :]
+    h_frontspar = h_s1s2[:, 0]  # height of the spar at 15% of the chord, as a function of y
+    h_rearspar = h_s1s2[:, 1]  # height of the spar at 50% of the chord, as a function of y
+    area = get_A(
+        wing_structure.t_skin,
+        wing_structure.t_spar_dist[nodes // 2 :],
+        wing_structure.stringer_dist[nodes // 2 :],
+        wing_structure.stringer_area,
+        wing_structure.spar_pos,
+        h_frontspar,
+        h_rearspar,
+        wing_structure.chord_distribution[nodes // 2 :],
+    )
+
+    Cl_DATA, Cdi_DATA, Cm_DATA = interpolate_Cl_Cd_Cm(Cl_data_wing, Cdi_data_wing, Cm_data_wing, wing_structure.ypts)
+
+    material = aircraft_data["Geometry"]["wingbox_material"]
+
+    L_cruise, D_cruise, M_cruise = get_force_distributions(
+        AoA,
+        altitude,
+        aircraft_data["Performance"]["Vc_m/s"],
+        Cl_DATA,
+        Cdi_DATA,
+        Cm_DATA,
+        wing_structure.chord_distribution,
+        ac_data=aircraft_data,
+    )
+
+    Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
+        L_cruise, D_cruise, M_cruise, wing_structure, ac_data=aircraft_data, load_factor=load_factor
+    )
+
+    axial_stresses = get_max_axial_stress(Mx, Vy, wing_structure.Ixx()[nodes // 2 :], hmax, area)
+    stress_max = np.max(np.abs(axial_stresses)) / 1e6
+
+    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
+    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)
+    fatigue_life(Sult=stress_ult, alpha=0.161, verification=True)
