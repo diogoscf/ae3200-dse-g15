@@ -747,7 +747,6 @@ if __name__ == "__main__":
 
     # run the fuselage sizing script
     if run_fuselage_sizing:
-
         # initialise the gear clearance
         s_gear = 0.2
 
@@ -759,8 +758,7 @@ if __name__ == "__main__":
         logging.info(" Calculating the fuselage dimension")
 
         # get the fuselage sizing class
-        fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg = xcg_bat)
-
+        fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg=xcg_bat)
 
         # fuselage_size = FuselageSizing(ac_data=fuselage_sizing_dict, bat_xcg=xcg_bat)
 

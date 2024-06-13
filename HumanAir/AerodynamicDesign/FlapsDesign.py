@@ -27,7 +27,9 @@ def flaps_design(ac_data=aircraft_data):
     deltaCLmax_takeoff = CLmax_TO - CLmax_clean
     CLalpha_clean = 0.1096  # update this if available after CFD simulations
 
-    Swf = ac_data["Aero"]["S_Wing"] * deltaCLmax_land / 1.3 / 0.9  # plain flap has a deltaCLmax_land=0.9 and simple slotted has 1.3
+    Swf = (
+        ac_data["Aero"]["S_Wing"] * deltaCLmax_land / 1.3 / 0.9
+    )  # plain flap has a deltaCLmax_land=0.9 and simple slotted has 1.3
 
     if Swf > 0.8 * ac_data["Aero"]["S_Wing"]:
         raise Exception("Not enough space for flaps")
@@ -89,7 +91,7 @@ def flaps_design(ac_data=aircraft_data):
         alphaL0_airfoil + delta_alphaL0_landing + 5
     )
     AoA_takeoff = (CLmax_clean - CLmax_Land + CLmax_TO + deltaCLmax_land) / CLalpha_flapped_takeoff - abs(
-        alphaL0_airfoil + delta_alphaL0_takeoff  + 5
+        alphaL0_airfoil + delta_alphaL0_takeoff + 5
     )
 
     # Calculate
@@ -113,7 +115,7 @@ def flaps_design(ac_data=aircraft_data):
     ac_data["Flaps"]["Sprime_S_landing"] = Sprime_S_landing
     ac_data["Flaps"]["Sprime_S_takeoff"] = Sprime_S_takeoff
 
-    #return ac_data
+    # return ac_data
 
 
 if __name__ == "_main_":

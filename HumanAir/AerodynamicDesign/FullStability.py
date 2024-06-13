@@ -254,15 +254,15 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.15, end_value=0.6, st
                     dummy_dict["Aero"]["S_h"] = S_h
                     dummy_dict["Aero"]["b_h"] = sqrt(ac_datafile["Aero"]["AR_HS"] * ac_datafile["Aero"]["S_h"])
                     dummy_dict["Aero"]["c_root_HS"] = (
-                            2
-                            * ac_datafile["Aero"]["S_h"]
-                            / (ac_datafile["Aero"]["b_h"] * (1 + ac_datafile["Aero"]["Taper_HS"]))
+                        2
+                        * ac_datafile["Aero"]["S_h"]
+                        / (ac_datafile["Aero"]["b_h"] * (1 + ac_datafile["Aero"]["Taper_HS"]))
                     )
                     dummy_dict["Aero"]["c_tip_HS"] = ac_datafile["Aero"]["Taper_HS"] * ac_datafile["Aero"]["c_root_HS"]
                     dummy_dict["Aero"]["MAC_HS"] = (
-                            (2 / 3 * ac_datafile["Aero"]["c_root_HS"])
-                            * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
-                            / (1 + ac_datafile["Aero"]["Taper_HS"])
+                        (2 / 3 * ac_datafile["Aero"]["c_root_HS"])
+                        * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
+                        / (1 + ac_datafile["Aero"]["Taper_HS"])
                     )
 
             else:
@@ -296,19 +296,16 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.15, end_value=0.6, st
                     dummy_dict["Aero"]["S_h"] = S_h
                     dummy_dict["Aero"]["b_h"] = sqrt(ac_datafile["Aero"]["AR_HS"] * ac_datafile["Aero"]["S_h"])
                     dummy_dict["Aero"]["c_root_HS"] = (
-                            2
-                            * ac_datafile["Aero"]["S_h"]
-                            / (ac_datafile["Aero"]["b_h"] * (1 + ac_datafile["Aero"]["Taper_HS"]))
+                        2
+                        * ac_datafile["Aero"]["S_h"]
+                        / (ac_datafile["Aero"]["b_h"] * (1 + ac_datafile["Aero"]["Taper_HS"]))
                     )
                     dummy_dict["Aero"]["c_tip_HS"] = ac_datafile["Aero"]["Taper_HS"] * ac_datafile["Aero"]["c_root_HS"]
                     dummy_dict["Aero"]["MAC_HS"] = (
-                            (2 / 3 * ac_datafile["Aero"]["c_root_HS"])
-                            * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
-                            / (1 + ac_datafile["Aero"]["Taper_HS"])
+                        (2 / 3 * ac_datafile["Aero"]["c_root_HS"])
+                        * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
+                        / (1 + ac_datafile["Aero"]["Taper_HS"])
                     )
-
-
-
 
             # check for convergence
             if np.abs(S_h_old - S_h) / S_h_old < 0.0001:

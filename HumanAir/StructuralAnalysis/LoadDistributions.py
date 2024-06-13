@@ -301,7 +301,6 @@ def InternalLoads(L, D, M, wing_structure, ac_data=aircraft_data, load_factor=1)
 
 
 def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
-
     nodes_data = len(Cl_data[0]["coefficient"])
     ypts_orig = np.linspace(Cl_data[0]["y_span"][0], Cl_data[0]["y_span"][-1], nodes_data)
 

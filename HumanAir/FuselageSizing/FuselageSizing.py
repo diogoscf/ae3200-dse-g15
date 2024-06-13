@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from math import tan
+
 # position update
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -51,7 +52,7 @@ class FuselageSizing:
     s_bat_wheel = 0.05  # margin for battery and wheels
 
     def __init__(self, ac_data=aircraft_data, bat_xcg=0.35):
-        self.bat_density = 1000 #kg/m^3
+        self.bat_density = 1000  # kg/m^3
         self.w_pax = 0.56
         self.n_seat = ac_data["General"]["N_pax"] + 1  # number of total seats
         self.w_engine = ac_data["Geometry"]["w_engine"]  # width of engine [m]
@@ -61,7 +62,6 @@ class FuselageSizing:
         self.D_nose = ac_data["Landing_gear"]["Dwn_m"]  # diameter of nose tire [m]
         self.h_nose = ac_data["Landing_gear"]["Wtn_m"]  # height of nose tire [m]
         self.D_main = ac_data["Landing_gear"]["Dwm_m"]  # diameter of main tire [m]
-
 
         self.lm = ac_data["Landing_gear"]["lm_m"]  # distance between main landing gear and cg
         self.ln = ac_data["Landing_gear"]["ln_m"]  # distance between nose landing gear and cg
@@ -85,13 +85,13 @@ class FuselageSizing:
         self.l_main_lateral = ac_data["Landing_gear"]["ymin_m"]  # main landing gear position when opened
         self.l_long_nose = ac_data["Landing_gear"]["Xnw_m"]  # nose landing gear longitudinal position
         self.l_long_main = ac_data["Landing_gear"]["Xmw_m"]  # main landing gear longitudinal position
-        self.h_main_strut = ac_data["Landing_gear"]["l_s_m"] + 1 / 2 * self.D_main   # height of main strut [m]
+        self.h_main_strut = ac_data["Landing_gear"]["l_s_m"] + 1 / 2 * self.D_main  # height of main strut [m]
         self.h_main = ac_data["Landing_gear"]["Wtm_m"]  # height of main tire [m]
-        self.h_nose_strut = ac_data["Landing_gear"]["l_s_n"] + tan(5 * np.pi / 180) * (ac_data["Landing_gear"]["l_s_m"] + ac_data["Landing_gear"]["l_s_n"]) + 1 / 2 * self.D_nose # height of nose strut [m]
-
-
-
-
+        self.h_nose_strut = (
+            ac_data["Landing_gear"]["l_s_n"]
+            + tan(5 * np.pi / 180) * (ac_data["Landing_gear"]["l_s_m"] + ac_data["Landing_gear"]["l_s_n"])
+            + 1 / 2 * self.D_nose
+        )  # height of nose strut [m]
 
     def n_row(self):
         return math.ceil(self.n_seat / FuselageSizing.n_row_seat)
@@ -103,11 +103,11 @@ class FuselageSizing:
         return FuselageSizing.l_pax * self.n_row()
 
     def length_main_strut(self, s_gear):
-        l_lateral_strut =   self.w_aisle / 2 + self.w_pax - s_gear -self.D_main
+        l_lateral_strut = self.w_aisle / 2 + self.w_pax - s_gear - self.D_main
         h = self.h_main_strut
         l_lateral = self.l_main_lateral - l_lateral_strut
 
-        return np.sqrt(l_lateral ** 2 + h ** 2)
+        return np.sqrt(l_lateral**2 + h**2)
 
     def l_battery(self, w_battery):
         return self.V_battery / (self.h_battery * w_battery)
@@ -217,7 +217,7 @@ class FuselageSizing:
         l_p = wb_fus + wu_fus + 2 * side_c
         return l_p
 
-    def plot_side_drawing(self, s_gear, ac_data = aircraft_data):
+    def plot_side_drawing(self, s_gear, ac_data=aircraft_data):
         ac_data["Landing_gear"]["length_main_strut"] = self.length_main_strut(s_gear=0.1)
         ac_data["Landing_gear"]["length_nose_strut"] = self.h_nose_strut
         fig, ax = plt.subplots()
@@ -313,7 +313,7 @@ class FuselageSizing:
                 edgecolor="m",
                 facecolor="none",
             )
-            #xcg1, l1, xcg2, l2 = self.calculate_battery_split()
+            # xcg1, l1, xcg2, l2 = self.calculate_battery_split()
             battery1 = patches.Rectangle(
                 # (self.l_long_nose + self.h_nose_strut + self.D_nose / 2 + 0.1, FuselageSizing.t_fuse),
                 # l_battery,
@@ -494,12 +494,16 @@ class FuselageSizing:
         my_dict["backwall"] = (my_dict["tailcone"][-1], my_dict["tailcone"][-1] + FuselageSizing.t_fuse)
         return my_dict
 
-
-    def calculate_battery_split(self, percent_front = 0.6):
-        self.bat_dict = self.below_position(s_gear = 0.2)
+    def calculate_battery_split(self, percent_front=0.6):
+        self.bat_dict = self.below_position(s_gear=0.2)
         print(self.bat_dict)
         # calculate the volumes of the battery packages
-        V1 = (self.bat_dict["main landing gear"][0] - self.bat_dict["nose landing gear"][1]) * percent_front  * self.h_battery * self.top_width() # 0.1 is for 10 cm clearance
+        V1 = (
+            (self.bat_dict["main landing gear"][0] - self.bat_dict["nose landing gear"][1])
+            * percent_front
+            * self.h_battery
+            * self.top_width()
+        )  # 0.1 is for 10 cm clearance
         V2 = self.V_battery - V1
 
         # calculate the length of the battery packages
@@ -511,7 +515,9 @@ class FuselageSizing:
         m2 = self.bat_density * V2
 
         # calculate the xcg of the battery packages
-        xcg1 = (self.bat_dict["main landing gear"][0] - self.bat_dict["nose landing gear"][1]) / 2 + self.bat_dict["nose landing gear"][1]
+        xcg1 = (self.bat_dict["main landing gear"][0] - self.bat_dict["nose landing gear"][1]) / 2 + self.bat_dict[
+            "nose landing gear"
+        ][1]
         xcg2 = 1 / m2 * (self.bat_xcg * self.length_fus() * (m1 + m2) - xcg1 * m1)
         # print(xcg1)
         # # print(l1)
@@ -520,21 +526,20 @@ class FuselageSizing:
         # print(self.bat_xcg)
         # print(xcg2)
 
-
         return xcg1, l1, xcg2, l2
 
-
     def below_position(self, s_gear):
-
         # get the battery dimensions
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
-
 
         # initialise and save what is needed in the dictioanary
         my_dict = {}
         my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
-        my_dict["nose landing gear"] = (self.l_long_nose , self.l_long_nose + self.h_nose_strut + self.D_nose / 2)
-        my_dict["main landing gear"] = (self.l_long_main - self.length_main_strut(s_gear=0.1) - self.D_main/2 , self.l_long_main)
+        my_dict["nose landing gear"] = (self.l_long_nose, self.l_long_nose + self.h_nose_strut + self.D_nose / 2)
+        my_dict["main landing gear"] = (
+            self.l_long_main - self.length_main_strut(s_gear=0.1) - self.D_main / 2,
+            self.l_long_main,
+        )
 
         # get the position of the batteries in terms of the xcg of the batteries
         battery_center = self.bat_xcg * self.length_fus()
@@ -552,8 +557,6 @@ class FuselageSizing:
     #     ac_data['Landing_gear']['l_s_m'] = self.length_main_strut(0.1)
     #     ac_data['Landing_gear']['l_s_n'] = self.length_main_strut(0.1) + tan(angle * np.pi / 180) * (
     #             ac_data["Landing_gear"]["lm_m"] + ac_data["Landing_gear"]["ln_m"])
-
-
 
 
 if __name__ == "__main__":
@@ -579,11 +582,11 @@ if __name__ == "__main__":
 
     fuselage_size = FuselageSizing(ac_data=aircraft_data)
     # print(fuselage_size.above_position())
-    #print(fuselage_size.below_position(0.1))
+    # print(fuselage_size.below_position(0.1))
     # print(fuselage_size.battery_dim(0.1))
     # print(fuselage_size.bottom_width(0.1))
     fuselage_size.plot_side_drawing(s_gear=0.1)
-    #fuselage_size.plot_front_view(s_gear=0.1)
+    # fuselage_size.plot_front_view(s_gear=0.1)
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init
     # print(fuselage_size.h_nose_strut)

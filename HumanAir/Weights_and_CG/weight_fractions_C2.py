@@ -552,7 +552,6 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
     sizing = False
     bat_xcg = bat_xcg_init
 
-
     # loop to get the optimised lemac and landing gear data with the batteries
     # in the right position and the lemac larger than 3.2m
     while not sizing:
@@ -573,10 +572,11 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
             # print(bellow_position)
             # check if the sizings are not overlapping
             if (
-                bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
+                bellow_position["nose landing gear"][1]
+                < bellow_position["battery"][0]
                 # and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
-                #print("DA")
+                # print("DA")
                 # if the sizing is correct, break the loop and return the optimised xlemac
                 # and update the xcg of the batteries
                 sizing = True
