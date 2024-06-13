@@ -224,6 +224,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                             )
                         )
                         break
+            Nf_actual = Nf / 4
 
             # plot the experimental data curve
             plt.figure()
@@ -244,7 +245,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                 plt.text(
                     0.95,
                     0.95,
-                    f"lifetime: {Nf} flights",
+                    f"lifetime: {Nf_actual} flights",
                     transform=plt.gca().transAxes,
                     fontsize=14,
                     verticalalignment="top",
@@ -361,8 +362,8 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
             ]
         )
         data[:, 1] = data[:, 1] * 1e6
-        Sult = 500 * 1e6
-        alpha = 0.1
+        Sult = Sult * 1e6
+        alpha = alpha
         N_min = 100
         N_max = 1e6
         # From N = 0 to N = N_min
@@ -445,6 +446,6 @@ if __name__ == "__main__":
     stress_max = np.max(np.abs(axial_stresses))/1e6
     print(stress_max, stress_ult)
 
-    fatigue_life(Sult=stress_ult, alpha=0.1, Smax=stress_max, verification=False, Experimental_SN=False)
-    fatigue_life(Sult=stress_ult, alpha=0.1, Smax=stress_max, verification=False, Experimental_SN=True)
-    fatigue_life(verification=True)
+    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
+    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)
+    fatigue_life(Sult=stress_ult, alpha=0.161, verification=True)
