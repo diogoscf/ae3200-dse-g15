@@ -724,14 +724,14 @@ if __name__ == "__main__":
                 m_airfoil,
                 I_theta,
                 S_theta,
-                1.225, # just plot the flutter diagram at sea level
+                1.225,  # just plot the flutter diagram at sea level
                 K_h,
                 K_theta,
                 C_L_alpha,
                 Sw,
                 a,
                 B,
-                V_arr = np.linspace(eps, 400 * 1.15, 500),
+                V_arr=np.linspace(eps, 400 * 1.15, 500),
             )
         # If flutter:
         else:
