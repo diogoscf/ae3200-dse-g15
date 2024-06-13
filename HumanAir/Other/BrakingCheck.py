@@ -1,13 +1,13 @@
 # import pandas as pd
-import numpy as np
+# import numpy as np
 import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from aircraft_data import aircraft_data
+from HumanAir.aircraft_data import aircraft_data
 
-from isa import isa
+# from isa import isa
 
 
 def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0):
@@ -23,10 +23,7 @@ def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0
 
     print(2 * P_max * 10**6 * A_calliper * mu, F_calliper)
 
-    if 2 * P_max * 10**6 * A_calliper * mu > F_calliper:
-        return True
-    else:
-        return False
+    return 2 * P_max * 10**6 * A_calliper * mu > F_calliper
 
 
 if __name__ == "__main__":
