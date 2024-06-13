@@ -399,7 +399,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
 
 if __name__ == "__main__":
-    stress_ult = aircraft_data["Materials"]["Aluminium"]["sigma_ult"]/1e6
+    stress_ult = aircraft_data["Materials"]["Aluminium"]["sigma_ult"] / 1e6
     nodes = 501
     load_factor = 2
     AoA = 0
@@ -411,22 +411,22 @@ if __name__ == "__main__":
     _, h_s1s2 = wing_structure.h_s1s2()
     # l_box_up, l_box_down = wing_structure.d_s1s2()
 
-    h_s1s2 = h_s1s2[nodes//2:]
+    h_s1s2 = h_s1s2[nodes // 2 :]
     # l_box_up, l_box_down = l_box_up[nodes//2:], l_box_down[nodes//2:]
     # ypts_halfspan =  wing_structure.ypts[nodes//2:]
 
-    hmax = wing_structure.hmax_dist[nodes//2:]
+    hmax = wing_structure.hmax_dist[nodes // 2 :]
     h_frontspar = h_s1s2[:, 0]  # height of the spar at 15% of the chord, as a function of y
     h_rearspar = h_s1s2[:, 1]  # height of the spar at 50% of the chord, as a function of y
     area = get_A(
         wing_structure.t_skin,
-        wing_structure.t_spar_dist[nodes//2:],
-        wing_structure.stringer_dist[nodes//2:],
+        wing_structure.t_spar_dist[nodes // 2 :],
+        wing_structure.stringer_dist[nodes // 2 :],
         wing_structure.stringer_area,
         wing_structure.spar_pos,
         h_frontspar,
         h_rearspar,
-        wing_structure.chord_distribution[nodes//2:],
+        wing_structure.chord_distribution[nodes // 2 :],
     )
 
     Cl_DATA, Cdi_DATA, Cm_DATA = interpolate_Cl_Cd_Cm(Cl_data_wing, Cdi_data_wing, Cm_data_wing, wing_structure.ypts)
@@ -434,16 +434,22 @@ if __name__ == "__main__":
     material = aircraft_data["Geometry"]["wingbox_material"]
 
     L_cruise, D_cruise, M_cruise = get_force_distributions(
-        AoA, altitude, aircraft_data["Performance"]["Vc_m/s"], Cl_DATA, Cdi_DATA, Cm_DATA, wing_structure.chord_distribution, ac_data=aircraft_data
+        AoA,
+        altitude,
+        aircraft_data["Performance"]["Vc_m/s"],
+        Cl_DATA,
+        Cdi_DATA,
+        Cm_DATA,
+        wing_structure.chord_distribution,
+        ac_data=aircraft_data,
     )
 
     Vx, Vy, Vz, Mx, My, Mz = InternalLoads(
         L_cruise, D_cruise, M_cruise, wing_structure, ac_data=aircraft_data, load_factor=load_factor
     )
 
-
-    axial_stresses = get_max_axial_stress(Mx, Vy, wing_structure.Ixx()[nodes//2:], hmax, area)
-    stress_max = np.max(np.abs(axial_stresses))/1e6
+    axial_stresses = get_max_axial_stress(Mx, Vy, wing_structure.Ixx()[nodes // 2 :], hmax, area)
+    stress_max = np.max(np.abs(axial_stresses)) / 1e6
     print(stress_max, stress_ult)
 
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
