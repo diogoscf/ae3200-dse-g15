@@ -64,9 +64,9 @@
         "w_motor": 0.54,
         "l_motor": 0.176,
         "l_empty": 0.32,
-        "t_spar_tip": 0.006944189477840185,
-        "t_spar_root": 0.005378972722462206,
-        "t_skin_wing": 0.001760777707100579,
+        "t_spar_tip": 0.0015915466590370726,
+        "t_spar_root": 0.0006367398614718283,
+        "t_skin_wing": 0.001990690810372587,
         "spar_pos": [
             0.15,
             0.65
@@ -100,8 +100,8 @@
         "strut_section_area_m2": 0.005,
         "wing_stringer_number": [
             2,
-            59,
-            31
+            60,
+            32
         ],
         "wing_stringer_sections": [
             0.4,
@@ -303,7 +303,11 @@
             "E": 68900000000.0,
             "sigma_y": 276000000.0,
             "poisson_ratio": 0.33,
+            "G": 26e9,
             "sigma_ult": 310e6
         }
+    },
+    "Structures": {
+        "structural_wing_weight": 475.24581095430995
     }
 }

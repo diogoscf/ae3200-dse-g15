@@ -28,9 +28,16 @@ from HumanAir.isa import isa
 def get_deflection(MOI, y, M, E):
     integrand = M / MOI
     # print(np.sum(I), np.sum(M), np.sum(integrand))
-    theta = -1 / E * integrate.cumulative_trapezoid(integrand, y, initial=0)
-    v = -integrate.cumulative_trapezoid(theta, y, initial=0)
+    dvdy = -1 / E * integrate.cumulative_trapezoid(integrand, y, initial=0)
+    v = -integrate.cumulative_trapezoid(dvdy, y, initial=0)
     return v
+
+
+def get_twist(J, y, T, G):
+    integrand = T / J
+    # print(np.sum(I), np.sum(M), np.sum(integrand))
+    theta = 1 / G * integrate.cumulative_trapezoid(integrand, y, initial=0)
+    return theta
 
 
 def force_distribution(AoA, altitude, V, chord_dist, Cl_DATA, Cdi_DATA):
@@ -451,3 +458,23 @@ if __name__ == "__main__":
 
     plt.tight_layout()
     plt.show()
+
+    # twist = (
+    #     get_twist(
+    #         wing_structure_data.torsional_constant()[nodes // 2 :],
+    #         wing_structure_data.ypts[nodes // 2 :],
+    #         My,
+    #         aircraft_data["Materials"][aircraft_data["Geometry"]["wingbox_material"]]["G"],
+    #     )
+    #     * 180
+    #     / np.pi
+    # )
+
+    # deflection = get_deflection(
+    #     wing_structure_data.Ixx()[nodes // 2 :],
+    #     y_points_plot,
+    #     Mx,
+    #     aircraft_data["Materials"][aircraft_data["Geometry"]["wingbox_material"]]["E"],
+    # )
+    # plt.plot(y_points_plot, deflection)
+    # plt.show()

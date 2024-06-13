@@ -835,5 +835,7 @@ if __name__ == "__main__":
         aircraft_data["Geometry"]["t_skin_wing"] = optimized_t_skin
         aircraft_data["Geometry"]["wing_stringer_number"] = np.ceil(optimized_no_stringers).astype(int).tolist()
 
+        aircraft_data["Structures"]["structural_wing_weight"] = weight * 2  # Multiply by 2 for both wings
+
         save_ac_data_to_json(aircraft_data)
         print("Data saved to design.json")
