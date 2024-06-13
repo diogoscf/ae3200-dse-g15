@@ -6,8 +6,7 @@ import os
 import sys
 import time
 
-# position update
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from HumanAir.aircraft_data import aircraft_data
 
@@ -47,7 +46,7 @@ class FuselageSizing:
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
-    t_fuse = 0.04  # fuselage structural thickness [m]
+    t_fuse = 0.05  # fuselage structural thickness [m]
     s_bat_wheel = 0.05  # margin for battery and wheels
 
     def __init__(self, ac_data=aircraft_data, bat_xcg=0.1):
@@ -72,8 +71,6 @@ class FuselageSizing:
         self.h_tail = ac_data["Geometry"]["h_tail"]  # height of tail
 
         self.V_battery = ac_data["Geometry"]["volume_battery"]  # volume of battery [m^3]
-
-        self.l_empty = ac_data["Geometry"]["l_empty"]
         self.w_aisle = ac_data["Geometry"]["w_aisle"]
         self.h_aisle = ac_data["Geometry"]["h_aisle"]
         self.w_motor = ac_data["Geometry"]["w_motor"]
@@ -118,7 +115,7 @@ class FuselageSizing:
         if self.check_back(s_gear):
             print("Landing gear folds backward")
             l_end_main_land = self.l_long_main + self.length_main_strut(s_gear) + (self.D_main / 2)
-            w_battery = s_gear * 2 + (self.D_main / 2)
+            w_battery = (self.D_main / 2) + self.w_aisle
             l_battery = self.l_battery(w_battery)
 
             while self.length_main_strut(s_gear) - (self.D_main / 2) - l_battery < 0:
@@ -129,12 +126,15 @@ class FuselageSizing:
             l_fus = self.length_fus()
 
             if l_fus - self.l_tailcone < l_end_main_land:
-                print("Landing gear cannot be folded backward or forward")
+                raise ValueError("Landing gear cannot be folded backward or forward")
 
         else:
             # print('Landing gear folds forward')
             w_battery = self.top_width() - 2 * FuselageSizing.s
             l_battery = self.l_battery(w_battery)
+            # print("battery width", w_battery)
+            # print("battery length", l_battery)
+            # print("battery height", self.h_battery)
 
         return round(l_battery, 3), round(w_battery, 3), round(s_gear, 3)
 
@@ -173,7 +173,7 @@ class FuselageSizing:
         return FuselageSizing.t_fuse + FuselageSizing.s_bat_wheel + self.h_main
 
     def length_fus(self):
-        return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock, 3)
+        return round(self.l_tailcone + self.l_nosecone() + self.l_cabin() + FuselageSizing.l_cock + self.l_motor, 3)
 
     def fuselage_wetted(self, s_gear):
         # assuming trapezoidal shape

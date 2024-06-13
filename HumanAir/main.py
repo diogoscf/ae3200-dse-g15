@@ -31,7 +31,8 @@ from HumanAir.Vn_Diagrams.design_values import calculate_load_design_values
 from HumanAir.Vn_Diagrams.loading_diagram import calc_nmax_nmin_manoeuvre
 from HumanAir.CO2_Calculator.co2v2 import calculate_co2_reduction_flightdist as co2
 from HumanAir.CO2_Calculator.co2v2 import improvement_co2
-from HumanAir.StructuralAnalysis.LoadDistributions import load_distribution_diagram
+
+# from HumanAir.StructuralAnalysis.LoadDistributions import load_distribution_diagram
 from HumanAir.FuselageSizing.FuselageSizing import FuselageSizing
 
 
@@ -348,7 +349,7 @@ if __name__ == "__main__":
     run_generate = False
     run_classI = False
     run_classII = True
-    run_fuselage_sizing = False
+    run_fuselage_sizing = True
 
     # initialise the logging
     setup_logging()
@@ -573,11 +574,11 @@ if __name__ == "__main__":
                     ac_data["Weights"]["MTOW_N"]
                 )
 
-                logging.info(" Calculating the loading distribution diagram")
+                # logging.info(" Calculating the loading distribution diagram")
 
-                load_distribution_diagram(ac_data=ac_data)
+                # load_distribution_diagram(ac_data=ac_data)
 
-                logging.info(" Calculating the loading distribution diagram successful")
+                # logging.info(" Calculating the loading distribution diagram successful")
                 logging.info(" Calculating the hourly price")
 
                 # calculating the hourly cost
@@ -704,12 +705,12 @@ if __name__ == "__main__":
             class_2_dictionary["Performance"]["n_min"],
         ) = calc_nmax_nmin_manoeuvre(class_2_dictionary["Weights"]["MTOW_N"])
 
-        logging.info(" Calculating the loading distribution diagram")
+        # logging.info(" Calculating the loading distribution diagram")
 
-        # plot the load distribution diagrams
-        load_distribution_diagram(ac_data=class_2_dictionary)
+        # # plot the load distribution diagrams
+        # load_distribution_diagram(ac_data=class_2_dictionary)
 
-        logging.info(" Calculating the loading distribution diagram successful")
+        # logging.info(" Calculating the loading distribution diagram successful")
         logging.info(" Sizing the flaps")
 
         # sizing the flaps

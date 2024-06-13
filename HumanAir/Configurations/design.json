@@ -25,7 +25,7 @@
         "Wpl_des_kg": 630
     },
     "Power_prop": {
-        "E_bat_Wh": 257272.76790293524,
+        "E_bat_Wh": 257295.50063119116,
         "E_fuel_Wh/kg": 11972,
         "E_bat_Wh/kg": 350,
         "P_ptr_kW/kg": 1.5,
@@ -35,21 +35,21 @@
         "eta_electricmotor": 0.925,
         "eta_powertrain": 0.9216,
         "eta_p": 0.8500000000000001,
-        "bat": 0.131,
-        "P_req_cruise_W": 238542.0231279792,
+        "bat": 0.13,
+        "P_req_cruise_W": 241262.9185485953,
         "K_n": 0.24,
         "int_fueltanks_fraction": 0,
         "N_e": 1,
         "N_t": 2,
-        "P_req_TO_W": 298177.528909974,
+        "P_req_TO_W": 301578.6481857441,
         "Dp_m": 2.286
     },
     "Geometry": {
-        "fus_height_m": 1.8,
-        "fus_length_m": 11.72,
-        "fus_width_m": 1.6,
-        "XLEMAC_m": 3.2145103388794474,
-        "tail_length_m": 5.5,
+        "fus_height_m": 2.2,
+        "fus_length_m": 12.05,
+        "fus_width_m": 1.8,
+        "XLEMAC_m": 3.2128997460980817,
+        "tail_length_m": 4.7,
         "l_f_nonosecone": 9.5,
         "fuselage_max_perimeter": 6.8,
         "w_engine": 0.85,
@@ -63,7 +63,52 @@
         "h_aisle": 1.524,
         "w_motor": 0.54,
         "l_motor": 0.176,
-        "l_empty": 0.32
+        "l_empty": 0.32,
+        "t_spar_tip": 0.006944189477840185,
+        "t_spar_root": 0.005378972722462206,
+        "t_skin_wing": 0.001760777707100579,
+        "spar_pos": [
+            0.15,
+            0.65
+        ],
+        "wing_stringer_area_m2": 0.000171,
+        "wing_stringer_MOI_m4": 1.458e-08,
+        "wing_stringer_thickness_m": 0.003,
+        "wing_stringer_small_length_m": 0.03,
+        "wing_rib_pos": [
+            0.05,
+            0.1,
+            0.15,
+            0.2,
+            0.25,
+            0.3,
+            0.35,
+            0.4,
+            0.45,
+            0.5,
+            0.55,
+            0.6,
+            0.65,
+            0.72,
+            0.79,
+            0.86,
+            0.93,
+            1
+        ],
+        "strut_loc_b/2": 0.6,
+        "strut_loc_MAC": 0.25,
+        "strut_section_area_m2": 0.005,
+        "wing_stringer_number": [
+            2,
+            59,
+            31
+        ],
+        "wing_stringer_sections": [
+            0.4,
+            0.3,
+            0.3
+        ],
+        "wingbox_material": "Aluminium"
     },
     "Aero": {
         "CLmax_clean": 2.2,
@@ -78,7 +123,7 @@
         "Taper_HS": 0.4,
         "Taper_v": 0.45,
         "QuarterChordSweep_Wing_deg": 0,
-        "QuarterChordSweep_HS_deg": 30,
+        "QuarterChordSweep_HS_deg": 0,
         "QuarterChordSweep_v_deg": 25,
         "HalfChordSweep_Wing_deg": 3.297,
         "HalfChordSweep_v_deg": 28.23,
@@ -156,7 +201,7 @@
         "W/S_N/m2": 859.8001,
         "W/P_N/W": 0.12065176979161106,
         "Vc_m/s": 60.0,
-        "V_takeoff_m/s": 35.0,
+        "V_takeoff_m/s": 30.0,
         "M_D": 0.2556706628569902,
         "range_nm": 600,
         "endurance": 4.74871794871795,
@@ -192,7 +237,7 @@
         "Xmw_m": 5.437481549554446,
         "Tipback_angle_deg": 15,
         "Scrape_angle_deg": 15,
-        "Nose_gear_distance": 0.4
+        "Nose_gear_distance": 0.8
     },
     "Stability": {
         "Cg_Aft": 0.9444168419265235,
@@ -205,7 +250,11 @@
         "Xcg_prop_m": -0.1,
         "Xcg_engine_m": 1.15,
         "Xcg_motor_m": 0.42,
-        "Xcg_battery_m": 7.0320000000000045
+        "Xcg_battery_m": 7.266400000000004,
+        "i_H_deg": 0,
+        "Elevator_deflection_deg": 25,
+        "Hinge_chord_elevator": 0.7,
+        "be_bh": 1.0
     },
     "General": {
         "Paint": true,
@@ -247,5 +296,13 @@
         "Electric Motor Weight": 384.552,
         "Passenger Mass": 84,
         "Luggage Mass": 16.8
+    },
+    "Materials": {
+        "Aluminium": {
+            "rho": 2710,
+            "E": 68900000000.0,
+            "sigma_y": 276000000.0,
+            "poisson_ratio": 0.33
+        }
     }
 }

@@ -80,7 +80,9 @@ def TailAero(l_H, acd=aircraft_data):
 
 def Liftrate(l_H, acd=aircraft_data):
     # Tail lift rate
-    SweepHS_05 = -4 / acd["Aero"]["AR_HS"] * (0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"]))
+    SweepHS_05 = np.tan(np.radians(acd["Aero"]["QuarterChordSweep_HS_deg"])) - 4 / acd["Aero"]["AR_HS"] * (
+        0.25 * (1 - acd["Aero"]["Taper_HS"]) / (1 + acd["Aero"]["Taper_HS"])
+    )
     ClaH = (
         2 * pi * acd["Aero"]["AR_HS"] / (2 + sqrt(4 + (acd["Aero"]["AR_HS"] / 0.95) ** 2 * (1 + tan(SweepHS_05) ** 2)))
     )

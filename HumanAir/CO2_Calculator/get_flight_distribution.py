@@ -22,13 +22,14 @@ if __name__ == "__main__":
     x = np.linspace(0, 800, 1000)
     colours = "brgcmy"
     combined = np.array([])
+    plt.rcParams.update({"font.size": 30})
     for i, row in flight_data.iterrows():
         dist = fit_log_normal(row["distance_before_refuelling_avg"], row["distance_before_refuelling_median"])
         print(
             i, dist.mean(), dist.median(), row["distance_before_refuelling_min"], row["distance_before_refuelling_max"]
         )
         simulated_lengths = dist.rvs(size=10000)
-        plt.plot(x, dist.pdf(x), colours[i] + "-", lw=2, label=i)  # type: ignore[index]
+        plt.plot(x, dist.pdf(x), colours[i] + "-", lw=2, label=row["aircraft"])  # type: ignore[index]
         combined = np.concatenate((combined, simulated_lengths))
 
     combined = combined[np.where(combined <= 600)]
