@@ -1,5 +1,6 @@
 nautical_mile = 1852  # meter
 foot = 0.3048  # meter
+G = 9.80665  # m/s^2
 
 
 def ft_to_m(a):
