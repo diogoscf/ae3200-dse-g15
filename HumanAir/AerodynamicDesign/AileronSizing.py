@@ -249,5 +249,5 @@ def AileronSizing(acd=aircraft_data):
 
 if __name__ == "__main__":
     # AileronDerivatives()
-    #StickArm(acd=aircraft_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
+    # StickArm(acd=aircraft_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
     AileronSizing()

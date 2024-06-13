@@ -257,7 +257,8 @@ class Class_II_Weight:
         results["Cessna"] = 0.40 * self.W_F / self.K_fsp
         results["USAF"] = (
             2.49
-            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13) ** 1.21
+            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13)
+            ** 1.21
         )
         results["Torenbeek"] = 2 * (self.W_F / 5.87) ** 0.667
 
