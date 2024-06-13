@@ -639,8 +639,6 @@ def calculate_K_h(wing_structure, typical_section):
         T_dist,
         wing_structure.material_G,
     )
-    plt.plot(y_points_halfspan, twist)
-    plt.show()
 
     return T / twist[idx_section]
 
@@ -665,9 +663,9 @@ if __name__ == "__main__":
     ctip = wing_structure.ct
     chord_typical_section = croot + typical_section * (ctip - croot)
 
-    shear_centre_dist = 0  # TODO: This
+    shear_centre_dist = 0.15*chord_typical_section + 0.65 # TODO: This
     B = chord_typical_section / 2  # Half-chord length of the typical section
-    a = (B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
+    a = -(B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
 
     wingspan = wing_structure.b
     m_airfoil = wing_structure.total_structural_weight / wingspan
