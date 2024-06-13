@@ -194,7 +194,7 @@ def flutter_analysis(m, I_theta, S_theta, rho_arr, K_h, K_theta, C_L_alpha, S, a
             # (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value.
             # We can therefore discard the second and fourth eigenvalues in the array p
             # (which are the conjugates of p[0] and p[2] respectively).
-            p_save.append([p[1], p[3]])
+            p_save.append([p[0], p[2]])
         # Convert p_save to a numpy array for easier manipulation
         p_save = np.array(p_save)
 
@@ -315,7 +315,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
         # (that is [0,0] or [1,1], not [0,1] or [1,0] where 1 is the conjugate of one e-value.
         # We can therefore discard the second and fourth eigenvalues in the array p
         # (which are the conjugates of p[0] and p[2] respectively).
-        p_save.append([p[1], p[3]])
+        p_save.append([p[0], p[2]])
     # Convert p_save to a numpy array for easier manipulation
     p_save = np.array(p_save)
 
@@ -650,7 +650,8 @@ if __name__ == "__main__":
         "flutter"  # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
     )
 
-    wing_structure = WingStructure(aircraft_data, airfoil_shape, 501)
+    nodes = 501
+    wing_structure = WingStructure(aircraft_data, airfoil_shape, nodes)
 
     C_L_alpha = aircraft_data["Aero"]["CLalpha"]
     sea_level_altitude = 0  # Sea-level is constraining for flutter analysis
@@ -665,7 +666,7 @@ if __name__ == "__main__":
     ctip = wing_structure.ct
     chord_typical_section = croot + typical_section * (ctip - croot)
 
-    shear_centre_dist = 0.15 * chord_typical_section + 0.41  # TODO: This
+    shear_centre_dist = wing_structure.shear_centre()[nodes // 2 :][int(typical_section * nodes / 2)]
     B = chord_typical_section / 2  # Half-chord length of the typical section
     a = -(B - shear_centre_dist) / B  # Distance from half-chord to the elastic axis of the typical section airfoil.
 
