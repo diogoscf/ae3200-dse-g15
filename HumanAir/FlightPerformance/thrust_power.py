@@ -3,9 +3,11 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import unit_conversions as conv
-from helper import density
+from FlightPerformance.helper import density
 
-def P_shaft(acf, h, dT, use_takeoff_power=False):
+#TODO: powertrain terug naar 0.95
+
+def P_shaft(acf, h, dT, use_takeoff_power=False, electric=False):
     """
     Returns the maximum available shaft power (therefore excluding propeller
     efficiency) for either continuous operation or short operation.
@@ -34,14 +36,21 @@ def P_shaft(acf, h, dT, use_takeoff_power=False):
 
     """
     
-    # temperature correction is included here (temperature only influences
-    # P_shaft by changing the density - see gudmundson example 7-3)
-    alt_correction = 1.132 * (density(h, dT)/1.225) - 0.132 # Gagg and Ferrar model, Gudmundsen eq 7-16
-    
-    if use_takeoff_power:
-        return acf.takeoff_power_sealevel * acf.eff_powertrain * alt_correction
+    if electric:
+        # TODO: assumed constant power with altitude
+        if use_takeoff_power:
+            return acf.electric_takeoff_power * acf.eff_powertrain
+        else:
+            return acf.electric_max_cont_power * acf.eff_powertrain
     else:
-        return acf.max_cont_power_sealevel * acf.eff_powertrain * alt_correction
+        # temperature correction is included here (temperature only influences
+        # P_shaft by changing the density - see gudmundson example 7-3)
+        alt_correction = 1.132 * (density(h, dT)/1.225) - 0.132 # Gagg and Ferrar model, Gudmundsen eq 7-16
+        
+        if use_takeoff_power:
+            return acf.takeoff_power_sealevel * acf.eff_powertrain * alt_correction
+        else:
+            return acf.max_cont_power_sealevel * acf.eff_powertrain * alt_correction
 
 def P_a(acf, h, dT, use_takeoff_power=False, V=None):
     """
@@ -95,6 +104,8 @@ It is an array of dicts, each dict containing:
     
     "use_takeoff_power": boolean, whether max constant or max TO power was used
     
+    "electric": boolean, whether the electric engine was used
+    
     V_C_ms : float, maximum velocity this calculation can be used for in m/s,
         beyond this point T = P_a/V is used.
 
@@ -104,7 +115,7 @@ It is an array of dicts, each dict containing:
 """
 thrust_calculations = []
 
-def T(acf, V_ms, h, dT, use_takeoff_power=False):
+def T(acf, V_ms, h, dT, use_takeoff_power=False, electric=False):
     """
     Approximates the thrust for given conditions. It uses the cubic spline
     interpolation as derived in Gudmundsun section 14.4.2 (method #3).
@@ -158,7 +169,8 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
     for calc in thrust_calculations:
         if np.isclose(calc["h"], h) and \
            np.isclose(calc["dT"], dT) and \
-           calc["use_takeoff_power"] == use_takeoff_power:
+           calc["use_takeoff_power"] == use_takeoff_power and \
+           calc["electric"] == electric:
             abcd_vector = calc["abcd_vector"]
             V_C_ms = calc["V_C_ms"]
             
@@ -171,7 +183,7 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
         eff_prop_max = acf.max_eff_prop
         
         # get shaft power
-        P_sh_W = P_shaft(acf, h, dT, use_takeoff_power)
+        P_sh_W = P_shaft(acf, h, dT, use_takeoff_power, electric=electric)
         P_sh_hp = conv.W_to_hp(P_sh_W)
         
         # calculate static thrust
@@ -223,6 +235,7 @@ def T(acf, V_ms, h, dT, use_takeoff_power=False):
             "h": h,
             "dT": dT,
             "use_takeoff_power": use_takeoff_power,
+            "electric": electric,
             "V_C_ms": V_C_ms,
             "abcd_vector": abcd_vector            
             })

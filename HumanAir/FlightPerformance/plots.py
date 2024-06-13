@@ -150,10 +150,10 @@ def plot_cruise_power_setting(acf):
         powersetting[i] = acf.power_setting(acf.V_cruise, W, h, dT)
         
     
-    std_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise, acf.dT_cruise)
-    max_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise_max, acf.dT_cruise)
-    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise} ISA+{acf.dT_cruise}: {std_cruise:.3f}")
-    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise_max} ISA+{acf.dT_cruise}: {max_cruise:.3f} ")
+    std_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise, acf.dT_default)
+    max_cruise = acf.power_setting(acf.V_cruise, W, acf.h_cruise_max, acf.dT_default)
+    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise} ISA+{acf.dT_default}: {std_cruise:.3f}")
+    print(f"Power setting at MTOW, V={acf.V_cruise}, h={acf.h_cruise_max} ISA+{acf.dT_default}: {max_cruise:.3f} ")
 
 
     plt.figure(figsize=(10,7))
@@ -211,11 +211,42 @@ def plot_thrust(acf):
     plt.show()
     
     print(f"Max eff: {T_lst[-1]:.2f}")
+    
+def plot_RC_F_max(acf):
+    h_list = np.arange(0, h_max, h_step)
+    V_list1 = np.zeros(len(h_list))
+    V_list2 = np.zeros(len(h_list))
+
+    for i, h in enumerate(h_list):
+        _, V_list1[i] = acf.RC_max(acf.W_MTO, h, 0)
+        V_list2[i] = acf.V_Prmin(acf.W_MTO, h, 0)
+        
+    V_lst = np.arange(acf.stall_speed(acf.W_MTO, 0, 0), acf.V_max(acf.W_MTO, 0, 0)+1, 1)
+    P_r_lst = np.zeros(len(V_lst))
+    for i, V in enumerate(V_lst):
+        P_r_lst[i] = acf.P_r(acf.W_MTO, V, 0, 0)
+
+
+    plt.figure(figsize=(10,7))
+    _, ax1 = plt.subplots()
+    ax1.plot(V_list1, h_list, label="Speed RCmax")
+    ax1.plot(V_list2, h_list, label="Speed P_r_min")
+    ax1.set_xlabel("Velocity [m/s]")
+    ax1.set_ylabel("Altitude [m]")
+    
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Power required [W]")
+    ax2.plot(V_lst, P_r_lst, label="Power required")
+
+    plt.legend()
+    plt.show()        
+    
 
 if __name__ == "__main__":
     acf = aircraft.Aircraft()
     #print(acf.RC_max(acf.W_MTO, 750, 18))
     #plot_climb_rate(acf)
+    plot_RC_F_max(acf)
     #plot_climb_gradient(acf)
     #plot_stall_speed(acf)
     #plot_cruise_power_setting(acf)

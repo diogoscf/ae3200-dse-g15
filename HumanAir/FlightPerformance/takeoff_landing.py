@@ -1,14 +1,15 @@
 import numpy as np
 from scipy.integrate import quad
 
-from helper import density
+from FlightPerformance.helper import density
+
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 # TODO: why is t/o (and landing?) so sensitive to S?
 
-# TO and landing calculations happen at low AoA thus current drag approximations
-# is fine.
 
-def takeoff_ground_run(acf, W, h, dT, slope, surface):
+def takeoff_ground_run(acf, W, h, dT, slope, surface, electric=False, calc_time=False):
     """
     Calculates the take-off ground run for given conditions using the Ruijgrok
     method (p372-376).
@@ -19,6 +20,8 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     
     It is inaccurate for high postive slopes and will throw an exception when
     the integration error estimate exceeds 0.001 m.
+    
+    If calc_time is set to True it will return the time required for takeoff.
         
     Parameters
     ----------
@@ -33,16 +36,18 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
         positive = sloped upwards at takeoff.
     surface : string
         Either "grass" or "paved"
+    electric : booelan
+        Whether to use electric propulsion
 
     Returns
     -------
-    s_run : float
-        Ground run [m]
+    s_run OR t_run and V_LOF : float
+        Ground run [m] OR time required for ground run [s] and lift off speed [m/s]
     accuracy : float
         Integration absolute error estimate [m]
 
     """
-        
+
     # TODO: ground effect currently only accounted for by reduced induced drag
     # there is a good discussion on ground effect in  
     # Fundamentals of Aircraft and Airship Design: Volume 1 by nicolai
@@ -56,8 +61,9 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     S = acf.S(flaps="TO")
     
     CL_ground = acf.CL_ground_TO # C_L during ground run, note; larger than 1, but no other option than to use CD()
+    # TO and landing calculations happen at low AoA thus current drag approximation is fine.
     CD_ground = acf.CD(CL_ground, gear="down", flaps="TO", ground_effect_h=20) # C_D during ground run
-    print(CD_ground)
+
     # Torenbeek estimates V_LOF to be 1.2*stall speed in T/O config
     # Gudmundsen estimates V_LOF to be 1.1*stall speed in T/O config
     # CS23 requires the rotation speed to be >=V_S1 and the speed at 15m >=1.2*V_S1
@@ -73,19 +79,40 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     
     def f(V):
         # gudmundsson eq 16.2-6 with acceleration from eq 16.2-9
-        T = acf.T(V, h, dT)
+        T = acf.T(V, h, dT, use_takeoff_power=True, electric=electric)
         D = 0.5 * rho * V**2 * S * CD_ground
         L = 0.5 * rho * V**2 * S * CL_ground
-        return V / (g/W * (T - D - mu_r*(W*np.cos(xi) - L) - W*np.sin(xi)))
+        if calc_time:
+            return 1 / (g/W * (T - D - mu_r*(W*np.cos(xi) - L) - W*np.sin(xi)))
+        else:
+            return V / (g/W * (T - D - mu_r*(W*np.cos(xi) - L) - W*np.sin(xi)))
     
-    s_run, accuracy = quad(f, 0, V_LOF) # integrate from V=0 to V=V_LOF
+    res, accuracy = quad(f, 0, V_LOF) # integrate from V=0 to V=V_LOF
     
-    s_run += V_LOF # add one second of flight as margin
+    if calc_time:
+        res += 1 # add one second of flight as margin
+    else:
+        res += V_LOF # add one second of flight as margin
         
     if accuracy > 10**-3:
-        raise Exception(f"Low accuracy in integrating takeoff distance: \
-                        s_run = {s_run}, accuracy = {accuracy}. \
+        raise Exception(f"Low accuracy in integrating takeoff distance or time: \
+                        res = {res}, accuracy = {accuracy}. \
                         This is likely due to a high positive slope. Slope={slope}%")
+    
+    # print imperial TOP and runway in ft (if paved) to validate with roskam1
+    # method; since this method is for paved runways only when surface=="paved"
+    # if surface == "paved":
+    #     # not sure if roskam requires sea level power or altitude-corrected
+    #     # power, difference is not very large (makes the point switch from
+    #     # above to below the curve in fig3.3 once correction is applied)
+    #     TOP_metric = W/S * W/acf.P_shaft(0, 0, use_takeoff_power=True) / \
+    #                     (acf.CLmax_TO * rho/1.225)
+    #     TOP_roskam = TOP_metric / 0.285808738 # not compatible with raymer
+    #     s_run_ft = s_run/.3048
+    #     print(f"TOP_roskam: {TOP_roskam:.1f}, s_g: {s_run_ft:.1f} ft")
+    
+    
+    
     #
     # Torenbeek method, torenbeek p167-168
     # Assumes constant speed propeller for Torenbeek method.
@@ -128,8 +155,10 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface):
     # a = g/W * (T - D - 0.05*(W - L)) # avg acceleration - nicolai has no friction coefficient for dry grass so using ruijgrok's value
     # s_run3 = 0.5 * V_LOF**2 / a
     
-    
-    return s_run, accuracy
+    if calc_time:
+        return res, V_LOF, accuracy
+    else:
+        return res, accuracy
 
     
 def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=False):
@@ -207,6 +236,12 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
    #                      s_ground = {s_ground}, accuracy = {accuracy}.")
         
     # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbel
+    
+    # if surface == "paved":
+    #     # roskam pt1 statistical method for comparison
+    #     V_S_L = np.sqrt(W/( 0.5 * rho * S * acf.CLmax_land))
+    #     s_g_roskam = conv.ft_to_m(0.265 * conv.m_s_to_kt(V_S_L)**2)
+    #     print(f"Landing distance according to roskam pt1: {s_g_roskam:.1f} m (no thrust reverse)")
     
     return s_ground#, s_ground2
     

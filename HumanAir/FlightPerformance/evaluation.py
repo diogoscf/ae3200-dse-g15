@@ -101,7 +101,7 @@ def vary_area():
     # surface     = "grass"
         
     
-    for S in np.arange(20, 40, step=1):
+    for S in [24, 26, 30]:# np.arange(20, 40, step=1):
         
         acf = aircraft.Aircraft()
         
@@ -110,9 +110,11 @@ def vary_area():
         acf.S_clean = S
         
         climbrate = acf.RC_max(acf.W_MTO, 0, 0)
+        gradient_cl  = acf.climb_slope_max(acf.W_MTO, 0, 0, gear="up", flaps="up")
         gradient_TO  = acf.climb_slope_max(acf.W_MTO, 0, 0, gear="up", flaps="TO")
         gradient_ld  = acf.climb_slope_max(acf.W_MTO, 0, 0, gear="down", flaps="land")
         V_S0      = acf.stall_speed(acf.W_MTO, 0, 0, flaps="land")
+        V_S1      = acf.stall_speed(acf.W_MTO, 0, 0, flaps="up")
         TO_dist   = acf.takeoff_ground_run(acf.W_MTO, elevation, temp_offset, slope, surface)
         land_dist = acf.landing_ground_distance(acf.W_MTO, elevation, temp_offset, -slope, surface, reversible_pitch=True)
         
@@ -126,14 +128,18 @@ def vary_area():
         
         print(f"""
               ****************** S = {S} ***********************
-              Climb rate          = {climbrate[0]:>8.2f} m/s    {pass_cr}   at V={climbrate[1]:.2f} m/s
-              Climb gradient TO   = {gradient_TO[0]:>8.2f} %      {pass_gr_TO}   at V={gradient_TO[1]:.2f} m/s
-              Climb gradient land = {gradient_ld[0]:>8.2f} %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
-              V_S0                = {V_S0:>8.2f} m/s    {pass_vs}
-              Takeoff run         = {TO_dist[0]:>8.0f} m      {pass_to}
-              Landing roll        = {land_dist:>8.0f} m      {pass_ld}
+              Climb rate           = {climbrate[0]:>8.2f} m/s    {pass_cr}   at V={climbrate[1]:.2f} m/s
+              Climb gradient clean = {gradient_cl[0]:>8.2f} % at V={gradient_cl[1]:.2f} m/s
+              Climb gradient TO    = {gradient_TO[0]:>8.2f} %      {pass_gr_TO}   at V={gradient_TO[1]:.2f} m/s
+              Climb gradient land  = {gradient_ld[0]:>8.2f} %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
+              V_S0                 = {V_S0:>8.2f} m/s    {pass_vs}
+              V_S1                 = {V_S1:>8.2f} m/s
+              Takeoff run          = {TO_dist[0]:>8.0f} m      {pass_to}
+              Landing roll         = {land_dist:>8.0f} m      {pass_ld}
               Runway with {TORA}m TORA at {elevation}m ISA+{temp_offset}, {slope}% slope, {surface} runway
               *************************************************
+              ! Note that the climb gradient calculations are
+                inaccurate because of the drag approximation  !
               """)
               
 def vary_weight():
@@ -168,7 +174,7 @@ def vary_weight():
     
     acf = aircraft.Aircraft()
     
-    acf.S_clean = 33
+    acf.S_clean = 26
 
     for W in np.arange(acf.W_OE, acf.W_MTO+500, step=500):
         
@@ -190,7 +196,7 @@ def vary_weight():
               """)
               
 if __name__ == "__main__":
-     plot_variation()
+     #plot_variation()
      vary_area()
      #vary_weight()
 

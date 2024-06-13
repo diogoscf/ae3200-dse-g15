@@ -33,7 +33,7 @@
         "eta_generator": 0.4,
         "DoD_bat": 0.8,
         "eta_electricmotor": 0.925,
-        "eta_powertrain": 0.95,
+        "eta_powertrain": 1,
         "eta_p": 0.8500000000000001,
         "bat": 0.135,
         "P_req_cruise_W": 226685.78612301836,
@@ -46,9 +46,7 @@
 		"Fuel_engine_P_TO_W": 368000,
         "Fuel_engine_P_max_cont_W": 338000,
         "Newton_fuel_per_W_per_S_TO": 0.34532749982929480304,
-        "Newton_fuel_per_W_per_S_flight": 0.3250141174863951048,
-        "Electric_engine_P_TO_W": 380000,
-        "Electric_engine_P_max_cont_W": 350000    
+        "Newton_fuel_per_W_per_S_flight": 0.3250141174863951048
     },
     "Geometry": {
         "fus_height_m": 2.2,
@@ -215,7 +213,6 @@
         "CO2": 26.51,
         "CO2_emissions_kg/kg": 3.16,
         "Altitude_Cruise_m": 3000,
-        "Altitude_Max_Cruise_m": 3700,
         "Altitude_TO_m": 750,
         "Altitude_Land_m": 750,
         "Temp_offset_TO_Land_cruise": 18,

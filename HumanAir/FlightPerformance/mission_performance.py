@@ -24,11 +24,11 @@ def fuel_rate(acf, P_shaft=None, TO=False):
         Fuel consumption rate [N/s].
 
     """
-    
     if TO == False:
         return P_shaft / acf.eff_powertrain * acf.fuel_cons_flight
     else:
-        return acf.takeoff_power_sealevel * acf.fuel_cons_TO
+        return acf.electric_takeoff_power * acf.fuel_cons_TO
+    
     
 def bat_cap_rate(acf, P_shaft=None, TO=False):
     """
@@ -52,10 +52,26 @@ def bat_cap_rate(acf, P_shaft=None, TO=False):
         Fuel consumption rate [N/s].
 
     """
+    if TO == False:
+        return P_shaft / acf.eff_powertrain / acf.eff_electric_motor / acf.eff_battery
+    else:
+        return acf.electric_takeoff_power/ acf.eff_powertrain / acf.eff_electric_motor / acf.eff_battery
+    
 
-def take_off(acf, h=None, dT=None, surface="grass"):
-    ground_distance = 0
-    return ground_distance    
+def take_off(acf, h=None, dT=None, surface="grass", electric=False):
+    if h == None and dT == None:
+        h = acf.h_TO
+        dT = acf.dT_default
+        
+    dt, acf.TAS = acf.takeoff_ground_run(acf.W_current, h, dT, 0, surface, electric=electric, calc_time=True)
+    
+    if electric:
+        acf.bat_cap -= acf.bat_cap_rate(TO=True) * dt
+    else:
+        acf.fuel -= acf.fuel_rate(TO=True) * dt
+        
+    acf.alt = 0 # neglect what little alt has been gained
+    
     
 def climb(acf, h=None, dT=None, rate=2.5):
     ground_distance = 0
@@ -73,7 +89,5 @@ def descent(acf, h=None, dT=None, rate=2.5):
     return ground_distance
     
 def land(acf, h=None, dT=None, surface="grass"):
-    ground_distance = 0
-    return ground_distance
     
 

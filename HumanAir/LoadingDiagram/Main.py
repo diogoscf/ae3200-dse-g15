@@ -16,7 +16,7 @@ sys.path.append(project_root)
 
 import aircraft_data
 
-from HumanAir.LoadingDiagram.Parameters import Parameters_ConvNoCanard as p
+from HumanAir.LoadingDiagram.Parameters import Parameters_CurrentDesign as p
 import HumanAir.LoadingDiagram.Equations as eq
 import HumanAir.LoadingDiagram.Plotting as plot
 
@@ -84,7 +84,7 @@ class WP_WS:
         )
         self.Climbrate_y = eq.Climbrate(p.eta_p, p.A, p.e, 0, 0, p.Cdo, p.climbrate, self.WS)
         self.Climbgradient_y = eq.Climbgradient(
-            p.eta_p, self.WS, p.climbgradient, p.V_climb, p.A, p.e, p.Clmax_clean, p.Cl_SafetyFactor, p.Cdo, 0, 0
+            p.eta_p, self.WS, p.climbgradient, p.V_climb, p.A, p.e, p.Clmax_TO, p.Cl_SafetyFactor, p.Cdo, 0, 0
         )
 
         # Convert the x-values to y-values
@@ -134,12 +134,21 @@ class WP_WS:
 
     #  ========== 2: Plot Lines =========="""
     def plot(self, saving=None):
-        
+        # not sure if altitude correction should be applied to power, assumed here and in FlightPerformance.takeoff_landing.py that it is not used
+        #power_alt_correction = 1.132 * (eq.Density(p.h_TO, p.temp_offset)/1.225) - 0.132 # Gagg and Ferrar model, Gudmundsen eq 7-16
         acf = aircraft_data.aircraft_data
         W = acf["CL2Weight"]["MTOW_N"]
-        S = acf["Aero"]["S_Wing"]
-        P = acf["Power_prop"]["Fuel_engine_P_max_cont_W"]
-        our_design = [W/S, W/P]
+        S_clean = acf["Aero"]["S_Wing"]
+        S_to = acf["Aero"]["S_Wing"] * acf["Flaps"]["Sprime_S_takeoff"] 
+        S_ld = acf["Aero"]["S_Wing"] * acf["Flaps"]["Sprime_S_landing"]
+        P_to = acf["Power_prop"]["Fuel_engine_P_TO_W"] * acf["Power_prop"]["eta_powertrain"] #* power_alt_correction # prop eff should not be included
+        P_cont = acf["Power_prop"]["Fuel_engine_P_max_cont_W"] * acf["Power_prop"]["eta_powertrain"] # prop eff taken into account in formulas
+
+        our_design_to = [W/S_to, W/P_to]
+        our_design_ld = [W/S_ld, W/P_cont]
+        our_design_clean = [W/S_clean, W/P_cont]
+
+        
         
         
         optimal_point = self.calculate_optimal_point()
@@ -163,7 +172,9 @@ class WP_WS:
         # plt.scatter(WS[index],Cruise_y[index], label="Chosen Design Point", s=100, color='red')
         plt.scatter(1040.95, 0.076651773, label="Cessna 206", s=100, color="blue")
         plt.scatter(optimal_point[1], optimal_point[0], label="Design Point", s=100, color="green")
-        plt.scatter(our_design[0], our_design[1], label="Current Design", s=100, color="orange")
+        plt.scatter(our_design_to[0], our_design_to[1], label="Current Design, Takeoff", s=100, color="orange")
+        plt.scatter(our_design_ld[0], our_design_ld[1], label="Current Design, Landing", s=100, color="black")
+        plt.scatter(our_design_clean[0], our_design_clean[1], label="Current Design, clean", s=100, color="brown")
         plt.xlabel(r"W/S (N/$m^2$)")
         plt.ylabel("W/P (N/W)")
         plt.ylim(0, 0.25)
