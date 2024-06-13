@@ -64,15 +64,15 @@
         "w_motor": 0.54,
         "l_motor": 0.176,
         "l_empty": 0.32,
-        "t_spar_tip": 0.006944189477840185,
-        "t_spar_root": 0.005378972722462206,
-        "t_skin_wing": 0.001760777707100579,
+        "t_spar_tip": 0.0014220140908492345,
+        "t_spar_root": 0.0005698880094934552,
+        "t_skin_wing": 0.000518200892922081,
         "spar_pos": [
             0.15,
             0.65
         ],
-        "wing_stringer_area_m2": 0.000231,
-        "wing_stringer_MOI_m4": 3.582e-08,
+        "wing_stringer_area_m2": 0.000201,
+        "wing_stringer_MOI_m4": 3.261e-08,
         "wing_stringer_thickness_m": 0.003,
         "wing_stringer_small_length_m": 0.03,
         "wing_rib_pos": [
@@ -100,8 +100,8 @@
         "strut_section_area_m2": 0.005,
         "wing_stringer_number": [
             2,
-            59,
-            31
+            38,
+            23
         ],
         "wing_stringer_sections": [
             0.4,
@@ -140,7 +140,7 @@
         "t_root_max_Wing": 0.46,
         "t_root_max_h": 0.3,
         "t_root_max_v": 0.3,
-        "CLmax_Land": 2.9000000000000005,
+        "CLmax_Land": 2.9000000000000004,
         "c_root_wing": 2.1965,
         "c_tip_wing": 0.8786,
         "c_root_HS": 1.7706645032300865,
@@ -155,7 +155,7 @@
         "MAC_v": 2.2474758735409948,
         "MAC_y": 0.7962218800097768
     },
-   "Flaps": {
+    "Flaps": {
         "cprime_c": 1.075,
         "Swf": 17.912441120519386,
         "delta_f": 45,
@@ -167,7 +167,7 @@
         "deflection_landing": 45,
         "deflection_takeoff": 45,
         "flap_start": 0.1401002254362557,
-        "flap_end": 0.69817955394002702,
+        "flap_end": 0.6981795539400271,
         "cf_c": 0.25,
         "cprime_c_landing": 1.023611111111111,
         "cprime_c_takeoff": 1.0094444444444444,
