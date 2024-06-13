@@ -75,7 +75,8 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                     plt.plot(np.exp(i), Smax, "ro")
                     plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
                     plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
-                    # Plot the coodinate of the intersection point next to the point, with a slight offset using numerical values
+                    # Plot the coodinate of the intersection point next to the point,
+                    # with a slight offset using numerical values
                     plt.text(
                         np.exp(i),
                         Smax,
@@ -137,7 +138,8 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                     plt.plot(np.exp(i), Smax, "ro")
                     plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
                     plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
-                    # Plot the coodinate of the intersection point next to the point, with a slight offset using numerical values
+                    # Plot the coodinate of the intersection point next to the point,
+                    # with a slight offset using numerical values
                     plt.text(
                         np.exp(i),
                         Smax,
@@ -227,7 +229,8 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                 plt.plot(Nf, Smax, "ro")
                 plt.plot([Nf, Nf], [0, Smax], "r--")
                 plt.plot([0, Nf], [Smax, Smax], "r--")
-                # Plot the coodinate of the intersection point next to the point, with a slight offset using numerical values
+                # Plot the coodinate of the intersection point next to the point,
+                # with a slight offset using numerical values
                 plt.text(Nf, Smax, "({:.2e}, {:.2e})".format(Nf, Smax), fontsize=12, verticalalignment="bottom")
                 # put the lifetime in a textbox on the top right corner
                 plt.text(
@@ -250,14 +253,16 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
     #     # From N = N_min to N = N_max
     #     x2 = np.linspace(np.log(N_min), np.log(N_max), 2)
-    #     S2 = np.log(Sult) + (np.log(alpha * Sult) - np.log(Sult))/(np.log(N_max) - np.log(N_min)) * (x2- np.log(N_min))
+    #     S2 = np.log(Sult) +
+    #       (np.log(alpha * Sult) - np.log(Sult))/(np.log(N_max) - np.log(N_min)) * (x2- np.log(N_min))
 
     #     # From N = N_max to N = infinity
     #     x3 = np.linspace(np.log(N_max), 20, 2)
     #     S3 = np.ones(len(x2))* np.log(alpha * Sult)
 
     #     # Compute intersection point
-    #     x = (np.log(Smax) - np.log(Sult)) / ((np.log(alpha * Sult) - np.log(Sult))/(np.log(N_max) - np.log(N_min))) + (np.log(N_min))
+    #     x = (np.log(Smax) - np.log(Sult)) /
+    #           ((np.log(alpha * Sult) - np.log(Sult))/(np.log(N_max) - np.log(N_min))) + (np.log(N_min))
 
     #     # Plot the Basquin curve
     #     plt.figure()
@@ -284,14 +289,16 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
     #     # From N = N_min to N = N_max
     #     x2 = np.linspace(np.log(N_min), np.log(N_max), 2)
-    #     S2 = np.log(Sult) + (np.log(alpha * Sult / K_t) - np.log(Sult))/(np.log(N_max) - np.log(N_min)) * (x2- np.log(N_min))
+    #     S2 = np.log(Sult) +
+    #       (np.log(alpha * Sult / K_t) - np.log(Sult))/(np.log(N_max) - np.log(N_min)) * (x2- np.log(N_min))
 
     #     # From N = N_max to N = infinity
     #     x3 = np.linspace(np.log(N_max), 20, 2)
     #     S3 = np.ones(len(x2))* np.log(alpha * Sult / K_t)
 
     #     # Compute intersection point
-    #     x = (np.log(Smax) - np.log(Sult)) / ((np.log(alpha * Sult / K_t) - np.log(Sult))/(np.log(N_max) - np.log(N_min))) + (np.log(N_min))
+    #     x = (np.log(Smax) - np.log(Sult)) /
+    #       ((np.log(alpha * Sult / K_t) - np.log(Sult))/(np.log(N_max) - np.log(N_min))) + (np.log(N_min))
 
     #     # Plot the Basquin curve
 
