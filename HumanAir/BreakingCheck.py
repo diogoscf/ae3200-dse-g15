@@ -9,14 +9,15 @@ from aircraft_data import aircraft_data
 
 from isa import isa
 
+
 def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0):
     KE_req = 0.5 * acd["CL2Weight"]["MTOW_N"] / 9.81 * 29.2**2 / 2
-    
-    d_ground = 508 #without taking into account reverse thrust
+
+    d_ground = 508  # without taking into account reverse thrust
 
     F_retarded = KE_req / d_ground
 
-    F_calliper = F_retarded * (acd["Landing_gear"]["Dwm_m"] / 2) / ((r_in + r_out) /2)
+    F_calliper = F_retarded * (acd["Landing_gear"]["Dwm_m"] / 2) / ((r_in + r_out) / 2)
 
     mu = 0.15
 
@@ -26,8 +27,9 @@ def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0
         return True
     else:
         return False
-    
+
+
 if __name__ == "__main__":
     # AileronDerivatives()
-    print(BrakeCheck(acd=aircraft_data,P_max=1.2, A_calliper=0.01, r_in=0.1, r_out=0.25))
+    print(BrakeCheck(acd=aircraft_data, P_max=1.2, A_calliper=0.01, r_in=0.1, r_out=0.25))
     # AileronSizing()
