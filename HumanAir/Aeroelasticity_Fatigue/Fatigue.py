@@ -450,7 +450,6 @@ if __name__ == "__main__":
 
     axial_stresses = get_max_axial_stress(Mx, Vy, wing_structure.Ixx()[nodes // 2 :], hmax, area)
     stress_max = np.max(np.abs(axial_stresses)) / 1e6
-    print(stress_max, stress_ult)
 
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)
