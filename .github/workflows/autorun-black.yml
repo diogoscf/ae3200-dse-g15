@@ -20,7 +20,7 @@ jobs:
       run: pip install black
 
     - name: Run black
-      run: git diff --name-only $GITHUB_BASE_REF $GITHUB_HEAD_REF | grep "*.py" | xargs black
+      run: black .
 
     - uses: stefanzweifel/git-auto-commit-action@v5
       with:
