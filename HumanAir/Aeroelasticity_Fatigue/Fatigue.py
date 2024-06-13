@@ -60,27 +60,27 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
                 # Compute intersection point
                 if Smax is not None:
-                    x = (np.log(Smax) - np.log(Sult)) / (
+                    i = (np.log(Smax) - np.log(Sult)) / (
                         (np.log(alpha * Sult) - np.log(Sult)) / (np.log(N_max) - np.log(N_min))
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(x) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
-                plt.plot(np.exp(x1), np.exp(S1), "b")
+                plt.plot(np.exp(x), np.exp(S), "b")
                 if Smax is not None:
                     # Plot intersection point
-                    plt.plot(np.exp(x), Smax, "ro")
-                    plt.plot([np.exp(x), np.exp(x)], [0, Smax], "r--")
-                    plt.plot([0, np.exp(x)], [Smax, Smax], "r--")
+                    plt.plot(np.exp(i), Smax, "ro")
+                    plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
+                    plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
                     # Plot the coodinate of the intersection point next to the point,
                     # with a slight offset using numerical values
                     plt.text(
-                        np.exp(x),
+                        np.exp(i),
                         Smax,
-                        "({:.2e}, {:.2e})".format(np.exp(x), Smax),
+                        "({:.2e}, {:.2e})".format(np.exp(i), Smax),
                         fontsize=12,
                         verticalalignment="bottom",
                     )
@@ -123,27 +123,27 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
                 # Compute intersection point
                 if Smax is not None:
-                    x = (np.log(Smax) - np.log(Sult)) / (
+                    i = (np.log(Smax) - np.log(Sult)) / (
                         (np.log(alpha * Sult) - np.log(Sult)) / (np.log(N_max) - np.log(N_min))
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(x) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
-                plt.plot(np.exp(x1), np.exp(S1), "b")
+                plt.plot(np.exp(x), np.exp(S), "b")
                 if Smax is not None:
                     # Plot intersection point
-                    plt.plot(np.exp(x), Smax, "ro")
-                    plt.plot([np.exp(x), np.exp(x)], [0, Smax], "r--")
-                    plt.plot([0, np.exp(x)], [Smax, Smax], "r--")
+                    plt.plot(np.exp(i), Smax, "ro")
+                    plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
+                    plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
                     # Plot the coodinate of the intersection point next to the point,
                     # with a slight offset using numerical values
                     plt.text(
-                        np.exp(x),
+                        np.exp(i),
                         Smax,
-                        "({:.2e}, {:.2e})".format(np.exp(x), Smax),
+                        "({:.2e}, {:.2e})".format(np.exp(i), Smax),
                         fontsize=12,
                         verticalalignment="bottom",
                     )
@@ -390,4 +390,6 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 
 
 if __name__ == "__main__":
-    fatigue_life(Smax=300, Experimental_SN=True)
+    fatigue_life(Sult=500, alpha=0.1, Smax=120, verification=False, Experimental_SN=False)
+    fatigue_life(Sult=500, alpha=0.1, Smax=120, verification=False, Experimental_SN=True)
+    fatigue_life(verification=True)
