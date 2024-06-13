@@ -439,7 +439,7 @@ def static_aeroelasticity(K_h, K_theta, S, C_L_alpha, a, B, q, alpha0, C_M_AC):
     plt.figure()
     plt.plot(range(1, iter + 1), x_save[1, :] * 180 / np.pi, linewidth=2)
     plt.plot([0, iter], [x_mono[1] * 180 / np.pi, x_mono[1] * 180 / np.pi], linewidth=2)
-    plt.legend(["Partitioned", "Monolithic"])
+    plt.legend(['Partitioned', "Monolithic"])
     plt.xlabel("Number of iterations", fontsize=14)
     plt.ylabel("Twist rotation [deg]", fontsize=14)
     plt.axis([0, iter, 0, 7])
