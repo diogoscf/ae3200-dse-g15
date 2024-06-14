@@ -73,7 +73,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 2.5)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
@@ -136,7 +136,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                     ) + (np.log(N_min))
 
                     # Lifetime in number of cycles
-                    Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
+                    Nf = int(np.exp(i) / 2.5)  # divide by 4 to account for the coarseness of the approach
 
                 # Plot the S-N curve
                 plt.figure()
@@ -224,7 +224,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
                             )
                         )
                         break
-            Nf_actual = Nf / 4
+            Nf_actual = Nf / 2.5
 
             # plot the experimental data curve
             plt.figure()
@@ -403,7 +403,7 @@ if __name__ == "__main__":
     nodes = 501
     load_factor = 1.5
     AoA = 0
-    altitude = 0
+    altitude = 3000
 
     wing_structure = WingStructure(aircraft_data, airfoil_shape, nodes)
 
@@ -455,4 +455,4 @@ if __name__ == "__main__":
 
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
     fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)
-    fatigue_life(Sult=stress_ult, alpha=0.161, verification=True)
+    fatigue_life(Sult=stress_ult, alpha=0.3, verification=True)
