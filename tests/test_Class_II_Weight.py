@@ -2,6 +2,7 @@ import numpy as np
 import math
 import os
 import sys
+
 #
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
@@ -188,6 +189,7 @@ def test_wing_weight():
     )
 
     assert math.isclose(weight_class.WingWeight()["Average"], 760, rel_tol=1e-3)
+
 
 def test_empennage_weight():
     # Initialize the Class_II_Weight object
