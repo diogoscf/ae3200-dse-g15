@@ -764,7 +764,6 @@ def run_optimiser(
 
 
 if __name__ == "__main__":
-
     (
         optimized_t_spar_tip,
         optimized_t_spar_root,

@@ -759,11 +759,9 @@ if __name__ == "__main__":
             )
 
     if analyze == "static aeroelasticity":
-
         # Static Aeroelasticity
         static_aeroelasticity(K_h, K_theta, Sw, C_L_alpha, a, B, q_cruise, alpha_0L, C_M_AC)
 
     if analyze == "static trimmed aeroelasticity":
-
         # Static Trimmed Aeroelasticity
         static_trimmed_aeroelasticity(K_h, K_theta, Sw, C_L_alpha, a, B, q_cruise, MTOW, C_M_AC)

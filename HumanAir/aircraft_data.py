@@ -18,7 +18,6 @@ def save_ac_data_to_json(ac_data=aircraft_data, filename="design.json"):
 
 
 def import_aero_data(file_name):
-
     data = {}
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
