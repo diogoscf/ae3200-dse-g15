@@ -187,7 +187,6 @@ def test_wing_weight():
         ** 0.30
     )
 
-
     assert math.isclose(weight_class.WingWeight()["Average"], 760, rel_tol=1e-3)
 
 
