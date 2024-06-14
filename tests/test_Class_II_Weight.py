@@ -2,7 +2,7 @@ import numpy as np
 import math
 import os
 import sys
-
+#
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
@@ -187,9 +187,7 @@ def test_wing_weight():
         ** 0.30
     )
 
-
     assert math.isclose(weight_class.WingWeight()["Average"], 760, rel_tol=1e-3)
-
 
 def test_empennage_weight():
     # Initialize the Class_II_Weight object
