@@ -13,7 +13,7 @@ vol_jet_a1_price = 0.8  # US$/L
 jet_a1_dens = 0.8025  # kg/m3
 
 
-def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, ac_data=aircraft_data, fuel_weight = None):
+def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, ac_data=aircraft_data, fuel_weight=None):
     """
     Calculate the hourly operating cost of a new aircraft design based on the mission range. Overhaul taken
     from MAF values, so not yet dependent on the mission profile legs. Should be improved later.
@@ -58,7 +58,7 @@ def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, ac_dat
 
 
 if __name__ == "__main__":
-    print(hourly_operating_cost("maf_mission_graph.csv", c206_data, ac_data = aircraft_data))
+    print(hourly_operating_cost("maf_mission_graph.csv", c206_data, ac_data=aircraft_data))
 
     # V&V
     input = {
