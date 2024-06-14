@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
 from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 
-# work in progress
+
 aircraft_data = {
     "Contingency": 1.2,
     "Contingency_C2W": 1.12,
