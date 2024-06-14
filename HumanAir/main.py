@@ -392,7 +392,7 @@ if __name__ == "__main__":
         # decreasing score: negative weight
         # no influence: weight = 0
 
-        weights = {
+        importance_weights = {
             "A": +0.0,
             "eta_p": +0.1,
             "Clmax_clean": +0.05,
@@ -421,7 +421,7 @@ if __name__ == "__main__":
             find_optimal_design(
                 ac_data,
                 maximum_weight_battery=maximum_weight_battery,
-                weights=weights,
+                weights=importance_weights,
                 CO2_threshold=CO2_threshold,
                 design_points=design_points,
                 printing=printing,
@@ -582,7 +582,7 @@ if __name__ == "__main__":
                 logging.info(" Calculating the hourly price")
 
                 # calculating the hourly cost
-                cost = hourly_operating_cost("maf_mission_graph.csv")
+                cost = hourly_operating_cost("maf_mission_graph.csv", ac_data = ac_data, fuel_weight = ac_data["Weights"]["Wfuel_N"])
 
                 print(f"Cost: {round(cost, 2)} [US$]")
 
@@ -616,9 +616,6 @@ if __name__ == "__main__":
         # initialise the bat percentage
         bat = np.arange(0, 0.3, 0.001)
         coeff_exp, coeff_pol = WeightEstm.PolynomialRegression(bat)
-
-        # run the regression to find power required cruise
-        co2_ratio_max = 0
 
         # set the condition to find the first point with co2 ratio > 50
         ok = 0
@@ -736,6 +733,11 @@ if __name__ == "__main__":
         TailIteration(ac_datafile=class_2_dictionary)
         logging.info(" Sizing the horizontal tail successful")
 
+        logging.info(" Calculating the cost")
+        cost = hourly_operating_cost("maf_mission_graph.csv", ac_data = class_2_dictionary, fuel_weight = class_2_dictionary["CL2Weight"]["Wfuel_N"])
+        print(f"Cost: {round(cost, 2)} [US$]")
+        logging.info(" Calculating the cost successful")
+
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")
         logging.info(" Design.json saved at: " + design_json_path)
@@ -778,8 +780,9 @@ if __name__ == "__main__":
         print("Nose Strut Length", round(fuselage_size.h_nose_strut, 2), "[m]")
 
         # plot the side and front view
-        fuselage_size.plot_side_drawing(s_gear=0.2, ac_data=fuselage_sizing_dict)
-        fuselage_size.plot_front_view(s_gear=0.2)
+        print(fuselage_size.below_position(s_gear = 0.1))
+        fuselage_size.plot_side_drawing(s_gear = 0.2, ac_data=fuselage_sizing_dict)
+        fuselage_size.plot_front_view(s_gear = 0.2)
 
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")

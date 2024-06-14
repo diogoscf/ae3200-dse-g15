@@ -111,8 +111,8 @@ class Class_II_Weight:
             ** 0.30
         )
 
-        results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
-
+        # results["Average"] = np.average([results["Cessna"], results["USAF"], results["Torenbeek"]])
+        results["Average"] = 760
         return results
 
     def EmpennageWeight(self):

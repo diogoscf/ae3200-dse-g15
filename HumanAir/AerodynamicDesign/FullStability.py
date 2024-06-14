@@ -188,7 +188,7 @@ def StabControl(acd=aircraft_data):
 
 
 # negative values does not work because the nose gear will colapse, the begin value has to be larger than 0.05
-def TailIteration(ac_datafile=aircraft_data, begin_value=0.15, end_value=0.6, step=10):
+def TailIteration(ac_datafile=aircraft_data, begin_value=0.2, end_value=0.6, step=10):
     # define the minimum value for Sh/S
     Sh_S_min = 10000
 

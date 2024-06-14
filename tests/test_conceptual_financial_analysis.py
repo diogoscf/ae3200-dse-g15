@@ -55,6 +55,6 @@ def test_hourly_operating_cost():
 
     assert math.isclose(
         182.7,
-        hourly_operating_cost(inp["mission_file"], inp["standard_aircraft_data"], inp["aircraft_data"]),
+        hourly_operating_cost(inp["mission_file"], inp["standard_aircraft_data"], inp["aircraft_data"], inp["aircraft_data"]["Weights"]["Wfuel_N"]),
         abs_tol=0.05,
     )
