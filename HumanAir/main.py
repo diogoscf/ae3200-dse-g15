@@ -582,7 +582,9 @@ if __name__ == "__main__":
                 logging.info(" Calculating the hourly price")
 
                 # calculating the hourly cost
-                cost = hourly_operating_cost("maf_mission_graph.csv", ac_data = ac_data, fuel_weight = ac_data["Weights"]["Wfuel_N"])
+                cost = hourly_operating_cost(
+                    "maf_mission_graph.csv", ac_data=ac_data, fuel_weight=ac_data["Weights"]["Wfuel_N"]
+                )
 
                 print(f"Cost: {round(cost, 2)} [US$]")
 
@@ -734,7 +736,9 @@ if __name__ == "__main__":
         logging.info(" Sizing the horizontal tail successful")
 
         logging.info(" Calculating the cost")
-        cost = hourly_operating_cost("maf_mission_graph.csv", ac_data = class_2_dictionary, fuel_weight = class_2_dictionary["CL2Weight"]["Wfuel_N"])
+        cost = hourly_operating_cost(
+            "maf_mission_graph.csv", ac_data=class_2_dictionary, fuel_weight=class_2_dictionary["CL2Weight"]["Wfuel_N"]
+        )
         print(f"Cost: {round(cost, 2)} [US$]")
         logging.info(" Calculating the cost successful")
 
@@ -780,9 +784,9 @@ if __name__ == "__main__":
         print("Nose Strut Length", round(fuselage_size.h_nose_strut, 2), "[m]")
 
         # plot the side and front view
-        print(fuselage_size.below_position(s_gear = 0.1))
-        fuselage_size.plot_side_drawing(s_gear = 0.2, ac_data=fuselage_sizing_dict)
-        fuselage_size.plot_front_view(s_gear = 0.2)
+        print(fuselage_size.below_position(s_gear=0.1))
+        fuselage_size.plot_side_drawing(s_gear=0.2, ac_data=fuselage_sizing_dict)
+        fuselage_size.plot_front_view(s_gear=0.2)
 
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")

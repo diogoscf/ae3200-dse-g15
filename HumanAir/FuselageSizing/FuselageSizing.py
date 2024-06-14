@@ -364,7 +364,7 @@ class FuselageSizing:
                 edgecolor="m",
                 facecolor="none",
             )
-            #print(self.length_main_strut(s_gear))
+            # print(self.length_main_strut(s_gear))
             xcg1, l1, xcg2, l2 = self.calculate_battery_split()
             battery1 = patches.Rectangle(
                 # (self.l_long_nose + self.h_nose_strut + self.D_nose / 2 + 0.1, FuselageSizing.t_fuse),
@@ -502,7 +502,7 @@ class FuselageSizing:
 
     def calculate_battery_split(self, percent_front=0.6):
         self.bat_dict = self.below_position(s_gear=0.2)
-        #print(self.bat_dict)
+        # print(self.bat_dict)
         # calculate the volumes of the battery packages
         V1 = (
             (self.bat_dict["main landing gear"][0] - self.bat_dict["nose landing gear"][1])
