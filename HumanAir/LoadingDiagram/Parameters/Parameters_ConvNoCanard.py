@@ -1,6 +1,7 @@
 """========== Aircraft Design Parameters =========="""
+
 name = "Conventional Aircraft, No Canard"
-shortname="conventional"
+shortname = "conventional"
 A = 11.5  # Cessna 206: 9.38, B2: 5.75
 e = 0.82
 eta_p = 0.85
