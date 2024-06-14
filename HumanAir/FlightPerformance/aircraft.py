@@ -1,13 +1,13 @@
 import numpy as np
 from scipy.optimize import root_scalar, minimize_scalar
 
-from FlightPerformance.helper import density
-import FlightPerformance.thrust_power as thrust_power
-import FlightPerformance.takeoff_landing as takeoff_landing
-
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import aircraft_data
+
+from FlightPerformance.helper import density
+import FlightPerformance.thrust_power as thrust_power
+import FlightPerformance.takeoff_landing as takeoff_landing
 
 
 class Aircraft:
@@ -126,10 +126,26 @@ class Aircraft:
 
         
         #
-        # calculated data - CANNOT BE USED SINCE CL_Dmin =/= 0
+        # calculated data - normal equations cannot be used since CL_CDmin =/= 0
         #
         
-        hier verder
+        # find CL/CD max for clean config
+        def CL_CD(CL):
+            return - (CL / self.CD(CL)) # minus so that minimize_scalar() will maximise
+        res = minimize_scalar(CL_CD, bounds=[0, self.CLmax_clean])
+        self.LDmax = -res.fun
+        self.CL_LDmax = res.x
+        self.CD_LDmax = self.CD(res.x)
+        
+        # find CL^3/CD^2 max for clean config
+        def CL3_CD2(CL):
+            return - (CL**3 / self.CD(CL)**2) # minus so that minimize_scalar() will maximise
+        res = minimize_scalar(CL3_CD2, bounds=[0, self.CLmax_clean])
+        self.L3D2max = -res.fun
+        self.CL_L3D2max = res.x
+        self.CD_L3D2max = self.CD(res.x)
+        
+        
         
         # self.LDmax    = 0.5 * np.sqrt(np.pi*self.AR*self.e_clean/self.CD0_clean) # ruijgrok p107
         # self.CD_LDmax = 2 * self.CD0_clean # ruijgrok p106
@@ -141,22 +157,7 @@ class Aircraft:
         # self.CL_L3D2max = (self.L3D2max * self.CD_L3D2max**2)**(1/3)
         
         
-        #
-        # variables for mission analysis
-        #
-        
-        self.TAS = 0
-        self.alt = 0
-        
-        self.payload = self.W_pl_no_pilot # [N]
-        self.fuel = self.W_MF # [N]
-        self.bat_cap = self.max_bat_cap # [Wh]
-        
-        self.distance_flown = 0 # [m]
-        self.time_flown = 0 # [s]
-    
-    def W_current(self):
-        return self.W_OE + self.payload + self.fuel
+
 
     def S(self, flaps="up"):
         if flaps == "up":
@@ -206,9 +207,15 @@ class Aircraft:
     def T(self, V_ms, h, dT, use_takeoff_power=False, electric=False):
         return thrust_power.T(self, V_ms, h, dT, use_takeoff_power=use_takeoff_power)
     
-    def prop_eff(acf, V, h, dT, use_takeoff_power=False):
-        return thrust_power.prop_eff(acf, V, h, dT, use_takeoff_power=use_takeoff_power)
+    def prop_eff(self, V, h, dT, use_takeoff_power=False):
+        return thrust_power.prop_eff(self, V, h, dT, use_takeoff_power=use_takeoff_power)
         
+    def fuel_rate(self, P_shaft=None, TO=False):
+        return thrust_power.fuel_rate(self, P_shaft=P_shaft, TO=TO)
+    
+    def bat_cap_rate(self, P_shaft=None, TO=False):
+        return thrust_power.bat_cap_rate(self, P_shaft=P_shaft, TO=TO)
+
     def P_r(self, W, V, h, dT):
         rho = density(h, dT)
         CL = W / (0.5 * rho * V**2 * self.S())

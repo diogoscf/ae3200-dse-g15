@@ -285,4 +285,61 @@ def prop_eff(acf, V, h, dT, use_takeoff_power=False):
     if eff > 1 and V > 0: # warn user, V>0 condition to ignore warnings for nonsensical values
         print(f"Propeller efficiency > 1. V={V} m/s, h={h} m, dT={dT} degC, takeoffpower={use_takeoff_power}, eff={eff}")
     return eff
+
+def fuel_rate(acf, P_shaft=None, TO=False):
+    """
+    Calculates the fuel consumed for given power required in N/s.
     
+    When 'TO' is set to 'True' this function disregards 'P_shaft' and assumes
+    max takeoff power.
+
+    Parameters
+    ----------
+    acf : Aircraft
+        The aircraft object.
+    P_shaft : float
+        Shaft power required [W].
+    TO  : boolean
+        Whether to use T/O power.
+
+    Returns
+    -------
+    float
+        Fuel consumption rate [N/s].
+
+    """
+    # from engine specs:
+    # T/O fuel consumption 0.17 kg/hp/hr -> 0,00000062101634094798 N/W/s
+    # averaged non-TO fuel consumption 0.16 kg/hp -> 0,00000058448596795104 N/W/s
+    if TO == False:
+        return P_shaft / acf.eff_powertrain * acf.fuel_cons_flight
+    else:
+        return acf.takeoff_power_sealevel * acf.fuel_cons_TO
+    
+    
+def bat_cap_rate(acf, P_shaft=None, TO=False):
+    """
+    Calculates the rate at which battery capacity is depleted in Wh/s.
+    
+    When 'TO' is set to 'True' this function disregards P_shaft and assumes
+    max takeoff power.
+
+    Parameters
+    ----------
+    acf : Aircraft
+        The aircraft object.
+    P_shaft : float
+        Shaft power required [W].
+    TO  : boolean
+        Whether to use T/O power.
+
+    Returns
+    -------
+    float
+        Fuel consumption rate [N/s].
+
+    """
+    if TO == False:
+        return P_shaft / acf.eff_powertrain / acf.eff_electric_motor / acf.eff_battery / 3600 # conv to Wh/s
+    else:
+        return acf.electric_takeoff_power/ acf.eff_powertrain / acf.eff_electric_motor / acf.eff_battery / 3600 # conv to Wh/s

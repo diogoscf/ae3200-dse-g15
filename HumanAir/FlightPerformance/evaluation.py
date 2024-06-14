@@ -101,7 +101,7 @@ def vary_area():
     # surface     = "grass"
         
     
-    for S in [24, 26, 30]:# np.arange(20, 40, step=1):
+    for S in [24, 26, 30, 36]:# np.arange(20, 40, step=1):
         
         acf = aircraft.Aircraft()
         
