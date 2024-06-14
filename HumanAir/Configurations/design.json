@@ -64,17 +64,17 @@
         "w_motor": 0.54,
         "l_motor": 0.176,
         "l_empty": 0.32,
-        "t_spar_tip": 0.0014220140908492345,
-        "t_spar_root": 0.0005698880094934552,
-        "t_skin_wing": 0.000518200892922081,
+        "t_spar_tip": 0.0006085889679805376,
+        "t_spar_root": 0.001539648646147833,
+        "t_skin_wing": 0.0005,
         "spar_pos": [
             0.15,
             0.65
         ],
-        "wing_stringer_area_m2": 0.000201,
-        "wing_stringer_MOI_m4": 3.261e-08,
-        "wing_stringer_thickness_m": 0.003,
-        "wing_stringer_small_length_m": 0.03,
+        "wing_stringer_area_m2": 0.000225,
+        "wing_stringer_MOI_m4": 1.9218e-08,
+        "wing_stringer_thickness_m": 0.005,
+        "wing_stringer_small_length_m": 0.02,
         "wing_rib_pos": [
             0.05,
             0.1,
@@ -95,17 +95,21 @@
             0.93,
             1
         ],
-        "strut_loc_b/2": 0.6,
+        "strut_loc_b/2": 0.7,
         "strut_loc_MAC": 0.25,
-        "strut_section_area_m2": 0.005,
+        "strut_section_area_m2": 0.002,
         "wing_stringer_number": [
-            2,
-            38,
-            23
+            17,
+            9,
+            7,
+            36,
+            34
         ],
         "wing_stringer_sections": [
-            0.4,
-            0.3,
+            0.2,
+            0.2,
+            0.1,
+            0.2,
             0.3
         ],
         "wingbox_material": "Aluminium"
@@ -307,7 +311,11 @@
             "E": 68900000000.0,
             "sigma_y": 276000000.0,
             "poisson_ratio": 0.33,
-            "sigma_ult": 310e6
+            "G": 26000000000.0,
+            "sigma_ult": 310000000.0
         }
+    },
+    "Structures": {
+        "structural_wing_weight": 315.5984023628792
     }
 }
