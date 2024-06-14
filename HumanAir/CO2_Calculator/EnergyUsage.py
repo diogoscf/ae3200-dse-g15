@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle, Patch
+import os
 
 phases = ["TO", "CR", "LD"]
 # Define the frequency distribution for mission distances (in nautical miles)
@@ -87,7 +88,7 @@ battery_percentage = np.where(total_energy_used != 0, (battery_usage_bins / tota
 fuel_percentage = np.where(total_energy_used != 0, (fuel_usage_bins / total_energy_used) * 100, 0)
 
 # Create the bar plot
-bar_width = 0.35
+bar_width = 0.45
 x = np.arange(len(distance_bins) - 1)
 
 fig, ax = plt.subplots(figsize=(20, 6))
@@ -98,8 +99,8 @@ bar2 = ax.bar(x + bar_width / 2, fuel_percentage, bar_width, label="Fuel", color
 
 # Add labels and title with custom fonts
 font_dict = {"fontsize": 20}
-ax.set_xlabel("Mission Distance (NM)", fontdict=font_dict)
-ax.set_ylabel("Percentage of Total Energy Used (%)", fontdict=font_dict)
+ax.set_xlabel("Mission Distance [NM]", fontdict=font_dict)
+ax.set_ylabel("Energy Provided [%]", fontdict=font_dict)
 ax.set_xticks(x)
 ax.set_xticklabels([f"{int(distance_bins[i])}-{int(distance_bins[i+1])}" for i in range(len(distance_bins) - 1)])
 
@@ -164,7 +165,11 @@ legend_elements = [
 ax.legend(handles=legend_elements, loc="upper center", prop={"size": 15})
 
 # Save the figure
-plt.savefig("energy_usage_plot.pdf")
+fig.savefig(
+    os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "energy-usage-plot.pdf"),
+    bbox_inches="tight",
+    dpi=200,
+)
 
 # Display the plot
 plt.show()

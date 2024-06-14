@@ -23,13 +23,19 @@ if __name__ == "__main__":
     colours = "brgcmy"
     combined = np.array([])
     plt.rcParams.update({"font.size": 30})
+    plt.rcParams.update({"axes.labelsize": 40})
+    fig, ax = plt.subplots()
+    fig.tight_layout()
+    ax.axhline(linewidth=2, color="k")
+    ax.axvline(linewidth=2, color="k")
+
     for i, row in flight_data.iterrows():
         dist = fit_log_normal(row["distance_before_refuelling_avg"], row["distance_before_refuelling_median"])
         print(
             i, dist.mean(), dist.median(), row["distance_before_refuelling_min"], row["distance_before_refuelling_max"]
         )
         simulated_lengths = dist.rvs(size=10000)
-        plt.plot(x, dist.pdf(x), colours[i] + "-", lw=2, label=row["aircraft"])  # type: ignore[index]
+        ax.plot(x, dist.pdf(x), colours[i] + "-", lw=2, label=row["aircraft"])  # type: ignore[index]
         combined = np.concatenate((combined, simulated_lengths))
 
     combined = combined[np.where(combined <= 600)]
@@ -37,7 +43,7 @@ if __name__ == "__main__":
     shape, loc, scale = stats.lognorm.fit(combined, floc=0)
     overall_dist = stats.lognorm(s=shape, loc=loc, scale=scale)
 
-    plt.plot(x, overall_dist.pdf(x), "k--", lw=2, label="Overall")
+    ax.plot(x, overall_dist.pdf(x), "k--", lw=2, label="Overall")
     print("Overall", overall_dist.mean(), overall_dist.median())
 
     # Plot simulated data
@@ -45,10 +51,20 @@ if __name__ == "__main__":
 
     # x = np.linspace(0, 1, 1000)
     # plt.plot(x, dist.pdf(x), 'r-', lw=2)
-    plt.title("Simulated Flight Lengths Distribution")
-    plt.xlabel("Flight Length (nm)")
-    plt.ylabel("Probability Density")
-    plt.legend()
+    # ax.set_title("Simulated Flight Lengths Distribution")
+    ax.set_xlabel("Flight Length [NM]")
+    ax.set_ylabel("Probability Density")
+    ax.grid()
+    ax.legend()
+
+    fig.set_size_inches(16, 9)
+    fig.tight_layout()
+
+    fig.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "flight-length-distribution.pdf"),
+        bbox_inches="tight",
+        dpi=200,
+    )
     plt.show()
 
     if input("Pickle distribution? (y/N): ").lower() == "y":
