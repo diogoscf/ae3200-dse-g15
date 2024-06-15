@@ -401,7 +401,7 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
 if __name__ == "__main__":
     stress_ult = aircraft_data["Materials"]["Aluminium"]["sigma_ult"] / 1e6
     nodes = 501
-    load_factor = 2
+    load_factor = 1.5
     AoA = 0
     altitude = 0
 

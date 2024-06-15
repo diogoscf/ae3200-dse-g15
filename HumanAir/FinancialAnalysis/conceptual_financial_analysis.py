@@ -13,7 +13,7 @@ vol_jet_a1_price = 0.8  # US$/L
 jet_a1_dens = 0.8025  # kg/m3
 
 
-def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, aircraft_data=aircraft_data):
+def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, ac_data=aircraft_data, fuel_weight=None):
     """
     Calculate the hourly operating cost of a new aircraft design based on the mission range. Overhaul taken
     from MAF values, so not yet dependent on the mission profile legs. Should be improved later.
@@ -37,28 +37,28 @@ def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, aircra
     overhaul_cost = (
         standard_aircraft_data["overhaul_per_hour"]
         * standard_aircraft_data["Vc_m/s"]
-        / aircraft_data["Performance"]["Vc_m/s"]
+        / ac_data["Performance"]["Vc_m/s"]
     )
 
     mission_freqs = calculate_mission_freqs(mission_file)
     _, maintenance_cost = _calculate_new_co2_flight_lengths(
         mission_freqs,
-        ac_data=aircraft_data,
+        ac_data=ac_data,
         maintenance_standard_co2=None,
         V_standard_kts=None,
         standard_ac_data=standard_aircraft_data,
     )  # NOTE: This maintenance cost estimate is not really correct now
 
-    endurance = nm_to_m(aircraft_data["Performance"]["range_nm"]) / aircraft_data["Performance"]["Vc_m/s"] / 3600
+    endurance = nm_to_m(ac_data["Performance"]["range_nm"]) / ac_data["Performance"]["Vc_m/s"] / 3600
 
-    fuel_burn = aircraft_data["Weights"]["Wfuel_N"] / 9.80665 / endurance
+    fuel_burn = fuel_weight / 9.80665 / endurance
     fuel_cost = fuel_burn * vol_jet_a1_price / jet_a1_dens
 
     return overhaul_cost + maintenance_cost + fuel_cost
 
 
 if __name__ == "__main__":
-    print(hourly_operating_cost("maf_mission_graph.csv", c206_data, aircraft_data))
+    print(hourly_operating_cost("maf_mission_graph.csv", c206_data, ac_data=aircraft_data))
 
     # V&V
     input = {

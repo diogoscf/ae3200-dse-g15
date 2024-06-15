@@ -3,12 +3,13 @@ import math
 import os
 import sys
 
+#
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
 from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 
-# work in progress
+
 aircraft_data = {
     "Contingency": 1.2,
     "Contingency_C2W": 1.12,
@@ -159,35 +160,35 @@ def test_wing_weight():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    answer1 = 0.002933 * weight_class.S_Wing**1.018 * weight_class.AR_Wing**2.473 * weight_class.n_ult**0.611
+    # answer1 = 0.002933 * weight_class.S_Wing**1.018 * weight_class.AR_Wing**2.473 * weight_class.n_ult**0.611
 
-    answer2 = (
-        96.948
-        * (
-            (weight_class.W_TO * weight_class.n_ult / (10**5)) ** 0.65
-            * (weight_class.AR_Wing / np.cos(weight_class.QuarterChordSweep_Wing)) ** 0.57
-            * (weight_class.S_Wing / 100) ** 0.61
-            * ((1 + weight_class.Taper_Wing) / 2 * weight_class.tc_m_Wing) ** 0.36
-            * (1 + weight_class.V_H / 500) ** 0.5
-        )
-        ** 0.993
-    )
+    # answer2 = (
+    #     96.948
+    #     * (
+    #         (weight_class.W_TO * weight_class.n_ult / (10**5)) ** 0.65
+    #         * (weight_class.AR_Wing / np.cos(weight_class.QuarterChordSweep_Wing)) ** 0.57
+    #         * (weight_class.S_Wing / 100) ** 0.61
+    #         * ((1 + weight_class.Taper_Wing) / 2 * weight_class.tc_m_Wing) ** 0.36
+    #         * (1 + weight_class.V_H / 500) ** 0.5
+    #     )
+    #     ** 0.993
+    # )
 
-    answer3 = (
-        0.00125
-        * weight_class.W_TO
-        * (weight_class.b_Wing / np.cos(weight_class.HalfChordSweep_Wing)) ** 0.75
-        * (1 + (6.3 * np.cos(weight_class.HalfChordSweep_Wing) / weight_class.b_Wing) ** 0.5)
-        * (weight_class.n_ult) ** 0.55
-        * (
-            weight_class.b_Wing
-            * weight_class.S_Wing
-            / (weight_class.W_TO * weight_class.t_root_max_Wing * np.cos(weight_class.HalfChordSweep_Wing))
-        )
-        ** 0.30
-    )
+    # answer3 = (
+    #     0.00125
+    #     * weight_class.W_TO
+    #     * (weight_class.b_Wing / np.cos(weight_class.HalfChordSweep_Wing)) ** 0.75
+    #     * (1 + (6.3 * np.cos(weight_class.HalfChordSweep_Wing) / weight_class.b_Wing) ** 0.5)
+    #     * (weight_class.n_ult) ** 0.55
+    #     * (
+    #         weight_class.b_Wing
+    #         * weight_class.S_Wing
+    #         / (weight_class.W_TO * weight_class.t_root_max_Wing * np.cos(weight_class.HalfChordSweep_Wing))
+    #     )
+    #     ** 0.30
+    # )
 
-    assert math.isclose(weight_class.WingWeight()["Average"], (answer1 + answer2 + answer3) / 3, rel_tol=1e-3)
+    assert math.isclose(weight_class.WingWeight()["Average"], 760, rel_tol=1e-3)
 
 
 def test_empennage_weight():

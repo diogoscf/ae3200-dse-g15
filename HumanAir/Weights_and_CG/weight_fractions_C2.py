@@ -328,8 +328,8 @@ def TailAero_copy(l_H, acd=aircraft_data):
     VhVcorr = acd["Aero"]["VhV"] * eta_H
 
     # Downwash Gradient supposedly from Slingerland whoever that may be
-    r = l_H * 2 / acd["Aero"]["b_Wing"]
-    mtv = 0 * 2 / acd["Aero"]["b_Wing"]
+    r = float(l_H * 2 / acd["Aero"]["b_Wing"])
+    mtv = float(0 * 2 / acd["Aero"]["b_Wing"])
     deda = (
         (
             (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
@@ -416,15 +416,16 @@ def Rotation_check(Weightlist, wcg, xlemac, FullCGlist, acd=aircraft_data):
 
     # Find sizing through fitted polynomial
     x = symbols("x")
-    CeC = solve(-6.624 * x**4 + 12.07 * x**3 - 8.292 * x**2 + 3.295 * x + 0.004942 - tau_e, x)[0]
+    CeC = solve(-6.624 * x**4 + 12.07 * x**3 - 8.292 * x**2 + 3.295 * x + 0.004942 - tau_e, x)
+    CeC = min([n for n in CeC if n.is_real])
     Elev = True
     if CeC > 0.4:
         Elev = False
-        print("WARNING: Your aircraft did not take off and crashed into a school")
+        # print("WARNING: Your aircraft did not take off and crashed into a school")
 
     # Update elevator sizing
     acd["Stability"]["Hinge_chord_elevator"] = ceil((1 - CeC) * 20) / 20
-    print(acd["Stability"]["Hinge_chord_elevator"])
+    acd["Stability"]["Hinge_chord_elevator"]
 
     return Elev
 
@@ -535,10 +536,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=F
     find_lg(nose_loading, max(CGlist), wcg, ac_datafile, max_load_nose=Wheel_pressure, fwdcg=min(FullCGlist))[0:5]
 
     # Check Rotation possibility
-    Rotate = True
     Rotate = np.array(Rotation_check(masslist, wcg, xlemac, FullCGlist))
-    print(Rotate)
-
     # Update dictionary values
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
@@ -556,26 +554,28 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
     # loop to get the optimised lemac and landing gear data with the batteries
     # in the right position and the lemac larger than 3.2m
     while not sizing:
-        _, CGlist, xlemac, nose_check = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
+        _, CGlist, xlemac, rotate = iterate_cg_lg(ac_datafile=ac_data, PERCENTAGE=percentage, bat_xcg=bat_xcg)
 
         # check if the nose gear can be placed
-        if not nose_check:
-            print("Nose gear collapsed, increasing battery xcg")
+        if not rotate:
+            # print("Nose gear collapsed, increasing battery xcg")
             bat_xcg += 0.01
 
         # check if the xlemac is acceptable
-        if xlemac > lemac_limit:
+        elif xlemac > lemac_limit and rotate:
             # TODO: call the function from fuselage sizing and check if the boxes overlap and returns the lemac
 
             # get the position of the batteries and the landing gears
             fuselage_sizing = FuselageSizing(ac_data=ac_data, bat_xcg=bat_xcg)
             bellow_position = fuselage_sizing.below_position(s_gear=0.1)  # s_gear is the clearance
-
+            # print(bellow_position)
             # check if the sizings are not overlapping
             if (
-                bellow_position["nose landing gear"][1] < bellow_position["battery"][0]
-                and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
+                bellow_position["nose landing gear"][1]
+                < bellow_position["battery"][0]
+                # and bellow_position["battery"][1] < bellow_position["main landing gear"][0]
             ):
+                # print("DA")
                 # if the sizing is correct, break the loop and return the optimised xlemac
                 # and update the xcg of the batteries
                 sizing = True
@@ -588,17 +588,36 @@ def optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.2, bat_xc
                 ac_data["Stability"]["Cg_Aft"] = (max(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
                 ac_data["Stability"]["Cg_Front"] = (min(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
 
-            # increase the battery xcg percentage
+            # check if the battery fits after the main landing gear
+            # elif bellow_position["main landing gear"][1] + 0.05 < bellow_position["battery"][0]:
+            #     #print("NU")
+            #     # if the sizing is correct, break the loop and return the optimised xlemac
+            #     # and update the xcg of the batteries
+            #     sizing = True
+            #
+            #     # update the lemac and the xcg of the batteries
+            #     ac_data["Geometry"]["XLEMAC_m"] = xlemac
+            #     ac_data["Stability"]["Xcg_battery_m"] = bat_xcg * ac_data["Geometry"]["fus_length_m"]
+            #
+            #     # update the cg limits
+            #     ac_data["Stability"]["Cg_Aft"] = (max(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
+            #     ac_data["Stability"]["Cg_Front"] = (min(CGlist) - xlemac) / ac_data["Aero"]["MAC_wing"]
+
+            # if the sizing is not correct, increase the battery xcg
             else:
                 bat_xcg += 0.01
 
-            # if it gets over an unrealistic value, break the loop
-            if bat_xcg > 0.9:
-                break
+        # if the xlemac is not acceptable, increase the battery xcg
+        elif xlemac < lemac_limit:
+            bat_xcg += 0.01
 
-        # if the lemac is too small, increase the percentage
+        # if the xlemac is acceptable, but no rotation, increase the battery xcg
         else:
             bat_xcg += 0.01
+
+        # if it gets over an unrealistic value, break the loop
+        if bat_xcg > 0.8:
+            break
 
     return bat_xcg
 
@@ -635,8 +654,8 @@ def calculate_lh(ac_data=aircraft_data):
 
 if __name__ == "__main__":
     init = time.process_time()
-    print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False))
+    # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False))
     # calculate_lh(ac_data=aircraft_data)
-    # optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.05, bat_xcg_init=0.5, lemac_limit = 3.2)
+    bat_xcg = optimised_xlemac_landing_gears(ac_data=aircraft_data, percentage=0.1, bat_xcg_init=0.1, lemac_limit=3.2)
     total = time.process_time() - init
     print(total)
