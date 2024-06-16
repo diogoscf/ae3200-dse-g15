@@ -177,40 +177,39 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
             Smax = Smax * 1e6
             data = np.array(
                 [
-                    (10.0, 482.63),
-                    (20.0, 482.63),
-                    (50.0, 482.63),
-                    (70.0, 482.63),
-                    (100.0, 420.28),
-                    (200.0, 325.43),
-                    (500.0, 241.32),
-                    (1000.0, 198.91),
-                    (2000.0, 168.92),
-                    (5000.0, 142.3),
-                    (7000.0, 135.83),
-                    (10000.0, 120.66),
-                    (20000.0, 99.46),
-                    (50000.0, 80.64),
-                    (100000.0, 71.15),
-                    (200000.0, 64.45),
-                    (500000.0, 58.5),
-                    (1000000.0, 55.5),
-                    (2000000.0, 53.38),
-                    (5000000.0, 51.5),
-                    (10000000.0, 50.55),
-                    (20000000.0, 49.88),
-                    (50000000.0, 49.28),
-                    (100000000.0, 48.99),
-                    (200000000.0, 48.77),
-                    (500000000.0, 48.59),
-                    (1000000000.0, 48.49),
+                    (5.00e4, 303.3693),
+                    (6.70e4, 296.4746),
+                    (2.40e4, 282.685),
+                    (8.70e4, 282.685),
+                    (6.70e4, 275.7903),
+                    (1.01e5, 262.0008),
+                    (3.60e4, 255.106),
+                    (1.90e5, 241.3165),
+                    (4.00e5, 241.3165),
+                    (4.00e5, 206.8427),
+                    (1.20e6, 206.8427),
+                    (2.00e6, 199.948),
+                    (4.30e6, 193.0532),
+                    (1.10e7, 193.0532),
+                    (2.10e6, 186.1584),
+                    (2.70e7, 172.3689),
+                    (2.10e7, 165.4742),
+                    (4.00e7, 165.4742),
+                    (6.10e7, 158.5794),
                 ]
             )
             data[:, 1] = data[:, 1] * 1e6
             if Smax is not None:
-                if Smax >= data[0, 1] or Smax <= data[-1, 1]:
-                    raise ValueError("The maximum stress should be between 0 and the ultimate tensile strength.")
-
+                if Smax >= data[0, 1]:
+                    print(
+                        "Instant failure: Your maximum stress experienced exceeds the material ultimate stress and will fail instantly"
+                    )
+                    return None
+                if Smax <= data[-1, 1]:
+                    print(
+                        "No fatigue: Your maximum stress experienced is below the material endurance limit and will not fail due to fatigue at all"
+                    )
+                    return None
             # Linearly interpolate between curve points to get the Nf for the given Smax
             if Smax is not None:
                 for i in range(len(data)):
@@ -332,37 +331,31 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
     if verification:
         data = np.array(
             [
-                (10.0, 482.63),
-                (20.0, 482.63),
-                (50.0, 482.63),
-                (70.0, 482.63),
-                (100.0, 420.28),
-                (200.0, 325.43),
-                (500.0, 241.32),
-                (1000.0, 198.91),
-                (2000.0, 168.92),
-                (5000.0, 142.3),
-                (7000.0, 135.83),
-                (10000.0, 120.66),
-                (20000.0, 99.46),
-                (50000.0, 80.64),
-                (100000.0, 71.15),
-                (200000.0, 64.45),
-                (500000.0, 58.5),
-                (1000000.0, 55.5),
-                (2000000.0, 53.38),
-                (5000000.0, 51.5),
-                (10000000.0, 50.55),
-                (20000000.0, 49.88),
-                (50000000.0, 49.28),
-                (100000000.0, 48.99),
-                (200000000.0, 48.77),
-                (500000000.0, 48.59),
-                (1000000000.0, 48.49),
+                (5.00e4, 303.3693),
+                (6.70e4, 296.4746),
+                (2.40e4, 282.685),
+                (8.70e4, 282.685),
+                (6.70e4, 275.7903),
+                (1.01e5, 262.0008),
+                (3.60e4, 255.106),
+                (1.90e5, 241.3165),
+                (4.00e5, 241.3165),
+                (4.00e5, 206.8427),
+                (1.20e6, 206.8427),
+                (2.00e6, 199.948),
+                (4.30e6, 193.0532),
+                (1.10e7, 193.0532),
+                (2.10e6, 186.1584),
+                (2.70e7, 172.3689),
+                (2.10e7, 165.4742),
+                (4.00e7, 165.4742),
+                (6.10e7, 158.5794),
             ]
         )
         data[:, 1] = data[:, 1] * 1e6
         Sult = Sult * 1e6
+        if Smax is not None:
+            Smax = Smax * 1e6
         alpha = alpha
         N_min = 100
         N_max = 1e6
@@ -384,18 +377,75 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
         x = np.concatenate((x1, x2, x3))
         S = np.concatenate((S1, S2, S3))
 
-        # Plot the S-N curve
+        # Compute intersection point
+        if Smax is not None:
+            i = (np.log(Smax) - np.log(Sult)) / (
+                (np.log(alpha * Sult) - np.log(Sult)) / (np.log(N_max) - np.log(N_min))
+            ) + (np.log(N_min))
+
+            # Lifetime in number of cycles
+            Nf = int(np.exp(i) / 4)  # divide by 4 to account for the coarseness of the approach
+
+        # round Nf to nearest 100
+        Nf = round(Nf, -2)
+
+        # find exponential fit for the experimental data
+        p = np.polyfit(np.log(data[:, 0]), np.log(data[:, 1]), 1)
+
+        # plot the S-N curves
         plt.figure()
         plt.plot(np.exp(x), np.exp(S), "b-")
-        # plot the experimental data curve
-        plt.plot(data[:, 0], data[:, 1], "g-")
+        plt.plot(data[:, 0], data[:, 1], "o", color="lightgreen")
+        plt.plot(data[:, 0], np.exp(np.polyval(p, np.log(data[:, 0]))), "r-")
+        if Smax is not None:
+            # Plot intersection point
+            plt.plot(np.exp(i), Smax, "ro")
+            plt.plot([np.exp(i), np.exp(i)], [0, Smax], "r--")
+            plt.plot([0, np.exp(i)], [Smax, Smax], "r--")
+            # Plot the coodinate of the intersection point next to the point,
+            # with a slight offset using numerical values
+            plt.text(
+                np.exp(i) * 1.2,
+                Smax * 1.01,
+                "({:.2e}, {:.2e})".format(np.exp(i), Smax),
+                fontsize=12,
+                verticalalignment="bottom",
+            )
+            # put the lifetime in a textbox on the top right corner
+            plt.text(
+                0.95,
+                0.95,
+                f"Nf: {Nf} flights",
+                transform=plt.gca().transAxes,
+                fontsize=14,
+                verticalalignment="top",
+                horizontalalignment="right",
+                bbox=dict(facecolor="white", alpha=0.5),
+            )
         plt.xscale("log")
         plt.yscale("log")
-        plt.xlabel("Number of cycles")
+        plt.xlabel("Number of cycles (Nf)")
         plt.ylabel("Stress")
-        plt.title("S-N curve")
-        plt.legend(["Basquin law approximation", "Experimental data"])
+        plt.legend(["Basquin law approximation", "Experimental data", "Exponential fit"])
+        plt.savefig(
+            os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "Fatigue.pdf"),
+            bbox_inches="tight",
+            dpi=200,
+        )
         plt.show()
+
+        # # Plot the S-N curve
+        # plt.figure()
+        # plt.plot(np.exp(x), np.exp(S), "b-")
+        # # plot the experimental data curve
+        # plt.plot(data[:, 0], data[:, 1], "g-")
+        # plt.xscale("log")
+        # plt.yscale("log")
+        # plt.xlabel("Number of cycles")
+        # plt.ylabel("Stress")
+        # plt.title("S-N curve")
+        # plt.legend(["Basquin law approximation", "Experimental data"])
+        # plt.show()
 
 
 if __name__ == "__main__":
@@ -403,7 +453,7 @@ if __name__ == "__main__":
     nodes = 501
     load_factor = 1.5
     AoA = 0
-    altitude = 0
+    altitude = 3000
 
     wing_structure = WingStructure(aircraft_data, airfoil_shape, nodes)
 
@@ -452,6 +502,6 @@ if __name__ == "__main__":
     stress_max = np.max(np.abs(axial_stresses)) / 1e6
     print(stress_max, stress_ult)
 
-    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=False)
-    fatigue_life(Sult=stress_ult, alpha=0.161, Smax=stress_max, verification=False, Experimental_SN=True)
-    fatigue_life(Sult=stress_ult, alpha=0.161, verification=True)
+    fatigue_life(Sult=stress_ult, alpha=0.30, Smax=stress_max, verification=False, Experimental_SN=False)
+    fatigue_life(Sult=stress_ult, alpha=0.30, Smax=stress_max, verification=False, Experimental_SN=True)
+    fatigue_life(Sult=stress_ult, alpha=0.30, Smax=stress_max, verification=True)
