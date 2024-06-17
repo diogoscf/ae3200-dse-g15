@@ -164,7 +164,7 @@ def plot_manoeuvre_diagram(
     ac_name="aircraft",
     save_plot=False,
     show_plot=True,
-):
+):  # pragma: no cover
     """
     Plot the loading diagram.
 
@@ -417,7 +417,7 @@ def plot_manoeuvre_diagram(
     return fig, ax
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     h = 0  # [m]
     temp_offset = 0  # [deg C]
 
