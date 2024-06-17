@@ -22,7 +22,6 @@ mock_aircraft_data = {
 }
 
 
-
 def test_calculate_load_design_values():
     M_D, V_H, n_ult_cruise, n_ult_land = calculate_load_design_values(mock_aircraft_data)
 
