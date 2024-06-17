@@ -3,6 +3,7 @@ import sys
 import math
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 from HumanAir.unit_conversions import (
     ft_to_m,
     m_to_ft,
@@ -17,11 +18,6 @@ from HumanAir.unit_conversions import (
     m_squared_to_ft_squared,
     W_to_hp,
 )
-
-
-nautical_mile = 1852  # meter
-foot = 0.3048  # meter
-g = 9.80665  # m/s^2
 
 
 def test_m_to_ft():

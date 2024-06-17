@@ -64,7 +64,7 @@ def isa(h, delta_T=0):
 
 
 # Feet and Flight Level converters
-def ft_to_m(x):
+def ft_to_m(x):  # pragma: no cover
     return x * 0.3048
 
 
@@ -72,7 +72,7 @@ def FL_to_m(x):
     return x * 0.3048 * 100.0
 
 
-def main():
+def main():  # pragma: no cover
     print("\n* * * ISA calculator * * *\n")
     print("\n1. Calculate ISA for altitude in meters")
     print("2. Calculate ISA for altitude in feet")
