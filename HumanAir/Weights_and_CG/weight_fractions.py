@@ -20,6 +20,7 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
     Pmw = (1 - nose_loading) * ac_datafile["Weights"]["MTOW_N"] / (2 * 9.81)
     Pnw = nose_loading * ac_datafile["Weights"]["MTOW_N"] / 9.81  # accounts for additional load from front CG
     Pmg = (1 - nose_loading) * ac_datafile["Weights"]["MTOW_N"] / (9.81)
+
     for tyre in range(len(tyres[:, 0])):
         Wt_m = tyres[tyre, 0]
         Dw_m = tyres[tyre, 1]
@@ -32,7 +33,7 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
         if tyres[tyre, 2] >= Pnw:
             break
 
-    if Pmw > tyres[-1, 2]:
+    # if Pmw > tyres[-1, 2]: # pragma: no cover
         print("WARNING: NO TYRE AVAILABLE")
         con = input("Continue? (y/n): ")
         if con == "n":
@@ -46,13 +47,18 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
         ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
     ) * np.tan(np.radians(18))
     iter = 1.0
+
     while iter > 0.0001:
         H_s = H_strike
+
         l_m = tan(np.radians(16)) * (Hcg + H_s + 0.5 * Dw_m)
+
         H_strike = (
             ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
         ) * np.tan(np.radians(18))
+
         iter = abs(H_s / H_strike - 1)
+
         if H_strike < 0.6 * Dw_m:
             H_strike = 0.6 * Dw_m
             iter = 0
@@ -101,18 +107,21 @@ def component_mass(ac_datafile=aircraft_data):
     wcg[0, 0] = Ww_frac
     wcg[0, -2] = Wbat_frac
     wcg[0, -1] = OEW_frac
+
     for i in range(1, 7, 1):
         wcg[0, i] = (
             np.average(fracs[:, i]) * (OEW_frac / OEW_avg)
             - (Wbat_frac * np.average(fracs[:, i]) / OEW_avg)
             - (Ww_diff * np.average(fracs[:, i]) / (OEW_avg - np.average(fracs[:, 0])))
         )
+
     for i in range(len(wcg[0, :])):
         wcg[1, i] = wcg[0, i] * MTOW_cont
+
     fracsum = np.sum(wcg[0, 0:-1])
 
     # Check whether fractions make sense
-    if abs(fracsum / OEW_frac - 1) > 0.01:
+    if abs(fracsum / OEW_frac - 1) > 0.01: # pragma: no cover
         print("WARNING: WEIGHT FRACTIONS DIVERGE")
         con = input("Continue? (y/n): ")
         if con == "n":
@@ -215,9 +224,9 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
     return wcg, CGlist, xlemac
 
-
 if __name__ == "__main__":
     init = time.process_time()
+    print(component_mass(aircraft_data))
     print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))
     total = time.process_time() - init
     print(total)
