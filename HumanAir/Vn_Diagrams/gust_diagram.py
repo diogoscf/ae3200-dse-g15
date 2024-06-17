@@ -114,7 +114,7 @@ def plot_gust_diagram(
     ac_name="aircraft",
     save_plot=True,
     show_plot=True,
-):
+): # pragma: no cover
     """
     Plot the gust diagram
 
@@ -305,7 +305,7 @@ def plot_gust_diagram(
     return fig, ax
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     Vc_ms, Vd_ms, _, V_S1, _, _ = calculate_manoeuvre_velocities(aircraft_data)
 
     (

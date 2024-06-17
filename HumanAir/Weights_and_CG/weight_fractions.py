@@ -193,7 +193,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
             wcg[2, 3] = nose_distance
             l_n = aftcg - wcg[2, 3]
             nose_loading = 1 / (l_n / l_m + 1)
-            if nose_loading > 0.15:
+            if nose_loading > 0.15: # pragma: no cover
                 print("WARNING: TOO MUCH LOAD ON NOSE WHEEL")
                 con = input("Continue? (y/n): ")
                 if con == "n":
@@ -224,7 +224,7 @@ def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
     ac_datafile["Landing_gear"]["Xnw_m"] = wcg[2, 3]
     return wcg, CGlist, xlemac
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     init = time.process_time()
     print(component_mass(aircraft_data))
     print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))

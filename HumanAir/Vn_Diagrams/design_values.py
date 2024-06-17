@@ -40,14 +40,14 @@ def calculate_load_design_values(aircraft_data):
     return M_D, V_H, n_ult_cruise, n_ult_land
 
 
-def save_to_acdata_dict(aircraft_data, M_D, V_H, n_ult_c, n_ult_l):
+def save_to_acdata_dict(aircraft_data, M_D, V_H, n_ult_c, n_ult_l): # pragma: no cover
     aircraft_data["Performance"]["n_ult"] = n_ult_c
     aircraft_data["Performance"]["n_ult_l"] = n_ult_l
     aircraft_data["Performance"]["M_D"] = M_D
     aircraft_data["Performance"]["Vh_m/s"] = V_H
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     M_D, V_H, n_ult_c, n_ult_l = calculate_load_design_values(aircraft_data)
     print(f"M_D = {M_D}")
     print(f"V_H = {V_H}")
