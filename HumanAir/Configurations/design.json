@@ -97,7 +97,7 @@
         ],
         "strut_loc_b/2": 0.7,
         "strut_loc_MAC": 0.25,
-        "strut_section_area_m2": 0.002,
+        "strut_section_area_m2": 0.001,
         "wing_stringer_number": [
             17,
             9,

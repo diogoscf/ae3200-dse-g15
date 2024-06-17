@@ -55,8 +55,13 @@ def Divergence(K_theta, CL_alpha, a, B, rho):
     V_div : float
         The divergence speed of the aircraft.
     """
+    V_div = 0
     q = K_theta / ((2 * B) * CL_alpha * (1 / 2 + a) * B)  # where S = 2 * b since we analyse per unit span.
-    V_div = np.sqrt(2 * q / rho)
+    if q > 0:
+        V_div = np.sqrt(2 * q / rho)
+    else:
+        V_div = -1 * np.sqrt(2 * abs(q) / rho)
+        print("We need to fly backwards in order to get divergence")
     return V_div
 
 
