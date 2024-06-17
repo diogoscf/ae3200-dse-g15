@@ -21,7 +21,7 @@ def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0
 
     mu = 0.15
 
-    print(2 * P_max * 10**6 * A_calliper * mu, F_calliper)
+    # print(2 * P_max * 10**6 * A_calliper * mu, F_calliper)
 
     return 2 * P_max * 10**6 * A_calliper * mu > F_calliper
 
