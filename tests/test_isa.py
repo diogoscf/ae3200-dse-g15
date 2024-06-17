@@ -10,7 +10,6 @@ from HumanAir.isa import (
     p1,
     rho1,
     isa,
-    ft_to_m,
     FL_to_m,
 )
 

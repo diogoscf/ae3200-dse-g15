@@ -221,7 +221,7 @@ class FuselageSizing:
         l_p = wb_fus + wu_fus + 2 * side_c
         return l_p
 
-    def plot_side_drawing(self, s_gear, ac_data=aircraft_data):
+    def plot_side_drawing(self, s_gear, ac_data=aircraft_data):  # pragma: no cover
         ac_data["Landing_gear"]["length_main_strut"] = self.length_main_strut(s_gear=0.1)
         ac_data["Landing_gear"]["length_nose_strut"] = self.h_nose_strut
         ac_data["Landing_gear"]["Hs_nose"] = self.h_nose_strut - self.h_nose / 2
@@ -404,7 +404,7 @@ class FuselageSizing:
         plt.axis("equal")
         plt.show()
 
-    def plot_front_view(self, s_gear):
+    def plot_front_view(self, s_gear):  # pragma: no cover
         fig, ax = plt.subplots()
         ax.axhline(y=0, color="gray", linewidth=0.3)
 
@@ -485,7 +485,7 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
-    def above_position(self):
+    def above_position(self):  # pragma: no cover
         my_dict = {}
         my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
         my_dict["empty_space"] = (my_dict["frontwall"][-1], my_dict["frontwall"][-1] + self.l_empty)
@@ -534,7 +534,7 @@ class FuselageSizing:
 
         return xcg1, l1, xcg2, l2
 
-    def below_position(self, s_gear):
+    def below_position(self, s_gear):  # pragma: no cover
         # get the battery dimensions
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
 
@@ -565,7 +565,7 @@ class FuselageSizing:
     #             ac_data["Landing_gear"]["lm_m"] + ac_data["Landing_gear"]["ln_m"])
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # # Example usage:
     # n_seat = 8
     # w_engine = 0.85

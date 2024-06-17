@@ -26,7 +26,7 @@ def BrakeCheck(acd=aircraft_data, P_max=0.0, A_calliper=0.0, r_in=0.0, r_out=0.0
     return 2 * P_max * 10**6 * A_calliper * mu > F_calliper
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # AileronDerivatives()
     print(BrakeCheck(acd=aircraft_data, P_max=1.2, A_calliper=0.01, r_in=0.1, r_out=0.25))
     # AileronSizing()
