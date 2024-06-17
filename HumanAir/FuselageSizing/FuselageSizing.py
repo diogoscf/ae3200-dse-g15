@@ -7,7 +7,6 @@ import sys
 import time
 from math import tan
 
-# position update
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
