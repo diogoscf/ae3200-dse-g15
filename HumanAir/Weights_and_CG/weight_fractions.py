@@ -33,7 +33,7 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
         if tyres[tyre, 2] >= Pnw:
             break
 
-    # if Pmw > tyres[-1, 2]: # pragma: no cover
+        # if Pmw > tyres[-1, 2]: # pragma: no cover
         print("WARNING: NO TYRE AVAILABLE")
         con = input("Continue? (y/n): ")
         if con == "n":
@@ -121,7 +121,7 @@ def component_mass(ac_datafile=aircraft_data):
     fracsum = np.sum(wcg[0, 0:-1])
 
     # Check whether fractions make sense
-    if abs(fracsum / OEW_frac - 1) > 0.01: # pragma: no cover
+    if abs(fracsum / OEW_frac - 1) > 0.01:  # pragma: no cover
         print("WARNING: WEIGHT FRACTIONS DIVERGE")
         con = input("Continue? (y/n): ")
         if con == "n":
