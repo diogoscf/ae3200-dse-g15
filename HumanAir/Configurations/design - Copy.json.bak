@@ -42,13 +42,7 @@
         "N_e": 1,
         "N_t": 2,
         "P_req_TO_W": 291477.32066664944,
-        "Dp_m": 2.286,
-		"Fuel_engine_P_TO_W": 292000, "old": 368000,
-        "Fuel_engine_P_max_cont_W": 338000,
-        "Newton_fuel_per_W_per_S_TO": 0.00000062101634094798,
-        "Newton_fuel_per_W_per_S_flight": 0.00000058448596795104,
-        "Electric_engine_P_TO_W": 380000,
-        "Electric_engine_P_max_cont_W": 350000    
+        "Dp_m": 2.286
     },
     "Geometry": {
         "fus_height_m": 2.2,
@@ -219,7 +213,6 @@
         "CO2": 26.51,
         "CO2_emissions_kg/kg": 3.16,
         "Altitude_Cruise_m": 3000,
-        "Altitude_Max_Cruise_m": 3700,
         "Altitude_TO_m": 750,
         "Altitude_Land_m": 750,
         "Temp_offset_TO_Land_cruise": 18,

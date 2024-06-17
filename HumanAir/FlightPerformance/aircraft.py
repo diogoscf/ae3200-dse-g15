@@ -36,6 +36,7 @@ class Aircraft:
         self.h_land         = dat["Performance"]["Altitude_Land_m"]
         self.dT_default     = dat["Performance"]["Temp_offset_TO_Land_cruise"]
 
+
         #
         # aerodynamic data
         #
@@ -45,7 +46,7 @@ class Aircraft:
         self.e_clean        = dat["Aero"]["e"]
         self.S_clean        = dat["Aero"]["S_Wing"]
         self.b              = dat["Aero"]["b_Wing"]
-        self.CL_Dmin        = 0.86
+        self.CL_Dmin        = 0.16 #0.866 # TODO: L/Dmax = 19 volgens CFD...
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
@@ -105,6 +106,7 @@ class Aircraft:
         self.eff_electric_motor       = dat["Power_prop"]["eta_electricmotor"]
         self.eff_battery              = dat["Power_prop"]["eta_bat"]
         self.max_bat_cap              = dat["Power_prop"]["E_bat_Wh"]
+        self.max_DoD_bat              = dat["Power_prop"]["DoD_bat"]
         
         self.number_of_engines        = 1
         self.propeller_diameter       = dat["Power_prop"]["Dp_m"]
@@ -210,11 +212,11 @@ class Aircraft:
     def prop_eff(self, V, h, dT, use_takeoff_power=False):
         return thrust_power.prop_eff(self, V, h, dT, use_takeoff_power=use_takeoff_power)
         
-    def fuel_rate(self, P_shaft=None, TO=False):
-        return thrust_power.fuel_rate(self, P_shaft=P_shaft, TO=TO)
+    def fuel_rate(self, P_shaft):
+        return thrust_power.fuel_rate(self, P_shaft)
     
-    def bat_cap_rate(self, P_shaft=None, TO=False):
-        return thrust_power.bat_cap_rate(self, P_shaft=P_shaft, TO=TO)
+    def bat_cap_rate(self, P_shaft):
+        return thrust_power.bat_cap_rate(self, P_shaft)
 
     def P_r(self, W, V, h, dT):
         rho = density(h, dT)
