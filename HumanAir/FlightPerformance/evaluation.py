@@ -129,9 +129,9 @@ def vary_area():
         print(f"""
               ****************** S = {S} ***********************
               Climb rate           = {climbrate[0]:>8.2f} m/s    {pass_cr}   at V={climbrate[1]:.2f} m/s
-              Climb gradient clean = {gradient_cl[0]:>8.2f} % at V={gradient_cl[1]:.2f} m/s
-              Climb gradient TO    = {gradient_TO[0]:>8.2f} %      {pass_gr_TO}   at V={gradient_TO[1]:.2f} m/s
-              Climb gradient land  = {gradient_ld[0]:>8.2f} %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
+              Climb gradient clean = ({gradient_cl[0]:>8.2f}) % at V={gradient_cl[1]:.2f} m/s
+              Climb gradient TO    = ({gradient_TO[0]:>8.2f}) %      {pass_gr_TO}   at V={gradient_TO[1]:.2f} m/s
+              Climb gradient land  = ({gradient_ld[0]:>8.2f}) %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
               V_S0                 = {V_S0:>8.2f} m/s    {pass_vs}
               V_S1                 = {V_S1:>8.2f} m/s
               Takeoff run          = {TO_dist[0]:>8.0f} m      {pass_to}

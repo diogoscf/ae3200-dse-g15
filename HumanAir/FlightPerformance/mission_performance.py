@@ -44,14 +44,14 @@ class MAircraft:
         # lists to keep track of changing parameters
         #
         
-        self.t_lst  = [0] # time since start takeoff [s]
-        self.v_lst  = [self.V] # speed [m/s]
-        self.h_lst  = [self.h] # altitude [m]
-        self.s_lst  = [0] # ground distance [m]
-        self.f_lst  = [self.fuel] # fuel weight [N]
-        self.b_lst  = [self.bat_cap] # battery capacity [Wh]
-        self.CL_lst = [0] # lift coefficient [-]
-        
+        self.t_lst  = [] # time since start takeoff [s]
+        self.v_lst  = [] # speed [m/s]
+        self.h_lst  = [] # altitude [m]
+        self.s_lst  = [] # ground distance [m]
+        self.f_lst  = [] # fuel weight [N]
+        self.b_lst  = [] # battery capacity [Wh]
+        self.CL_lst = [] # lift coefficient [-]
+        self._update_lists()
         
         #
         # variables for printing energy consumption
@@ -71,9 +71,9 @@ class MAircraft:
 
         """
         # print warnings if neccessary
-        if self.b_lst[-1] > 0 and self.bat_cap < 0:
+        if len(self.b_lst) > 0 and self.b_lst[-1] > 0 and self.bat_cap < 0:
             print("***** WARNING: battery capacity below 0 ******")
-        if self.f_lst[-1] > 0 and self.fuel < 0:
+        if len(self.f_lst) > 0 and self.f_lst[-1] > 0 and self.fuel < 0:
             print("***** WARNING: fuel level below 0 ******")
             
         # append current values to lists
@@ -86,7 +86,7 @@ class MAircraft:
         if self.V > 0:
             self.CL_lst.append(self.CL)
         else:
-            self.CL_lst.append(0)
+            self.CL_lst.append(self.acf.CL_ground_TO)
             
         
     def plot_flight(self):
@@ -247,7 +247,7 @@ class MAircraft:
         self._print_update("de/acceleration")
         
         
-    def fly_const_CL_const_climbrate(self, RC, h_target, electric=False, time_step=30):
+    def fly_const_CL_const_climbrate(self, RC, h_target, electric=False, time_step=10):
         """
         Make aircraft climb at constant climb rate while maintaining current
         lift coefficient.
@@ -319,7 +319,7 @@ class MAircraft:
         self._print_update("climb")
             
         
-    def fly_const_V_descent(self, h_target, time_step=30):
+    def fly_const_V_descent(self, h_target, time_step=10):
         """
         Descent at variable descent rate to maintain current speed.
 
@@ -376,7 +376,7 @@ class MAircraft:
         self._print_update("descent")
 
             
-    def fly_const_V_const_alt(self, target_distance, time_step=60, electric=False):
+    def fly_const_V_const_alt(self, target_distance, time_step=10, electric=False):
         """
         Fly keeping current altitude and speed constant (good for cruise). When
         electric is set to true it automatically switches to the fuel engine 
@@ -443,7 +443,7 @@ class MAircraft:
         print(f"CL after: {self.CL:.2f}")
 
         
-    def fly_const_CL_const_alt(self, duration, time_step=60, electric=False):
+    def fly_const_CL_const_alt(self, duration, time_step=10, electric=False):
         """
         Loiter at constant CL at constant altitude without covering more ground
         distance. The current CL is maintained.

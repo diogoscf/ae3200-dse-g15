@@ -235,7 +235,6 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
    #      raise Exception(f"Low accuracy in integrating landing distance: \
    #                      s_ground = {s_ground}, accuracy = {accuracy}.")
         
-    # TODO: verwijder "MAC" van design.json als deze niet nodig is want deze is dubbel
     
     # if surface == "paved":
     #     # roskam pt1 statistical method for comparison

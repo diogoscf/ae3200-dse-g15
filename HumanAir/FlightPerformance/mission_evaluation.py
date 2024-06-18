@@ -7,46 +7,69 @@ Created on Fri Jun 14 10:41:53 2024
 
 import mission_performance
 
-tot_dist_nm = 600 # 1400
-leg_dist_m = tot_dist_nm * 1852 / 4
+num_legs = 4
 
-macf = mission_performance.MAircraft(750)
-# macf.V = 30
-# #macf._fly_const_CL_const_climbrate(2.5, 3000)
-# macf._fly_const_V_const_alt(1000000)
-# print(macf.ground_distance)
-# print(macf.flight_time)
-# print(macf.V)
-# #macf.take_off(750, "grass", electric=False)
-# #macf.climb(3000, 2.5)
+tot_dist_nm = 600
+leg_dist_m = tot_dist_nm * 1852 / num_legs
 
-macf.take_off(750, "grass", electric=True)
-V_start_climb = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
-macf.fly_accelerate_const_alt(V_start_climb, electric=True)
-macf.fly_const_CL_const_climbrate(2.5, 3000, electric=True)
-macf.fly_accelerate_const_alt(60, electric=True)
-macf.fly_const_V_const_alt(leg_dist_m, electric=True)
-macf.fly_const_V_descent(750)
-macf.land()
-for _ in range(2):
-    macf.take_off(750, "grass", electric=False)
+airfield_elevation = 750
+cruise_altitude = 3000
+loiter_altitude = 1200
+temp_offset = 18
+climb_rate = 2.5
+cruise_speed = 60
+loiter_duration = 115*60 # [s]
+
+macf = mission_performance.MAircraft(airfield_elevation)
+macf.dT = temp_offset
+
+
+#
+# flight
+#
+
+for i in range(num_legs):
+    # takeoff
+    macf.take_off(airfield_elevation, "grass", electric=i==0)
+    
+    # acceleration to ideal CL for climbing
     V_start_climb = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
-    macf.fly_accelerate_const_alt(V_start_climb, electric=False)
-    macf.fly_const_CL_const_climbrate(2.5, 3000, electric=False)
-    macf.fly_accelerate_const_alt(60, electric=False)
-    macf.fly_const_V_const_alt(leg_dist_m, electric=False)
-    macf.fly_const_V_descent(750)
-    macf.land()
-macf.take_off(750, "grass", electric=False)
-V_start_climb = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
-macf.fly_accelerate_const_alt(V_start_climb, electric=False)
-macf.fly_const_CL_const_climbrate(2.5, 3000, electric=False)
-macf.fly_accelerate_const_alt(60, electric=False)
-macf.fly_const_V_const_alt(leg_dist_m, electric=False)
-macf.fly_const_V_descent(1200)
-V_loiter = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
-macf.fly_accelerate_const_alt(V_loiter)
-macf.fly_const_CL_const_alt(115*60)
-macf.fly_const_V_descent(750)
+    macf.fly_accelerate_const_alt(V_start_climb, electric=i==0)
+    
+    # climb
+    macf.fly_const_CL_const_climbrate(climb_rate, cruise_altitude, electric=i==0)
+    
+    # accelerate to cruise speed
+    macf.fly_accelerate_const_alt(cruise_speed, electric=i==0)
+    
+    # cruise
+    macf.fly_const_V_const_alt(leg_dist_m, electric=i==0)
+    
+    if i < num_legs-1:
+        # descent
+        macf.fly_const_V_descent(airfield_elevation)
+    
+        # land
+        macf.land()
+    else:
+        # descent to loiter alt
+        macf.fly_const_V_descent(loiter_altitude)
+        
+        # decelerate or accelerate to loiter speed
+        V_loiter = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
+        macf.fly_accelerate_const_alt(V_loiter)
+        
+        # loiter
+        macf.fly_const_CL_const_alt(loiter_duration)
+        
+        # descent
+        macf.fly_const_V_descent(airfield_elevation)
+        
+        # land
+        macf.land()
+
+
+# plot and print
+
 macf.plot_flight()
 macf.print_energy_level()

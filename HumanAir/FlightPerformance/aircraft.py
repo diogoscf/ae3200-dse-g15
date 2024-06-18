@@ -46,7 +46,7 @@ class Aircraft:
         self.e_clean        = dat["Aero"]["e"]
         self.S_clean        = dat["Aero"]["S_Wing"]
         self.b              = dat["Aero"]["b_Wing"]
-        self.CL_Dmin        = 0.16 #0.866 # TODO: L/Dmax = 19 volgens CFD...
+        self.CL_Dmin        = 0.866 # 0.16 voor L/D van 19 #0.866 # TODO: L/Dmax = 19 volgens CFD...
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
@@ -110,7 +110,7 @@ class Aircraft:
         
         self.number_of_engines        = 1
         self.propeller_diameter       = dat["Power_prop"]["Dp_m"]
-        self.spinner_diameter         = 0.3 # TODO: update
+        self.spinner_diameter         = 0.4
         
         
         #
@@ -131,6 +131,9 @@ class Aircraft:
         # calculated data - normal equations cannot be used since CL_CDmin =/= 0
         #
         
+        # CDmin to get CD0 at CL=0
+        self.CDmin = self.CD0_clean - self.CL_Dmin**2 / (np.pi * self.AR * self.e_clean)
+        print(f"CDmin: {self.CDmin:.4f}")
         # find CL/CD max for clean config
         def CL_CD(CL):
             return - (CL / self.CD(CL)) # minus so that minimize_scalar() will maximise
@@ -174,7 +177,7 @@ class Aircraft:
         
         # TODO: replace by more accurate representation for high-alpha CD and flap estimation
         
-        CD0 = self.CD0_clean
+        CDmin = self.CD0_clean
         e = self.e_clean
         
         # ground effect reduces induced drag, using nicolai section 10.2
@@ -187,7 +190,7 @@ class Aircraft:
             sigma = max(sigma,0) # for around h_b > .75 sigma will become negative
 
         if gear == "down" and self.retractable_gear:
-            CD0 += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
+            CDmin += 0.011 # p264 of Nicolai: Fundamentals of Aircraft and Airship Design: Volume 1
             
         if flaps == "TO" or flaps == "land":
             # roskam pt 6 p82 and further
@@ -196,9 +199,9 @@ class Aircraft:
             delta_CDind = 0.2**2 * delta_CL**2 # profile drag
             delta_CDint = 0.4 * delta_CDpro # inteference drag
 
-            return CD0 + delta_CDint + delta_CDpro + (delta_CDind + (CL-self.CL_Dmin-delta_CL)**2 / (np.pi * self.AR * e)) * (1-sigma)
+            return CDmin + delta_CDint + delta_CDpro + (delta_CDind + (CL-self.CL_Dmin-delta_CL)**2 / (np.pi * self.AR * e)) * (1-sigma)
         else:
-            return CD0 + (CL-self.CL_Dmin)**2 / (np.pi * self.AR * e) * (1-sigma)
+            return CDmin + (CL-self.CL_Dmin)**2 / (np.pi * self.AR * e) * (1-sigma)
     
     def P_shaft(self, h, dT, use_takeoff_power=False, electric=False):
         return thrust_power.P_shaft(self, h, dT, use_takeoff_power=use_takeoff_power)

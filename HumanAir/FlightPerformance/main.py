@@ -36,3 +36,5 @@ plt.ylabel("C_D")
 plt.ylim(0,0.25)
 plt.legend()
 plt.show()
+
+print(acf.LDmax)

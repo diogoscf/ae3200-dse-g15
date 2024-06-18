@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import unit_conversions as conv
 from FlightPerformance.helper import density
 
-#TODO: powertrain terug naar 0.95
 
 def P_shaft(acf, h, dT, use_takeoff_power=False, electric=False):
     """
