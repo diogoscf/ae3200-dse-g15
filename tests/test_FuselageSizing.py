@@ -172,7 +172,6 @@ def test_above_position():
 
 
 def test_below_position():
-
     expected_dict = {
         "frontwall": (0, 0.04),
         "nose landing gear": (4.0, 5.65),

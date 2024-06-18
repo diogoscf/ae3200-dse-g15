@@ -15,7 +15,7 @@ def fit_log_normal(mean, median):
     return stats.lognorm(s=sigma, scale=np.exp(mu))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     with open(os.path.join(os.path.dirname(__file__), "maf_flights_before_refuelling.csv"), "r") as f:
         flight_data = pd.read_csv(f)
 

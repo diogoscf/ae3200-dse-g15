@@ -127,8 +127,8 @@ def AileronDerivatives(acd=aircraft_data):  # sizing method starting from p 466 
 
     c_h_delta_M = c_h_delta_bal / np.sqrt((1 - 0.182**2))
 
-    eta_i = acd["Aileron"]["start"]
-    eta_o = acd["Aileron"]["end"]
+    #eta_i = acd["Aileron"]["start"]
+    #eta_o = acd["Aileron"]["end"]
     # K_delta_eta_i = 2.43  # taken from Roskam VI page 485
     # K_delta_eta_o = 4.0  # taken from Roskam VI page 485
     # K_delta = (K_delta_eta_i * (1 - eta_i) - K_delta_eta_o * (1 - eta_o)) / (eta_o - eta_i)
