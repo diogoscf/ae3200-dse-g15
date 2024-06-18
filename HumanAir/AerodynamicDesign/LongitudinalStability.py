@@ -65,7 +65,7 @@ class LongitudinalStability:
 
         return np.max([ShSStability, ShSControllability])
 
-    def Plotting(self): # pragma: no cover
+    def Plotting(self):  # pragma: no cover
         stability = self.Stability()
         stability_no_margin = self.Stability_NoMargin()
         controllability = self.Controllability()

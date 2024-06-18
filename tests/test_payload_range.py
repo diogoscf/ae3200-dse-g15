@@ -35,6 +35,7 @@ if not os.path.exists(mock_config_dir):
 with open(mock_config_file, "w", encoding="utf-8") as f:
     json.dump(mock_aircraft_data, f)
 
+
 # Define the test function
 def test_payload_range_points():
     # Calculate payload range points using the mock data
@@ -77,4 +78,3 @@ def test_payload_range_points():
 
     # Clean up: remove the mock file after testing
     os.remove(mock_config_file)
-

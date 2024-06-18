@@ -171,7 +171,6 @@ def test_above_position():
     assert actual_dict["backwall"][1] == expected_dict["backwall"][1]
 
 
-
 def test_below_position():
 
     expected_dict = {

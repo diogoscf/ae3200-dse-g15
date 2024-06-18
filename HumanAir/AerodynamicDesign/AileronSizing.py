@@ -247,7 +247,7 @@ def AileronSizing(acd=aircraft_data):
         raise Exception("No suitable design found.")
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     # AileronDerivatives()
     # StickArm(acd=aircraft_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
     AileronSizing()

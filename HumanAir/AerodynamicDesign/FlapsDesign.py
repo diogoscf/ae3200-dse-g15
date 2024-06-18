@@ -118,6 +118,6 @@ def flaps_design(ac_data=aircraft_data):
     # return ac_data
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     dict_test = flaps_design()
     # print(dict_test["Flaps"])
