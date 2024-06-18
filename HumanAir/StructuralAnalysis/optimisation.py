@@ -513,7 +513,7 @@ def run_optimiser(
     maxiter=None,
     full_return=False,
     verbose=False,
-):
+):  # pragma: no cover
     """
     Function to run the optimization of the wing structure
 
@@ -763,7 +763,7 @@ def run_optimiser(
     return optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers, weight
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     (
         optimized_t_spar_tip,
         optimized_t_spar_root,

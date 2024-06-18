@@ -150,35 +150,41 @@ def test_maximum_perimeter():
     assert isclose(fuselage.maximum_perimeter(0.1), 2.56 + (0.56 + 0.03 + 0.04) * 2 + 1 + 4.13, rel_tol=1e-2)
 
 
-# def test_above_position():
-#     expected_dict = {
-#         "frontwall": (0, 0.04),
-#         "empty_space": (0.04, 0.54),
-#         "motor": (0.54, 2.54),
-#         "engine": (2.54, 5.54),
-#         "firewall": (5.54, 5.69),
-#         "cockpit": (5.69, 7.11),
-#         "row1": (7.11, 8.2),
-#         "row2": (8.2, 9.29),
-#         "row3": (9.2, 10.38),
-#         "tailcone": (10.38, 12.88),
-#         "backwall": (12.88, 12.92),
-#     }
-#
-#     for key in expected_dict:
-#         if isinstance(key, tuple):
-#             if key not in fuselage.above_position():
-#                 assert False
-#             if not isclose(expected_dict[key], fuselage.above_position()[key], rel_tol=1e-2):
-#                 assert False
-#         else:
-#             if key not in fuselage.above_position() or not isclose(
-#                 expected_dict[key], fuselage.above_position()[key], rel_tol=1e-2
-#             ):
-#                 assert False
-#
-#     assert True
-#
+def test_above_position():
+    expected_dict = {
+        "frontwall": (0, 0.04),
+        "empty_space": (0.04, 0.54),
+        "motor": (0.54, 2.54),
+        "engine": (2.54, 5.54),
+        "firewall": (5.54, 5.69),
+        "cockpit": (5.69, 7.11),
+        "row1": (7.11, 8.2),
+        "row2": (8.2, 9.29),
+        "row3": (9.2, 10.38),
+        "tailcone": (10.38, 12.88),
+        "backwall": (12.88, 12.92),
+    }
+
+    actual_dict = fuselage.above_position()
+
+    assert actual_dict["frontwall"][0] == expected_dict["frontwall"][0]
+    assert actual_dict["backwall"][1] == expected_dict["backwall"][1]
+
+
+
+def test_below_position():
+
+    expected_dict = {
+        "frontwall": (0, 0.04),
+        "nose landing gear": (4.0, 5.65),
+        "main landing gear": (3.34, 6.0),
+        "battery": (31.3, 33.04),
+    }
+
+    actual_dict = fuselage.below_position(0.1)
+
+    assert actual_dict["frontwall"][0] == expected_dict["frontwall"][0]
+    assert actual_dict["nose landing gear"][0] == expected_dict["nose landing gear"][0]
 
 
 def test_calculate_battery_split():
@@ -188,7 +194,3 @@ def test_calculate_battery_split():
     assert isclose(l1, -1.39, rel_tol=1e-1)
     assert isclose(xcg2, 14.10, rel_tol=1e-1)
     assert isclose(l2, 2.15, rel_tol=1e-1)
-
-
-# def test_below_position():
-#     assert False

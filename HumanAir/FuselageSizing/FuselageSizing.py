@@ -524,12 +524,6 @@ class FuselageSizing:
             "nose landing gear"
         ][1]
         xcg2 = 1 / m2 * (self.bat_xcg * self.length_fus() * (m1 + m2) - xcg1 * m1)
-        # print(xcg1)
-        # # print(l1)
-        # print(xcg2)
-        # # print(l2)
-        # print(self.bat_xcg)
-        # print(xcg2)
 
         return xcg1, l1, xcg2, l2
 
@@ -550,18 +544,7 @@ class FuselageSizing:
         battery_center = self.bat_xcg * self.length_fus()
         my_dict["battery"] = (battery_center - l_battery / 2, battery_center + l_battery / 2)
 
-        # my_dict["battery"] = (
-        #     self.l_end_nose_land() + FuselageSizing.s,
-        #     self.l_end_nose_land() + FuselageSizing.s + l_battery,
-        # )
-        # print(my_dict['battery'][0], my_dict['battery'][1])
         return my_dict
-
-    # def size_struts(self, ac_data = aircraft_data, angle = None):
-    #
-    #     ac_data['Landing_gear']['l_s_m'] = self.length_main_strut(0.1)
-    #     ac_data['Landing_gear']['l_s_n'] = self.length_main_strut(0.1) + tan(angle * np.pi / 180) * (
-    #             ac_data["Landing_gear"]["lm_m"] + ac_data["Landing_gear"]["ln_m"])
 
 
 if __name__ == "__main__":  # pragma: no cover

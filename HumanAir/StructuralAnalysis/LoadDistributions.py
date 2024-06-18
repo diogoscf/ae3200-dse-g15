@@ -335,7 +335,7 @@ def interpolate_Cl_Cd_Cm(Cl_data, Cdi_data, Cm_data, y_points):
     return Cl_data, Cdi_data, Cm_data
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Data
     AoA = 0
     # Sw = 39  # [m2]

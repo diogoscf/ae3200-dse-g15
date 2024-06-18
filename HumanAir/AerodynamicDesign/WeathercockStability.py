@@ -127,5 +127,5 @@ def VerticalTailSizing(acd=aircraft_data):
         return acd
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     VerticalTailSizing()

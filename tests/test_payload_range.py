@@ -2,10 +2,11 @@ import pytest
 import json
 import os
 import sys
+import matplotlib.pyplot as plt  # Importing plt to mock the plot setup
 
+# Append parent directory to sys.path to import payload_range_points
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from HumanAir.PayloadRange_Diagrams.payload_range import payload_range_points
-
 
 # Mock aircraft data for testing
 mock_aircraft_data = {
@@ -25,7 +26,7 @@ mock_aircraft_data = {
 }
 
 # Directory where the mock file will be saved
-mock_config_dir = os.path.join(os.path.dirname(__file__), "..", "Configurations")
+mock_config_dir = os.path.join(os.path.dirname(__file__), "Configurations")
 mock_config_file = os.path.join(mock_config_dir, "mock_aircraft_data.json")
 
 # Save the mock aircraft data to a JSON file
@@ -34,7 +35,7 @@ if not os.path.exists(mock_config_dir):
 with open(mock_config_file, "w", encoding="utf-8") as f:
     json.dump(mock_aircraft_data, f)
 
-
+# Define the test function
 def test_payload_range_points():
     # Calculate payload range points using the mock data
     results = payload_range_points("mock_aircraft_data.json")
@@ -52,18 +53,18 @@ def test_payload_range_points():
         pretty_name,
     ) = results
 
-    # Expected results (based on calculations from the mock data)
-    expected_zero_fuel_range_km = 6300.0  # Update based on expected calculations
-    expected_maxpayload_maxrange_km = 2100.0  # Update based on expected calculations
+    # Define expected values with a tolerance (relative error)
+    expected_zero_fuel_range_km = 6300.0
+    expected_maxpayload_maxrange_km = 2100.0
     expected_design_range_km = 2778.0
-    expected_max_fuel_range_km = 3450.0  # Update based on expected calculations
-    expected_ferry_range_km = 4800.0  # Update based on expected calculations
+    expected_max_fuel_range_km = 3450.0
+    expected_ferry_range_km = 4800.0
     expected_Wpl_max_N = 2000.0 * 9.80665
     expected_Wpl_des_N = 1000.0 * 9.80665
     expected_Wpl_maxfuel_N = 1000000.0 - 500000.0 - 300000.0
     expected_pretty_name = "Test Aircraft"
 
-    # Test assertions
+    # Test assertions with approximate equality
     assert zero_fuel_range_km == pytest.approx(expected_zero_fuel_range_km, rel=1e-2)
     assert maxpayload_maxrange_km == pytest.approx(expected_maxpayload_maxrange_km, rel=1e-2)
     assert design_range_km == pytest.approx(expected_design_range_km, rel=1e-2)
@@ -74,5 +75,6 @@ def test_payload_range_points():
     assert Wpl_maxfuel_N == pytest.approx(expected_Wpl_maxfuel_N, rel=1e-2)
     assert pretty_name == expected_pretty_name
 
-    # Clean up the mock file after testing
+    # Clean up: remove the mock file after testing
     os.remove(mock_config_file)
+
