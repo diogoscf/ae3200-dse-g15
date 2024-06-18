@@ -15,7 +15,6 @@ test_data = {
 
 
 def test_chord():
-
     location = 1.9
     expected_result = 2 * 40 / (1 + 0.5) / 10 * (1 - (1 - 0.5) / 10 * 2 * location)
     result = chord(data=test_data, location=1.9)
@@ -23,7 +22,6 @@ def test_chord():
 
 
 def test_flaps_design():
-
     ac_data = test_data.copy()
     flaps_design(ac_data)
 

@@ -6,6 +6,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from HumanAir.AerodynamicDesign.PlanformDesign import Planform
 
+
 def test_WingSurfaceArea():
     AR = 8.0
     Taper = 0.3
@@ -73,7 +74,9 @@ def test_MAC():
 
     planform = Planform(AR, Taper, QuarterChordSweep, tc, MTOW=MTOW, WS=WS, S=S)
 
-    assert isclose(planform.MAC(), (2 * 2 * 1 / ((1 + 0.3) * np.sqrt(1 * 8)) / 3) * (1 + 0.3 + 0.3 ** 2) / (1 + 0.3) , rel_tol=1e-3)
+    assert isclose(
+        planform.MAC(), (2 * 2 * 1 / ((1 + 0.3) * np.sqrt(1 * 8)) / 3) * (1 + 0.3 + 0.3**2) / (1 + 0.3), rel_tol=1e-3
+    )
 
 
 def test_MAC_y():
@@ -87,7 +90,7 @@ def test_MAC_y():
 
     planform = Planform(AR, Taper, QuarterChordSweep, tc, MTOW=MTOW, WS=WS, S=S)
 
-    assert isclose(planform.MAC_y(), np.sqrt(1 * 8) / 6 * (1 + 2 * 0.3) / (1 + 0.3) , rel_tol=1e-3)
+    assert isclose(planform.MAC_y(), np.sqrt(1 * 8) / 6 * (1 + 2 * 0.3) / (1 + 0.3), rel_tol=1e-3)
 
 
 def test_HalfChordSweep():
@@ -115,7 +118,4 @@ def test_t_root_max():
 
     planform = Planform(AR, Taper, QuarterChordSweep, tc, MTOW=MTOW, WS=WS, S=S)
 
-    assert isclose(planform.t_root_max(), 0.1 * 2 * 1 / ((1 + 0.3) * np.sqrt(1 * 8)) , rel_tol=1e-3)
-
-
-
+    assert isclose(planform.t_root_max(), 0.1 * 2 * 1 / ((1 + 0.3) * np.sqrt(1 * 8)), rel_tol=1e-3)

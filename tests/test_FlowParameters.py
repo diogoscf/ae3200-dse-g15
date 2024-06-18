@@ -14,16 +14,19 @@ class MockWing:
 
 
 flow_init = Flow(100, ISA(0, 0, -0.0065), MockWing)
-def test_mach():
 
-    assert isclose(flow_init.Mach(), 100 / ISA(0,0,-0.0065).SpeedOfSound() , rel_tol=1e-2)
+
+def test_mach():
+    assert isclose(flow_init.Mach(), 100 / ISA(0, 0, -0.0065).SpeedOfSound(), rel_tol=1e-2)
 
 
 def test_reynolds():
-
-    assert isclose(flow_init.Reynolds(), 100 * 10.0 * ISA(0,0,-0.0065).Density() / ISA(0,0,-0.0065).DynamicViscosity(), rel_tol=1e-2)
+    assert isclose(
+        flow_init.Reynolds(),
+        100 * 10.0 * ISA(0, 0, -0.0065).Density() / ISA(0, 0, -0.0065).DynamicViscosity(),
+        rel_tol=1e-2,
+    )
 
 
 def test_beta():
-
-    assert isclose(flow_init.Beta(), (1 - (100 / ISA(0,0,-0.0065).SpeedOfSound())**2)**0.5, rel_tol=1e-2)
+    assert isclose(flow_init.Beta(), (1 - (100 / ISA(0, 0, -0.0065).SpeedOfSound()) ** 2) ** 0.5, rel_tol=1e-2)
