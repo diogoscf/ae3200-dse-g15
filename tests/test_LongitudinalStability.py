@@ -35,9 +35,10 @@ def test_CMac_Wing():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file, tempfile.NamedTemporaryFile(
-        delete=False, mode="w"
-    ) as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
@@ -66,9 +67,10 @@ def test_Stability():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file, tempfile.NamedTemporaryFile(
-        delete=False, mode="w"
-    ) as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
@@ -97,9 +99,10 @@ def test_Controllability():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file, tempfile.NamedTemporaryFile(
-        delete=False, mode="w"
-    ) as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
@@ -128,9 +131,10 @@ def test_ShS():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file, tempfile.NamedTemporaryFile(
-        delete=False, mode="w"
-    ) as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
