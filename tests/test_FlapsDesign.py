@@ -8,22 +8,11 @@ from HumanAir.AerodynamicDesign.FlapsDesign import chord, flaps_design
 
 # Test data
 test_data = {
-    "Aero": {
-        "S_Wing": 40.0,
-        "Taper_Wing": 0.5,
-        "b_Wing": 10.0,
-        "CLmax_clean": 1.4,
-        "CLmax_Land": 2,
-        "CLmax_TO": 1.8
-    },
-    "Geometry": {
-        "fus_width_m": 3.0
-    },
-    "Flaps": {
-        "deflection_landing": 15,
-        "deflection_takeoff": 15
-    }
+    "Aero": {"S_Wing": 40.0, "Taper_Wing": 0.5, "b_Wing": 10.0, "CLmax_clean": 1.4, "CLmax_Land": 2, "CLmax_TO": 1.8},
+    "Geometry": {"fus_width_m": 3.0},
+    "Flaps": {"deflection_landing": 15, "deflection_takeoff": 15},
 }
+
 
 def test_chord():
 

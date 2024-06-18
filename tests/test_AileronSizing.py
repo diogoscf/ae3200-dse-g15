@@ -31,17 +31,21 @@ test_data = {
     },
 }
 
+
 def test_chord():
     result = chord(test_data, location=1.9)
     assert isinstance(result, float)
+
 
 def test_cy_y():
     result = cy_y(test_data, y=1)
     assert isinstance(result, float)
 
+
 def test_cy_y2():
     result = cy_y2(test_data, y=1)
     assert isinstance(result, float)
+
 
 def test_AileronDerivatives():
     ac_data = test_data.copy()
@@ -50,6 +54,7 @@ def test_AileronDerivatives():
     assert "C_h_alpha" in ac_data["Aileron"]
     assert "C_h_delta" in ac_data["Aileron"]
 
+
 def test_StickArm():
     ac_data = test_data.copy()
     StickArm(ac_data, alpha=0.0, delta=14.0, h=3000.0, V=60.0)
@@ -57,6 +62,7 @@ def test_StickArm():
     assert "surface_a" in ac_data["Aileron"]
     assert "d_aileron" in ac_data["Aileron"]
     assert "stick_arm" in ac_data["Aileron"]
+
 
 def test_AileronSizing():
     ac_data = test_data.copy()
