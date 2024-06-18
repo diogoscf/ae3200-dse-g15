@@ -24,7 +24,7 @@ mission_freqs_global = None
 flight_distribution = None
 
 
-def get_flight_distribution(dist_file="flight_dist.pickle", size=10000):
+def get_flight_distribution(dist_file="flight_dist.pickle", size=10000): # pragma: no cover
     with open(os.path.join(os.path.dirname(__file__), dist_file), "rb") as f:
         dist = pickle.load(f)
     return dist.rvs(size=size)
@@ -220,7 +220,7 @@ def calculate_co2_reduction_flightdist(
     return co2_ratio
 
 
-def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
+def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False): # pragma: no cover
     c206_hour = 134  # Cessna 206 CO2 emissions in kg/hr
     c206_flight_hours = (359 + 149) / 2  # Average Cessna 206 flight hours
     target_level = 0.5  # CO2 reduction level
@@ -305,7 +305,7 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
     plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     # t1 = time.process_time()
     # n = 10000
     # i = 0

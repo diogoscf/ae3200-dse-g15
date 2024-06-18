@@ -306,7 +306,7 @@ def cg_excursion(Xcg_OEW, xlemac, ac_datafile=aircraft_data, plot=False):
     return Combined_CG, Combined_mass, Combined_FullCG
 
 
-def TailAero_copy(l_H, acd=aircraft_data):
+def TailAero_copy(l_H, acd=aircraft_data): # pragma: no cover
     # (copy from FullStability.py)
     # Get and convert values to imp*rial
     taper_h = acd["Aero"]["Taper_HS"]
@@ -652,7 +652,7 @@ def calculate_lh(ac_data=aircraft_data):
     return QCH_mac - QCW_mac
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     init = time.process_time()
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.2, bat_xcg=0.5, plot=False))
     # calculate_lh(ac_data=aircraft_data)

@@ -34,7 +34,7 @@ average_prefuel_flight_length_nm = None
 average_prefuel_legs = None
 
 
-def calculate_average_prefuel(flight_data_file):
+def calculate_average_prefuel(flight_data_file): # pragma: no cover
     """
     Calculate the average flight length before refuelling from the flight data file.
 
@@ -68,7 +68,7 @@ def calculate_average_prefuel(flight_data_file):
 
 
 # NOTE: Outdated
-def calculate_mission_freqs(mission_file):
+def calculate_mission_freqs(mission_file): # pragma: no cover
     """Calculate the frequency of each mission in the mission file.
 
     Parameters
@@ -416,7 +416,7 @@ def calculate_co2_reduction_average_flight(
     return co2_ratio
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     # t1 = time.process_time()
     # n = 10000
     # i = 0
