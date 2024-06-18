@@ -46,7 +46,7 @@ class Aircraft:
         self.e_clean        = dat["Aero"]["e"]
         self.S_clean        = dat["Aero"]["S_Wing"]
         self.b              = dat["Aero"]["b_Wing"]
-        self.CL_Dmin        = 0.866 # 0.16 voor L/D van 19 #0.866 # TODO: L/Dmax = 19 volgens CFD...
+        self.CL_Dmin        = 0.146#0.17 voor matchen point met Cdmin=Cd0 # 0.16 voor L/D van 19 #0.866 # TODO: L/Dmax = 19 volgens CFD...
         
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
@@ -105,7 +105,7 @@ class Aircraft:
         self.electric_max_cont_power  = dat["Power_prop"]["Electric_engine_P_max_cont_W"]
         self.eff_electric_motor       = dat["Power_prop"]["eta_electricmotor"]
         self.eff_battery              = dat["Power_prop"]["eta_bat"]
-        self.max_bat_cap              = dat["Power_prop"]["E_bat_Wh"]
+        self.max_bat_cap              = dat["Power_prop"]["E_bat_Wh"] # TODO: check with better batteries
         self.max_DoD_bat              = dat["Power_prop"]["DoD_bat"]
         
         self.number_of_engines        = 1
@@ -177,7 +177,7 @@ class Aircraft:
         
         # TODO: replace by more accurate representation for high-alpha CD and flap estimation
         
-        CDmin = self.CD0_clean
+        CDmin = self.CDmin
         e = self.e_clean
         
         # ground effect reduces induced drag, using nicolai section 10.2

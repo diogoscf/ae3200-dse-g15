@@ -120,7 +120,7 @@ def vary_area():
         
         pass_cr = "pass" if climbrate[0] >= 5 else "FAIL"
         pass_gr_TO = "pass" if gradient_TO[0] >= 4 else "FAIL"
-        pass_gr_ld = "pass" if gradient_ld[0] >= 2.5 else "FAIL"
+        pass_gr_ld = "pass" if gradient_ld[0] >= 3 else "FAIL"
         pass_vs = "pass" if V_S0 <= 25 else "FAIL"
         pass_to = "pass" if TO_dist[0] <= TORA else "FAIL"
         pass_ld = "pass" if land_dist <= TORA else "FAIL"

@@ -18,7 +18,7 @@ loiter_altitude = 1200
 temp_offset = 18
 climb_rate = 2.5
 cruise_speed = 60
-loiter_duration = 115*60 # [s]
+loiter_duration = 75*60 # [s]
 
 macf = mission_performance.MAircraft(airfield_elevation)
 macf.dT = temp_offset
