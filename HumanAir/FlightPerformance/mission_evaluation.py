@@ -7,6 +7,10 @@ Created on Fri Jun 14 10:41:53 2024
 
 import mission_performance
 
+better_batteries = False
+
+better_battery_factor = 685 / 350
+
 num_legs = 4
 
 tot_dist_nm = 600
@@ -23,6 +27,11 @@ loiter_duration = 75*60 # [s]
 macf = mission_performance.MAircraft(airfield_elevation)
 macf.dT = temp_offset
 
+if better_batteries:
+    macf.acf.max_bat_cap = macf.acf.max_bat_cap * better_battery_factor
+    macf.bat_cap = macf.acf.max_bat_cap
+    macf.b_lst[0] = macf.bat_cap
+    macf.last_bat_cap = macf.bat_cap
 
 #
 # flight
@@ -30,20 +39,21 @@ macf.dT = temp_offset
 
 for i in range(num_legs):
     # takeoff
-    macf.take_off(airfield_elevation, "grass", electric=i==0)
+    print(f"**************** Takeoff distance: {macf.acf.takeoff_ground_run(macf.W, 750, 18, 0, 'grass')[0]:.2f} m *******************")
+    macf.take_off(airfield_elevation, "grass", electric=i>=num_legs-2)
     
     # acceleration to ideal CL for climbing
     V_start_climb = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
-    macf.fly_accelerate_const_alt(V_start_climb, electric=i==0)
+    macf.fly_accelerate_const_alt(V_start_climb, electric=i>=num_legs-2)
     
     # climb
-    macf.fly_const_CL_const_climbrate(climb_rate, cruise_altitude, electric=i==0)
+    macf.fly_const_CL_const_climbrate(climb_rate, cruise_altitude, electric=i==num_legs-2)
     
     # accelerate to cruise speed
-    macf.fly_accelerate_const_alt(cruise_speed, electric=i==0)
+    macf.fly_accelerate_const_alt(cruise_speed, electric=i>=num_legs-2)
     
     # cruise
-    macf.fly_const_V_const_alt(leg_dist_m, electric=i==0)
+    macf.fly_const_V_const_alt(leg_dist_m, electric=i>=num_legs-2) # if we have batcap left over this will use it during second cruise
     
     if i < num_legs-1:
         # descent

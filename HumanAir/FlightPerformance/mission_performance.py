@@ -357,10 +357,9 @@ class MAircraft:
             # thus with P_a = 0 -> RC = -P_r/W
             RC = - V*self.D / self.W
             
-            # TODO: uncomment
             # check if descent rate is reasonable
-            #if RC < -3:
-            #    raise Exception(f"Descent RoC unreasonably large: {RC:.2f} m/s")
+            if RC < -4:
+                raise Exception(f"Descent RoC unreasonably large: {RC:.2f} m/s")
             #print(f"RoC descent: {RC:.2f} m/s")
             
             # determine ground speed

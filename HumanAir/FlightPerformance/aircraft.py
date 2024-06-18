@@ -9,6 +9,7 @@ from FlightPerformance.helper import density
 import FlightPerformance.thrust_power as thrust_power
 import FlightPerformance.takeoff_landing as takeoff_landing
 
+# TODO: note mistake in WP/WS diagram?
 
 class Aircraft:
     """
@@ -46,8 +47,8 @@ class Aircraft:
         self.e_clean        = dat["Aero"]["e"]
         self.S_clean        = dat["Aero"]["S_Wing"]
         self.b              = dat["Aero"]["b_Wing"]
-        self.CL_Dmin        = 0.146#0.17 voor matchen point met Cdmin=Cd0 # 0.16 voor L/D van 19 #0.866 # TODO: L/Dmax = 19 volgens CFD...
-        
+        self.CL_Dmin        = 0.0#0.146#0.17 voor matchen point met Cdmin=Cd0 # 0.16 voor L/D van 19 #0.866
+
         self.CLmax_clean    = dat["Aero"]["CLmax_clean"]
         self.CLmax_TO       = dat["Aero"]["CLmax_TO"]
         self.CLmax_land     = dat["Aero"]["CLmax_Land"]
@@ -105,7 +106,7 @@ class Aircraft:
         self.electric_max_cont_power  = dat["Power_prop"]["Electric_engine_P_max_cont_W"]
         self.eff_electric_motor       = dat["Power_prop"]["eta_electricmotor"]
         self.eff_battery              = dat["Power_prop"]["eta_bat"]
-        self.max_bat_cap              = dat["Power_prop"]["E_bat_Wh"] # TODO: check with better batteries
+        self.max_bat_cap              = dat["Power_prop"]["E_bat_Wh"]
         self.max_DoD_bat              = dat["Power_prop"]["DoD_bat"]
         
         self.number_of_engines        = 1
@@ -134,6 +135,7 @@ class Aircraft:
         # CDmin to get CD0 at CL=0
         self.CDmin = self.CD0_clean - self.CL_Dmin**2 / (np.pi * self.AR * self.e_clean)
         print(f"CDmin: {self.CDmin:.4f}")
+        
         # find CL/CD max for clean config
         def CL_CD(CL):
             return - (CL / self.CD(CL)) # minus so that minimize_scalar() will maximise
@@ -174,9 +176,7 @@ class Aircraft:
     
     def CD(self, CL, gear="up", flaps="up", ground_effect_h=None): # this parabolic approximation is about accurate until CL=1 (ruijgrok p226)
         """ Parabolic estimation of C_D for given C_L for given gear/flaps conditions (default=clean) """
-        
-        # TODO: replace by more accurate representation for high-alpha CD and flap estimation
-        
+                
         CDmin = self.CDmin
         e = self.e_clean
         
