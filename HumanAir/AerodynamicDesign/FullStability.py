@@ -348,7 +348,7 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.2, end_value=0.6, ste
     print(f"The aircraft has a horizontal tail with a surface area of {round(ac_datafile['Aero']['S_h'], 2)} [m^2]")
 
 
-def Plotting(acd=aircraft_data, show=True): # pragma: no cover
+def Plotting(acd=aircraft_data, show=True):  # pragma: no cover
     # Get data to plot from previous functions
     StabSM, StabNeutral, Control, Xcg, lh_sv = StabControl(acd)
     StabSM = np.array(StabSM, dtype=np.float64)
@@ -370,6 +370,6 @@ def Plotting(acd=aircraft_data, show=True): # pragma: no cover
         plt.show()
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     # Plotting()
     TailIteration(ac_datafile=aircraft_data)

@@ -5,6 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from HumanAir.AerodynamicDesign.ISA import ISA
 
+
 def test_temperature():
     # Test the Temperature method of ISA class
     isa_sea_level = ISA(0, 0, -0.0065)  # ISA model at sea level
@@ -28,6 +29,7 @@ def test_density():
 
     assert np.isclose(result_sea_level, expected_sea_level, rtol=0.01)
 
+
 def test_dynamic_viscosity():
     # Test the DynamicViscosity method of ISA class
     isa_sea_level = ISA(0, 0, -0.0065)  # ISA model at sea level
@@ -48,6 +50,5 @@ def test_speed_of_sound():
 
     # Expected speed of sounds (approximate values)
     expected_sea_level = 340.3  # m/s (speed of sound at sea level)
-
 
     assert np.isclose(result_sea_level, expected_sea_level, rtol=0.1)

@@ -17,6 +17,8 @@ WS = 100.0
 S = 1
 
 wing = Planform(AR, Taper, QuarterChordSweep, tc, MTOW=MTOW, WS=WS, S=S)
+
+
 def test_CMac_Wing():
     # Define sample inputs for the LongitudinalStability class
     CLh = 0.5
@@ -30,19 +32,21 @@ def test_CMac_Wing():
     VhV = 1.0
     FuselageLength = 10.0
 
-
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode='w') as wing_file, \
-            tempfile.NamedTemporaryFile(delete=False, mode='w') as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
         h_file_name = h_file.name
 
-    stability = LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing,
-                                      wing_file_name, h_file_name)
+    stability = LongitudinalStability(
+        CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing, wing_file_name, h_file_name
+    )
     expected_CMac_Wing = -0.0669
     assert isclose(stability.CMac_Wing(), expected_CMac_Wing, rel_tol=1e-3)
 
@@ -60,19 +64,21 @@ def test_Stability():
     VhV = 1.0
     FuselageLength = 10.0
 
-
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode='w') as wing_file, \
-            tempfile.NamedTemporaryFile(delete=False, mode='w') as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
         h_file_name = h_file.name
 
-    stability = LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing,
-                                      wing_file_name, h_file_name)
+    stability = LongitudinalStability(
+        CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing, wing_file_name, h_file_name
+    )
     expected_stability = 0.067
     assert isclose(stability.Stability()[50], expected_stability, rel_tol=1e-2)  # Checking a specific index
 
@@ -93,15 +99,18 @@ def test_Controllability():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode='w') as wing_file, \
-            tempfile.NamedTemporaryFile(delete=False, mode='w') as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
         h_file_name = h_file.name
 
-    stability = LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing,
-                                      wing_file_name, h_file_name)
+    stability = LongitudinalStability(
+        CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing, wing_file_name, h_file_name
+    )
     expected_controllability = 0.37
     assert isclose(stability.Controllability()[50], expected_controllability, rel_tol=1e-2)  # Checking a specific index
 
@@ -122,14 +131,17 @@ def test_ShS():
     airfoil_wing_data = {"C_L_Alpha": 5.7, "Cm_0": -0.1}
     airfoil_h_data = {"C_L_Alpha": 4.5, "Cm_0": -0.05}
 
-    with tempfile.NamedTemporaryFile(delete=False, mode='w') as wing_file, \
-            tempfile.NamedTemporaryFile(delete=False, mode='w') as h_file:
+    with (
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as wing_file,
+        tempfile.NamedTemporaryFile(delete=False, mode="w") as h_file,
+    ):
         json.dump(airfoil_wing_data, wing_file)
         json.dump(airfoil_h_data, h_file)
         wing_file_name = wing_file.name
         h_file_name = h_file.name
 
-    stability = LongitudinalStability(CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing,
-                                      wing_file_name, h_file_name)
+    stability = LongitudinalStability(
+        CLh, CLah, Xcgh, XLEMAC, CgAft, CgFwd, SM, deda, VhV, FuselageLength, wing, wing_file_name, h_file_name
+    )
     expected_ShS = 0.214
     assert isclose(stability.ShS(), expected_ShS, rel_tol=1e-2)
