@@ -78,7 +78,7 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface, electric=False, calc_time=
         mu_r = 0.05 # short cut grass, ruijgrok p372
     
     def f(V):
-        # gudmundsson eq 16.2-6 with acceleration from eq 16.2-9
+        # ruijgrok eq 16.2-6 with acceleration from eq 16.2-9
         T = acf.T(V, h, dT, use_takeoff_power=True, electric=electric)
         D = 0.5 * rho * V**2 * S * CD_ground
         L = 0.5 * rho * V**2 * S * CL_ground

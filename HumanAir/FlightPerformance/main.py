@@ -17,6 +17,7 @@ import numpy as np
 
 acf = aircraft.Aircraft()
 
+
 CL_list = np.linspace(0,3,50)
 CD_list = np.zeros(len(CL_list))
 CD_TO = np.zeros(len(CL_list))

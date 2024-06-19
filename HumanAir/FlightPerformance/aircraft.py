@@ -537,7 +537,7 @@ class Aircraft:
         D = 0.5 * density(h, dT) * V**2 * self.S() * self.CD(CL)
         
         if CL > 1: return 0
-        
+
         return V * D / self.P_a(h, dT, V=V)
     
     

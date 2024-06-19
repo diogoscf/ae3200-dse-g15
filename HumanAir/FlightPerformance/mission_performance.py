@@ -59,7 +59,7 @@ class MAircraft:
         
         self.last_fuel = self.fuel # to calculate fuel used per flight part
         self.last_bat_cap = self.bat_cap # to calculate fuel ued per flight part
-
+        
     
     def _update_lists(self):
         """
@@ -319,6 +319,7 @@ class MAircraft:
         self._print_update("climb")
             
         
+        # TODO: regenerative descent, constant RoC
     def fly_const_V_descent(self, h_target, time_step=10):
         """
         Descent at variable descent rate to maintain current speed.
@@ -498,6 +499,7 @@ class MAircraft:
         # done, print energy usage
         self._print_update("loiter")
         
+        
     def take_off(self, elevation, surface, electric=False):
         """
         Make the aircraft take off. 
@@ -559,7 +561,7 @@ class MAircraft:
         self._print_update("take off")
     
         
-    def land(self):
+    def land(self): # TODO: account for power consumed here
         """ Lands aircraft - only sets V to zero """
         self.V = 0
         self._update_lists()

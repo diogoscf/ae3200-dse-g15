@@ -331,5 +331,4 @@ def bat_cap_rate(acf, P_shaft=None,  TO=False):
     if P_shaft < 0:
         raise Exception("P_shaft supplied is negative")
 
-    # TODO: check if efficiencies are correct and correctly used
     return P_shaft / acf.eff_powertrain / acf.eff_electric_motor / acf.eff_battery / 3600 # conv to Wh/s
