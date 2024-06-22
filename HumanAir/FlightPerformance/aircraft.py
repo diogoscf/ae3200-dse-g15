@@ -215,8 +215,8 @@ class Aircraft:
     def prop_eff(self, V, h, dT, use_takeoff_power=False):
         return thrust_power.prop_eff(self, V, h, dT, use_takeoff_power=use_takeoff_power)
         
-    def fuel_rate(self, P_shaft):
-        return thrust_power.fuel_rate(self, P_shaft)
+    def fuel_rate(self, P_shaft, is_takeoff):
+        return thrust_power.fuel_rate(self, P_shaft, is_takeoff)
     
     def bat_cap_rate(self, P_shaft):
         return thrust_power.bat_cap_rate(self, P_shaft)
@@ -536,7 +536,9 @@ class Aircraft:
         CL = W / (0.5 * density(h, dT) * V**2 * self.S())
         D = 0.5 * density(h, dT) * V**2 * self.S() * self.CD(CL)
         
-        if CL > 1: return 0
+        if CL > 1: 
+            print(h)
+            return 0
 
         return V * D / self.P_a(h, dT, V=V)
     

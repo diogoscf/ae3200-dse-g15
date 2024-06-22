@@ -5,7 +5,7 @@ Created on Fri Jun 14 10:41:53 2024
 @author: Alex
 """
 
-# TODO: add fuel reserve requirement?
+# TODO: add fuel reserve requirement to report?
 
 import mission_performance
 
@@ -13,7 +13,7 @@ better_batteries = False
 
 better_battery_factor = 685 / 350
 
-num_legs = 4 # TODO: switch to electric later?
+num_legs = 4
 
 range_adjust = 0.725 # since distance is also covered in climb and descent we lower the cruise range
 tot_dist_nm = 600 * range_adjust
@@ -86,4 +86,3 @@ for i in range(num_legs):
 
 macf.plot_flight()
 macf.print_energy_level()
-print(f"Ground distance: {macf.ground_distance:.2f}")

@@ -26,6 +26,30 @@ class MAircraft:
         
         
         #
+        # flight phase ID's
+        #
+        
+        self.id_TO      = 0
+        self.id_acc     = 1
+        self.id_climb   = 2
+        self.id_cruise  = 3
+        self.id_descent = 4
+        self.id_loiter  = 5
+        self.id_land    = 6
+        
+        # index corresponds to ID
+        self.phase_names = [
+            "take-off",
+            "acceleration",
+            "climb",
+            "cruise",
+            "descent",
+            "loiter",
+            "landing"
+            ]
+        
+        
+        #
         # variables for mission analysis
         #
         
@@ -35,6 +59,9 @@ class MAircraft:
         self.payload = self.acf.W_pl_no_pilot # current payload [N]
         self.fuel = self.acf.W_MF # current fuel weight [N]
         self.bat_cap = self.acf.max_bat_cap # current battery capacity [Wh]
+        
+        # fuel weight in newtons that would be equivalent to battery capacity used
+        self.bat_eq_fuel = 0
                 
         self.ground_distance = 0 # distance flown [m]
         self.flight_time = 0 # time since start takeoff [s]
@@ -53,12 +80,24 @@ class MAircraft:
         self.CL_lst = [] # lift coefficient [-]
         self._update_lists()
         
+        
+        #
+        # variables to keep track of fuel consumption during different phases
+        # index corresponds to flight phase ID
+        #
+        
+        self.phase_fuel    = [0, 0, 0, 0, 0, 0, 0]
+        self.phase_eq_fuel = [0, 0, 0, 0, 0, 0, 0]
+        self.phase_bat     = [0, 0, 0, 0, 0, 0, 0]
+        
+        
         #
         # variables for printing energy consumption
         #
         
         self.last_fuel = self.fuel # to calculate fuel used per flight part
-        self.last_bat_cap = self.bat_cap # to calculate fuel ued per flight part
+        self.last_eq_fuel = self.bat_eq_fuel
+        self.last_bat_cap = self.bat_cap
         
     
     def _update_lists(self):
@@ -118,9 +157,9 @@ class MAircraft:
         plt.show()
         
         
-    def _print_update(self, label):
+    def _print_update(self, phase_id):
         """
-        Prints fuel used for last flight segment.
+        Prints fuel used for flight phase.
 
         Parameters
         ----------
@@ -132,29 +171,70 @@ class MAircraft:
         None.
 
         """
+        
+        label = self.phase_names[phase_id]
+        
         # get and print difference
         fuel_used = self.last_fuel - self.fuel
+        eq_fuel_used = self.bat_eq_fuel - self.last_eq_fuel # starts at zero so order reversed
         bat_cap_used = self.last_bat_cap - self.bat_cap
-        print(f"** {fuel_used:8.1f} N fuel and {bat_cap_used:8.1f} Wh energy used during {label}")
+        print(f"** {fuel_used:8.1f} N fuel and {bat_cap_used:8.1f} Wh energy (={eq_fuel_used:5.1f} N fuel) used during {label}")
         
         # update
         self.last_fuel = self.fuel
+        self.last_eq_fuel = self.bat_eq_fuel
         self.last_bat_cap = self.bat_cap
         
     def print_energy_level(self):
         """
-        Prints how much fuel is used and how much is left over.
+        Prints how much fuel/bat is left over.
 
         Returns
         -------
         None.
 
         """
-        f_1 = self.f_lst[0]
+        _, perc = self.calculate_fuel_reserve()
         b_1 = self.b_lst[0]
-        print(f"{self.fuel:8.1f} N fuel left over ({self.fuel/f_1*100:.1f}%)")
+        print("***************************************************************")
+        print(f"{self.fuel:8.1f} N fuel left over ({perc:.1f}% fuel reserve)")
         print(f"{self.bat_cap:8.1f} Wh battery left over ({self.bat_cap/b_1*100:.1f}%)")
+        print("***************************************************************")
 
+        for i in range(7):
+            print(f"Total {self.phase_fuel[i]:8.1f} N fuel, \
+{self.phase_bat[i]:8.1f} Wh energy \
+({self.phase_eq_fuel[i]:5.1f} N equivalent) \
+for {self.phase_names[i]}")
+                  
+        print("***************************************************************")
+        print(f"Ground distance: {self.ground_distance:.1f} m  =  {self.ground_distance/1852:.1f} nm")
+        print(f"Flight duration: {self.flight_time:.1f} s")
+        print("***************************************************************")
+
+    def calculate_fuel_reserve(self):
+        """
+        Calculates the required fuel reserve in newtons given (15% of trip fuel,
+        in other words all fuel consumed except by loiter).
+
+        Returns
+        -------
+        fuel_reserve_required: float
+            Required fuel reserve to reach 15% trip fuel reserve
+        percentage_reserve: float
+            Current fuel level as % of trip fuel
+        
+        """
+        
+        # trip fuel = all fuel except loiter
+        trip_fuel = sum(self.phase_fuel) - self.phase_fuel[self.id_loiter]
+        trip_fuel += sum(self.phase_eq_fuel) - self.phase_eq_fuel[self.id_loiter]
+        
+        fuel_reserve_required = trip_fuel * 0.15
+        
+        percentage_reserve = self.fuel / trip_fuel * 100
+        
+        return fuel_reserve_required, percentage_reserve    
         
     def _get_W(self):
         """ Returns current gross weight [N] """
@@ -180,7 +260,40 @@ class MAircraft:
         """ Power required for steady level flight """
         return self.D * self.V
     
-    
+    def _consume_energy(self, P_shaft, duration, electric, phase_id):
+        """
+        Consume fuel or battery capacity for given shaft power and duration
+
+        Parameters
+        ----------
+        P_shaft : float
+            Shaft power required [W].
+        duration : float
+            Duration of power consumption [s].
+        electric : boolean
+            Whether the electric motor is used.
+        phase_id : integer
+            Phase id of flight phase
+
+        Returns
+        -------
+        None.
+
+        """
+        is_takeoff = phase_id == self.id_TO
+        fuel_cons = self.acf.fuel_rate(P_shaft, is_takeoff) * duration
+        if electric:
+            # update battery capacity and equivalent fuel consumption
+            bat_cons = self.acf.bat_cap_rate(P_shaft) * duration
+            self.bat_cap -= bat_cons
+            self.bat_eq_fuel += fuel_cons # plus as it starts from 0
+            self.phase_bat[phase_id] += bat_cons
+            self.phase_eq_fuel[phase_id] += fuel_cons
+        else:
+            # update fuel level
+            self.fuel -= fuel_cons
+            self.phase_fuel[phase_id] += fuel_cons
+
     def fly_accelerate_const_alt(self, V_target, electric=False, time_step=.5):
         """
         This function will either accelerate or decelerate the aircraft.
@@ -224,12 +337,7 @@ class MAircraft:
                 # max constant thrust
                 T = self.acf.T(self.V, self.h, self.dT, electric=electric)
                 P_shaft = self.acf.P_shaft(self.h, self.dT, electric=electric)
-                if electric:
-                    # update battery capacity
-                    self.bat_cap -= self.acf.bat_cap_rate(P_shaft) * time_step
-                else:
-                    # update fuel level
-                    self.fuel -= self.acf.fuel_rate(P_shaft) * time_step
+                self._consume_energy(P_shaft, time_step, electric, self.id_acc)
             else:
                 # zero throttle
                 T = 0
@@ -244,7 +352,7 @@ class MAircraft:
             self._update_lists()
             
         # done, print energy usage
-        self._print_update("de/acceleration")
+        self._print_update(self.id_acc)
         
         
     def fly_const_CL_const_climbrate(self, RC, h_target, electric=False, time_step=10):
@@ -296,13 +404,7 @@ class MAircraft:
             # and P_r = V * (D + W/g*a)
             P = RC * self.W + self.V * (self.D + self.W/g*a)
             P_shaft = P / self.acf.prop_eff(self.V, self.h, self.dT)
-            
-            if electric:
-                # update battery capacity
-                self.bat_cap -= self.acf.bat_cap_rate(P_shaft) * time_step
-            else:
-                # update fuel level
-                self.fuel -= self.acf.fuel_rate(P_shaft) * time_step
+            self._consume_energy(P_shaft, time_step, electric, self.id_climb)
 
             # determine ground speed
             V_avg = self.V + (V2 - self.V)/2 # avg speed over dt assuming const a
@@ -316,7 +418,7 @@ class MAircraft:
             self._update_lists()
             
         # done, print energy consumed
-        self._print_update("climb")
+        self._print_update(self.id_climb)
             
         
         # TODO: regenerative descent, constant RoC
@@ -373,7 +475,7 @@ class MAircraft:
             self._update_lists()
             
         # print energy consumed
-        self._print_update("descent")
+        self._print_update(self.id_descent)
 
             
     def fly_const_V_const_alt(self, target_distance, time_step=10, electric=False):
@@ -397,7 +499,7 @@ class MAircraft:
         None.
 
         """
-        print(f"CL before: {self.CL:.2f} CL/CD: {self.CL/self.acf.CD(self.CL):.2f} opt: {self.acf.LDmax:.2f}")
+        #print(f"CL before: {self.CL:.2f} CL/CD: {self.CL/self.acf.CD(self.CL):.2f} opt: {self.acf.LDmax:.2f}")
         # stores distance covered during this phase        
         distance = 0
         
@@ -419,16 +521,11 @@ class MAircraft:
                 energy = self.acf.bat_cap_rate(P_shaft) * time_step
                 DoD = 1 - (self.bat_cap-energy) / self.acf.max_bat_cap
                 
-                if DoD < self.acf.max_DoD_bat:
-                    # update battery capacity
-                    self.bat_cap -= self.acf.bat_cap_rate(P_shaft) * time_step
-                else:
+                if DoD >= self.acf.max_DoD_bat:
                     # switch to fuel
                     electric = False
-                    self.fuel -= self.acf.fuel_rate(P_shaft) * time_step
-            else:
-                # update fuel level
-                self.fuel -= self.acf.fuel_rate(P_shaft) * time_step
+            
+            self._consume_energy(P_shaft, time_step, electric, self.id_cruise)
 
             # update ground distance of this segment
             distance += self.V * time_step
@@ -439,8 +536,8 @@ class MAircraft:
             self._update_lists()
             
         # done, print energy consumption
-        self._print_update("cruise")
-        print(f"CL after: {self.CL:.2f}")
+        self._print_update(self.id_cruise)
+        #print(f"CL after: {self.CL:.2f}")
 
         
     def fly_const_CL_const_alt(self, duration, time_step=10, electric=False):
@@ -478,13 +575,8 @@ class MAircraft:
             # get required shaft power, neglecting deceleration to maintain CL
             P_shaft = self.V * self.D / self.acf.prop_eff(self.V, self.h, self.dT)
             
-            if electric:
-                # update battery capacity
-                self.bat_cap -= self.acf.bat_cap_rate(P_shaft) * time_step
-            else:
-                # update fuel level
-                self.fuel -= self.acf.fuel_rate(P_shaft) * time_step
-
+            self._consume_energy(P_shaft, time_step, electric, self.id_loiter)
+            
             # update speed to maintain CL
             self.V = np.sqrt(self.W / (0.5 * rho * self.S * CL))
             
@@ -497,7 +589,7 @@ class MAircraft:
             self._update_lists()
             
         # done, print energy usage
-        self._print_update("loiter")
+        self._print_update(self.id_loiter)
         
         
     def take_off(self, elevation, surface, electric=False):
@@ -535,19 +627,15 @@ class MAircraft:
         if self.W > self.acf.W_MTO:
             raise Exception(f"Aircraft weight ({self.W:.0f} N) exceeds MTOW ({self.acf.W_MTO:.0f} N)")
             
+        # TODO: neglect extra power of e-motor? use fuel engine power as max?
+        
         # get duration and final speed of takeoff phase
         t, V, _ = self.acf.takeoff_ground_run(self.W, elevation, self.dT, 0, surface, electric=electric, calc_time=True)
         
         # get max TO shaft power
         P_shaft = self.acf.P_shaft(elevation, self.dT, use_takeoff_power=True, electric=electric)
         
-        
-        if electric:
-            # update battery capacity
-            self.bat_cap -= self.acf.bat_cap_rate(P_shaft) * t
-        else:
-            # update fuel level
-            self.fuel -= self.acf.fuel_rate(P_shaft) * t
+        self._consume_energy(P_shaft, t, electric, self.id_TO)
                         
         # update aircraft parameters
         # note that there may be multiple takeoffs in a flight so we cannot
@@ -558,7 +646,7 @@ class MAircraft:
         self._update_lists()
         
         # print energy used
-        self._print_update("take off")
+        self._print_update(self.id_TO)
     
         
     def land(self): # TODO: account for power consumed here

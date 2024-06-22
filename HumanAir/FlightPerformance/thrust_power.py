@@ -285,7 +285,7 @@ def prop_eff(acf, V, h, dT, use_takeoff_power=False):
         print(f"Propeller efficiency > 1. V={V} m/s, h={h} m, dT={dT} degC, takeoffpower={use_takeoff_power}, eff={eff}")
     return eff
 
-def fuel_rate(acf, P_shaft):
+def fuel_rate(acf, P_shaft, is_takeoff):
     """
     Calculates the fuel consumed for given shaft power required in N/s.
 
@@ -295,7 +295,9 @@ def fuel_rate(acf, P_shaft):
         The aircraft object.
     P_shaft : float
         Shaft power required [W].
-
+    takeoff : boolean
+        Whether this is during take-off
+        
     Returns
     -------
     float
@@ -308,10 +310,13 @@ def fuel_rate(acf, P_shaft):
     # from engine specs:
     # T/O fuel consumption 0.17 kg/hp/hr -> 0,00000062101634094798 N/W/s
     # averaged non-TO fuel consumption 0.16 kg/hp -> 0,00000058448596795104 N/W/s
-    return P_shaft / acf.eff_powertrain * acf.fuel_cons_flight
+    if is_takeoff:
+        return P_shaft / acf.eff_powertrain * acf.fuel_cons_TO
+    else:
+        return P_shaft / acf.eff_powertrain * acf.fuel_cons_flight
     
     
-def bat_cap_rate(acf, P_shaft=None,  TO=False):
+def bat_cap_rate(acf, P_shaft):
     """
     Calculates the rate at which battery capacity is depleted in Wh/s.
     
