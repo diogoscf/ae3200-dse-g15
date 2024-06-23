@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 def plot_variation():
     
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(6,3))
     
-    for i in [1,2,3,4,5]:
+    for i in [1,2,4]:
         if i == 2:
             # ***** design *****
             elevation   = 750
@@ -55,14 +55,14 @@ def plot_variation():
         for W in W_list:
             TO_dist.append(acf.takeoff_ground_run(W, elevation, temp_offset, slope, surface)[0])
             
-        plt.plot(W_list, TO_dist, label=label)
+        plt.plot(W_list/9.80665, TO_dist, label=label)
             
     #plt.ylim(300, 900)
     plt.ylabel("Required runway length [m]")
-    plt.xlabel("Gross takeoff weight [N]")
+    plt.xlabel("Gross takeoff weight [kg]")
     plt.legend()
     plt.grid()
-    plt.savefig("takeoff.svg")
+    plt.savefig("plots/takeoff.svg")
     plt.show()
         
     print(f"OE: {acf.W_OE}")
