@@ -355,15 +355,39 @@ for {self.phase_names[i]}")
         # done, print energy usage
         self._print_update(self.id_acc)
         
-    def fly_const_V_const_climbrate(self, RC, h_target, electric=False, time_step=10):
         
+    def fly_const_climbrate(self, RC, h_target, electric=False, time_step=10):
+        """
+        Fly at constany climb rate. May be used for descent as well as ascent.
+        In climb the speed is kept constant, in descent the speed may increase
+        but it will not decrease.
+
+        Parameters
+        ----------
+        RC : float
+            Climb rate [m/s].
+        h_target : float
+            Target altitude [m].
+        electric : boolean, optional
+            Whether to use electric power. The default is False.
+        time_step : float, optional
+            Integration time step. The default is 10.
+
+        Returns
+        -------
+        None.
+
+        """
+        # speed will not decrease below this
         V = self.V
         
-        # determine ground speed
-        V_g   = np.sqrt(V**2 - RC**2) # ground speed (so we are taking into account flight path angle here)
-
+        # climb
         if RC > 0:
+            # determine ground speed, stays constant
+            V_g   = np.sqrt(V**2 - RC**2) # ground speed (so we are taking into account flight path angle here)
+
             while h_target > self.h:
+                # derived from RoC = (P_a - P_r) / W
                 P = RC * self.W + self.V * self.D
                 P_shaft = P / self.acf.prop_eff(self.V, self.h, self.dT)
                 self._consume_energy(P_shaft, time_step, electric, self.id_climb)
@@ -377,12 +401,22 @@ for {self.phase_names[i]}")
             # done, print energy consumed
             self._print_update(self.id_climb)
             
+        # descent
         else:
             while h_target < self.h:
-                P = RC * self.W + self.V * self.D # TODO: acceleration neglected
+                # determine ground speed
+                V_g   = np.sqrt(V**2 - RC**2) # ground speed (so we are taking into account flight path angle here)
+
+                # derived from RoC = (P_a - P_r) / W
+                P = RC * self.W + self.V * self.D
+
                 if P > 0:
                     P_shaft = P / self.acf.prop_eff(self.V, self.h, self.dT)
                     self._consume_energy(P_shaft, time_step, electric, self.id_descent)
+                else:
+                    # accelerate
+                    a = - P / self.V / self.W
+                    self.V += a * time_step
                 
                 # update aircraft parameters
                 self.ground_distance += V_g * time_step
@@ -393,129 +427,7 @@ for {self.phase_names[i]}")
             # done, print energy consumed
             self._print_update(self.id_descent)
 
-        
-    # def fly_const_CL_const_climbrate(self, RC, h_target, electric=False, time_step=10):
-    #     """
-    #     Make aircraft climb at constant climb rate while maintaining current
-    #     lift coefficient.
 
-    #     Parameters
-    #     ----------
-    #     RC : float
-    #         Climb rate [m/s], may not be negative.
-    #     h_target : float
-    #         Target altitude [m].
-    #     electric : boolean, optional
-    #         Whether electric power is used. The default is False.
-    #     time_step : float, optional
-    #         Time step for integration [s]. The default is 30.
-
-    #     Raises
-    #     ------
-    #     Exception
-    #         Raises exception if h_target is below current h.
-
-    #     Returns
-    #     -------
-    #     None.
-        
-    #     """
-    #     # check if we are indeed having to climb
-    #     if h_target < self.h:
-    #         raise Exception("This function cannot be used for descent")
-    #     elif np.isclose(self.h, h_target):
-    #         return # already at target altitude
-        
-    #     # get current CL, this will be kept constant
-    #     CL = self.CL
-        
-    #     #
-    #     # integrate
-    #     #
-    #     while self.h < h_target:
-    #         # find the acceleration required to maintain current CL
-    #         rho2 = density(self.h+RC*time_step, self.dT) # density at next integration step
-    #         V2 = np.sqrt(self.W / (0.5 * rho2 * self.S * CL)) # speed at next integration step
-    #         a = (V2 - self.V) / time_step
-            
-    #         # calculate shaft power required
-    #         # with small angle approximation P = RC*W + P_r
-    #         # and P_r = V * (D + W/g*a)
-    #         P = RC * self.W + self.V * (self.D + self.W/g*a)
-    #         P_shaft = P / self.acf.prop_eff(self.V, self.h, self.dT)
-    #         self._consume_energy(P_shaft, time_step, electric, self.id_climb)
-
-    #         # determine ground speed
-    #         V_avg = self.V + (V2 - self.V)/2 # avg speed over dt assuming const a
-    #         V_g   = np.sqrt(V_avg**2 - RC**2) # ground speed (so we are taking into account flight path angle here)
-            
-    #         # update aircraft parameters
-    #         self.ground_distance += V_g * time_step
-    #         self.V += a * time_step
-    #         self.flight_time += time_step
-    #         self.h += RC * time_step
-    #         self._update_lists()
-            
-    #     # done, print energy consumed
-    #     self._print_update(self.id_climb)
-            
-        
-    # def fly_const_V_descent(self, h_target, time_step=10):
-    #     """
-    #     Descent at variable descent rate to maintain current speed.
-
-    #     Parameters
-    #     ----------
-    #     h_target : float
-    #         Target altitude [m].
-    #     time_step : float, optional
-    #         Time step for integration in seconds. The default is 30.
-
-    #     Raises
-    #     ------
-    #     Exception
-    #         Raised if h_target > current h or is descent rate exceeds 3m/s.
-
-    #     Returns
-    #     -------
-    #     None.
-
-    #     """
-    #     # check if we are going to descent
-    #     if h_target > self.h:
-    #         raise Exception("This function cannot be used for ascent")
-    #     elif np.isclose(self.h, h_target):
-    #         return # already at target altitude
-        
-    #     # store current speed so that we can keep it constant
-    #     V = self.V
-        
-    #     #
-    #     # integration
-    #     #
-    #     while self.h > h_target:
-    #         # with small angle approximation RC = (P_a - P_r)/W
-    #         # thus with P_a = 0 -> RC = -P_r/W
-    #         RC = - V*self.D / self.W
-            
-    #         # check if descent rate is reasonable
-    #         if RC < -4:
-    #             #raise Exception(f"Descent RoC unreasonably large: {RC:.2f} m/s")
-    #             print(f"!!!!!!!!! RoC descent large: {RC:.2f} m/s !!!!!!!!!!")
-            
-    #         # determine ground speed
-    #         V_g   = np.sqrt(V**2 - RC**2) # we are taking into account flight path angle here
-            
-    #         # update aircraft parameters
-    #         self.ground_distance += V_g * time_step
-    #         self.flight_time += time_step
-    #         self.h += RC * time_step
-    #         self._update_lists()
-            
-    #     # print energy consumed
-    #     self._print_update(self.id_descent)
-
-            
     def fly_const_V_const_alt(self, target_distance, time_step=10, electric=False):
         """
         Fly keeping current altitude and speed constant (good for cruise). When
@@ -573,9 +485,10 @@ for {self.phase_names[i]}")
             self.flight_time += time_step
             self._update_lists()
             
+        #print(f"CL after: {self.CL:.2f}")
+
         # done, print energy consumption
         self._print_update(self.id_cruise)
-        #print(f"CL after: {self.CL:.2f}")
 
         
     def fly_const_CL_const_alt(self, duration, time_step=10, electric=False):
@@ -694,8 +607,18 @@ for {self.phase_names[i]}")
         self._print_update(self.id_TO)
     
         
-    def land(self): # TODO: account for power consumed here
-        """ Lands aircraft - only sets V to zero """
+    def land(self):
+        """ 
+        Lands aircraft. 
+        
+        Takes into account fuel consumption by reverse thrust, then sets V to zero.
+        
+        Assumes fuel engine is used.
+        """
+        t = self.acf.landing_ground_distance(self.W, self.h, self.dT, 0, "grass", reversible_pitch=True, calc_time=True)
+        P = self.acf.P_shaft(self.h, self.dT) * 0.4
+        self._consume_energy(P, t, False, self.id_land)
         self.V = 0
+        self.flight_time += t
         self._update_lists()
 

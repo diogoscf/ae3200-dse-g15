@@ -161,7 +161,7 @@ def takeoff_ground_run(acf, W, h, dT, slope, surface, electric=False, calc_time=
         return res, accuracy
 
     
-def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=False):
+def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=False, calc_time=False):
     """
     Estimates landing ground run distance using gudmundsen method (chapter 22).
     
@@ -221,26 +221,10 @@ def landing_ground_distance(acf, W, h, dT, slope, surface, reversible_pitch=Fals
 
     s_ground = - V_T**2 * W / (2 * g * (T - D - D_g - W * np.sin(xi))) # gudmundsen eq 22-2 and 22-13
     
+    if calc_time:
+        return s_ground / V_avg + 3
+
     s_ground += 3 * V_T # add 2 seconds of overflight, 1 second of free roll at touchdown speed
-    
-   #  def f(V):
-   #      L = 0.5 * rho * V**2 * S * CL
-   #      D = 0.5 * rho * V**2 * S * CD
-   #      D_g = mu*(W-L)*acf.weight_on_MLG # assumes zero pitching moment
-   #      return (W/g * V) / (T - D - D_g - W*np.sin(xi))
-   #  s_ground2, accuracy = quad(f, V_T, 0)
-   # # s_ground2 += V_T
-    
-   #  if accuracy > 10**-3:
-   #      raise Exception(f"Low accuracy in integrating landing distance: \
-   #                      s_ground = {s_ground}, accuracy = {accuracy}.")
         
-    
-    # if surface == "paved":
-    #     # roskam pt1 statistical method for comparison
-    #     V_S_L = np.sqrt(W/( 0.5 * rho * S * acf.CLmax_land))
-    #     s_g_roskam = conv.ft_to_m(0.265 * conv.m_s_to_kt(V_S_L)**2)
-    #     print(f"Landing distance according to roskam pt1: {s_g_roskam:.1f} m (no thrust reverse)")
-    
-    return s_ground#, s_ground2
+    return s_ground
     

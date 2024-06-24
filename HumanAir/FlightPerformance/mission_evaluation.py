@@ -116,7 +116,7 @@ def perform_flight(
         macf.fly_accelerate_const_alt(V_start_climb, electric=perform_electric)
         
         # climb
-        macf.fly_const_V_const_climbrate(climb_rate, cruise_altitude, electric=perform_electric)
+        macf.fly_const_climbrate(climb_rate, cruise_altitude, electric=perform_electric)
         
         # accelerate to cruise speed
         macf.fly_accelerate_const_alt(cruise_speed, electric=perform_electric)
@@ -126,13 +126,13 @@ def perform_flight(
         
         if i < num_legs-1:
             # descent
-            macf.fly_const_V_const_climbrate(-climb_rate, airfield_elevation, electric=perform_electric)
+            macf.fly_const_climbrate(-climb_rate, airfield_elevation, electric=perform_electric)
         
             # land
             macf.land()
         else:
             # descent to loiter alt
-            macf.fly_const_V_const_climbrate(-climb_rate, loiter_altitude, electric=perform_electric)
+            macf.fly_const_climbrate(-climb_rate, loiter_altitude, electric=perform_electric)
             
             # decelerate or accelerate to loiter speed
             V_loiter = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
@@ -142,7 +142,7 @@ def perform_flight(
             macf.fly_const_CL_const_alt(loiter_duration)
             
             # descent
-            macf.fly_const_V_const_climbrate(-climb_rate, airfield_elevation, electric=False)
+            macf.fly_const_climbrate(-climb_rate, airfield_elevation, electric=False)
             
             # land
             macf.land()
@@ -191,7 +191,7 @@ def perform_single_leg_hybrid_flight(
     macf.fly_accelerate_const_alt(V_start_climb, electric=False)
     
     # climb
-    macf.fly_const_V_const_climbrate(climb_rate, cruise_altitude, electric=False)
+    macf.fly_const_climbrate(climb_rate, cruise_altitude, electric=False)
     
     # accelerate to cruise speed
     macf.fly_accelerate_const_alt(cruise_speed, electric=False)
@@ -202,7 +202,7 @@ def perform_single_leg_hybrid_flight(
 
     
     # descent to loiter alt
-    macf.fly_const_V_const_climbrate(-climb_rate, loiter_altitude, electric=False)
+    macf.fly_const_climbrate(-climb_rate, loiter_altitude, electric=False)
     
     # decelerate or accelerate to loiter speed
     V_loiter = macf.acf.V_Prmin(macf.W, macf.h, macf.dT)
@@ -212,7 +212,7 @@ def perform_single_leg_hybrid_flight(
     macf.fly_const_CL_const_alt(loiter_duration)
     
     # descent
-    macf.fly_const_V_const_climbrate(-climb_rate, airfield_elevation, electric=False)
+    macf.fly_const_climbrate(-climb_rate, airfield_elevation, electric=False)
     
     # land
     macf.land()
@@ -229,9 +229,9 @@ def perform_single_leg_hybrid_flight(
 if __name__ == "__main__":
     #calculate_range()
     #perform_single_leg_hybrid_flight()
-    #perform_flight()
+    perform_flight()
     
-    acf = aircraft.Aircraft()
-    acf.W_pl_no_pilot -= 3*90*9.80665
-    acf.W_MF += 32988-acf.W_MTO + 3*90*9.80665
-    calculate_range(acf, num_legs=2)
+    # acf = aircraft.Aircraft()
+    # acf.W_pl_no_pilot -= 3*90*9.80665
+    # acf.W_MF += 32988-acf.W_MTO + 3*90*9.80665
+    # calculate_range(acf, num_legs=2)

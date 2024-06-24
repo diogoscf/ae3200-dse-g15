@@ -547,5 +547,5 @@ class Aircraft:
     def takeoff_ground_run(self, W, h, dT, slope, surface, electric=False, calc_time=False):
         return takeoff_landing.takeoff_ground_run(self, W, h, dT, slope, surface, electric=electric, calc_time=calc_time)
        
-    def landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=False):
-        return takeoff_landing.landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=reversible_pitch)
+    def landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=False, calc_time=False):
+        return takeoff_landing.landing_ground_distance(self, W, h, dT, slope, surface, reversible_pitch=reversible_pitch, calc_time=calc_time)
