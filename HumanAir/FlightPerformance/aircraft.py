@@ -9,7 +9,6 @@ from FlightPerformance.helper import density
 import FlightPerformance.thrust_power as thrust_power
 import FlightPerformance.takeoff_landing as takeoff_landing
 
-# TODO: note mistake in WP/WS diagram?
 
 class Aircraft:
     """
@@ -380,7 +379,7 @@ class Aircraft:
 
         def slope(V): # calculates slope *-1
             CL = W / (0.5 * rho * V**2 * S) # small angle assumption, L=W cos(gamma) -> L=W
-            CD = 1.5*self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations, currently multiplied by 1.5 as adjustment
+            CD = 1.5*self.CD(CL, gear=gear, flaps=flaps) # inaccurate with current CD calculations, currently multiplied by 1.5 as adjustment
             D = 0.5 * rho * V**2 * S * CD
             T = self.T(V, h, dT)
             return (T - D) / W, CL
@@ -395,7 +394,7 @@ class Aircraft:
         print(f"Slope CL = {CL_opt:.2f}; at speed {V_opt:.2f}; min speed {min_speed:.2f}")                        
         # def slope(V): # calculates slope *-1
         #     CL = min(1, W / (0.5 * rho * V**2 * self.S)) # small angle assumption, L=W cos(gamma) -> L=W
-        #     CD = self.CD(CL, gear=gear, flaps=flaps) # TODO: inaccurate with current CD calculations
+        #     CD = self.CD(CL, gear=gear, flaps=flaps) # inaccurate with current CD calculations
         #     D = 0.5 * rho * V**2 * self.S * CD
         #     T = self.T(V, h, dT)
         #     return -(T - D) / W # minus so that minimize() will maximize
@@ -471,9 +470,9 @@ class Aircraft:
         the thrust function.   
         
         Note that it is inaccurate for high altitudes because of bad high-CL
-        drag prediction.
+        drag prediction. Also the root-scalar method is unpredictable for high
+        altitudes.
         
-        TODO: root_scalar method employed is not very reliable at high altitudes
 
         Parameters
         ----------
@@ -514,8 +513,6 @@ class Aircraft:
         Returns 0 if C_L > 1 because with current drag estimation CD is
         inaccurate for C_L>1.
         
-        TODO: change this when CD() has been updated.
-
         Parameters
         ----------
         V : float

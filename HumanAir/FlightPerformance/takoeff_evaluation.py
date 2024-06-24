@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 def plot_variation():
     
-    plt.figure(figsize=(6,3))
+    fig = plt.figure(figsize=(6,3))
     
     for i in [1,2,4]:
         if i == 2:
@@ -52,15 +52,24 @@ def plot_variation():
         
         TO_dist = []
         
+        printed = False
+        
         for W in W_list:
-            TO_dist.append(acf.takeoff_ground_run(W, elevation, temp_offset, slope, surface)[0])
+            dist = acf.takeoff_ground_run(W, elevation, temp_offset, slope, surface)[0]
+            if i == 2 and dist > 500 and not printed:
+                printed = True
+                print(W_list[len(TO_dist)-1])
+                print(TO_dist[-1])
+            TO_dist.append(dist)
             
         plt.plot(W_list/9.80665, TO_dist, label=label)
             
     #plt.ylim(300, 900)
     plt.ylabel("Required runway length [m]")
     plt.xlabel("Gross takeoff weight [kg]")
+    plt.xlim(acf.W_OE/9.80665, acf.W_MTO/9.80665)
     plt.legend()
+    fig.axes[0].set_xticks([2800, 3000, 3200, 3400])
     plt.grid()
     plt.savefig("plots/takeoff.svg")
     plt.show()

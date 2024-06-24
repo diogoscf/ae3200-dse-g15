@@ -5,11 +5,8 @@ Created on Fri Jun 14 10:41:53 2024
 @author: Alex
 """
 
-# TODO: add fuel reserve requirement to report?
-
 import aircraft
 import mission_performance
-
 
 
 def calculate_range(
@@ -231,5 +228,10 @@ def perform_single_leg_hybrid_flight(
 
 if __name__ == "__main__":
     #calculate_range()
-    perform_single_leg_hybrid_flight()
+    #perform_single_leg_hybrid_flight()
     #perform_flight()
+    
+    acf = aircraft.Aircraft()
+    acf.W_pl_no_pilot -= 3*90*9.80665
+    acf.W_MF += 32988-acf.W_MTO + 3*90*9.80665
+    calculate_range(acf, num_legs=2)

@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 g = 9.80665
 
-
 class MAircraft:
     """
     Mission-Aircraft class.
@@ -196,8 +195,10 @@ class MAircraft:
         """
         _, perc = self.calculate_fuel_reserve()
         b_1 = self.b_lst[0]
+        eq_fuel = sum(self.phase_eq_fuel) - self.phase_eq_fuel[self.id_loiter]
         print("***************************************************************")
         print(f"{self.fuel:8.1f} N fuel left over ({perc:.1f}% fuel reserve)")
+        print(f"{eq_fuel:5.1f} N eq fuel total")
         print(f"{self.bat_cap:8.1f} Wh battery left over ({self.bat_cap/b_1*100:.1f}%)")
         print("***************************************************************")
 
@@ -459,7 +460,6 @@ for {self.phase_names[i]}")
     #     self._print_update(self.id_climb)
             
         
-        # TODO: regenerative descent?, constant RoC
     # def fly_const_V_descent(self, h_target, time_step=10):
     #     """
     #     Descent at variable descent rate to maintain current speed.
@@ -673,7 +673,6 @@ for {self.phase_names[i]}")
             self.last_eq_fuel = self.bat_eq_fuel
             self.last_bat_cap = self.bat_cap
             
-        # TODO: neglect extra power of e-motor? use fuel engine power as max?
         
         # get duration and final speed of takeoff phase
         t, V, _ = self.acf.takeoff_ground_run(self.W, elevation, self.dT, 0, surface, electric=electric, calc_time=True)

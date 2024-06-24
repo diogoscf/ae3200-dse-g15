@@ -36,7 +36,6 @@ def P_shaft(acf, h, dT, use_takeoff_power=False, electric=False):
     """
     
     if electric:
-        # TODO: assumed constant power with altitude
         if use_takeoff_power:
             return acf.electric_takeoff_power * acf.eff_powertrain
         else:

@@ -41,23 +41,23 @@ ro1, ro2, ro3 = 431.5, 633.4, 788.7
 # electric only, one leg
 #
 
-rb1, rb2, rb3 = 110.0, 112.6, 133.9
+rb1, rb2, rb3 = 108.8, 111.2, 132.5
 
 # point 1, max payload, no fuel
 # acf = aircraft.Aircraft()
 # acf.W_pl_no_pilot += extra_payload
-# acf.W_MF = 0 # TODO: no fuel reserves :(
+# acf.W_MF = 420 # reserve fuel, when changes are made, check if still correct
 # rb1 = mission_evaluation.calculate_range(acf, guess_tot_range_nm=103, num_legs=1, only_electric=True) / 1852
 
-# # point 2, design payload, no fuel
+# point 2, design payload, no fuel
 # acf = aircraft.Aircraft()
-# acf.W_MF = 0
+# acf.W_MF = 410 # reserve fuel, when changes are made, check if still correct
 # rb2 = mission_evaluation.calculate_range(acf, guess_tot_range_nm=105, num_legs=1, only_electric=True) / 1852
 
 # # point 3, zero payload, no
 # acf = aircraft.Aircraft()
 # acf.W_pl_no_pilot = pl3*g
-# acf.W_MF = 0
+# acf.W_MF = 330 # reserve fuel, when changes are made, check if still correct
 # rb3 = mission_evaluation.calculate_range(acf, guess_tot_range_nm=110, num_legs=1, only_electric=True) / 1852
 
 
@@ -83,6 +83,7 @@ plt.xlabel("Range (nm)")
 plt.ylabel("Payload (kg)")
 plt.ylim(0, pl1*1.1)
 plt.xlim(0, r3*1.1)
-#plt.legend()
+plt.grid()
+plt.legend()
 plt.savefig("plots/payload_range.svg")
 plt.show()
