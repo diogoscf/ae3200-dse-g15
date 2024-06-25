@@ -7,11 +7,12 @@ import sys
 import time
 from math import tan
 
-0.32 # [m]
+0.32  # [m]
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from HumanAir.aircraft_data import aircraft_data
+
 
 class FuselageSizing:
     """
@@ -38,13 +39,13 @@ class FuselageSizing:
 
     """
     Landing gear specification
-    """ 
+    """
     s_aft = 0.05  # landing gear clearance [m]
 
     """
     Other specifications
     """
-    
+
     l_enbu = 0.15  # engine/firewall buffer [m]
     h_floor = 0.1  # floor height [m]
     l_extra = 0.2  # extra space [m]
@@ -113,7 +114,7 @@ class FuselageSizing:
         return FuselageSizing.l_pax * self.n_row()
 
     def length_main_strut(self, s_gear):
-        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle/2
+        l_lateral_strut = (self.D_main / 2) + s_gear + self.w_aisle / 2
         h = self.h_main_strut
         l_lateral = self.l_main_lateral - l_lateral_strut
 
@@ -155,7 +156,7 @@ class FuselageSizing:
 
         else:
             # print('Landing gear folds forward')
-            w_battery = (self.top_width() - 2 * FuselageSizing.s) 
+            w_battery = self.top_width() - 2 * FuselageSizing.s
 
             w_battery = self.top_width() - 4 * FuselageSizing.s - 2 * self.D_main
 
@@ -176,10 +177,10 @@ class FuselageSizing:
         # s_gear is the distance between the two areas
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
         # bottom width from seats:
-        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2  + self.w_aisle
+        bw1 = (FuselageSizing.w_pax + FuselageSizing.s + FuselageSizing.t_fuse) * 2 + self.w_aisle
 
         # bottom width from landing gear:
-        bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft) 
+        bw2 = 2 * (s_gear + self.D_main + FuselageSizing.s_aft)
 
         return round(FuselageSizing.bigger_mag(bw1, bw2), 3)
 
