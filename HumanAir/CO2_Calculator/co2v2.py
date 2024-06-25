@@ -153,6 +153,7 @@ def calculate_new_co2_flightdist(
     co2 = fuel_co2 + maintenance_overhaul_co2
     return co2, maintenance_overhaul_co2
 
+
 def calculate_new_co2_flightdist_incl_bat(
     flightdist,
     mission_freqs,
@@ -208,7 +209,9 @@ def calculate_new_co2_flightdist_incl_bat(
         * (1 - battery_usage_ratio)
         / (ac_data["Power_prop"]["E_fuel_Wh/kg"] * ac_data["Power_prop"]["eta_generator"])
     )  # TODO: Check if power train efficiency matters
-    fuel_emissions_return = fuel_required_return_kg * ac_data["Performance"]["CO2_emissions_kg/kg"] + (ac_data["Power_prop"]["E_bat_Wh"] / 1000 * 0.4)
+    fuel_emissions_return = fuel_required_return_kg * ac_data["Performance"]["CO2_emissions_kg/kg"] + (
+        ac_data["Power_prop"]["E_bat_Wh"] / 1000 * 0.4
+    )
 
     if maintenance_standard_co2 is None:
         _, maintenance_standard_co2 = calculate_standard_co2_flightdist(
@@ -414,4 +417,4 @@ if __name__ == "__main__":  # pragma: no cover
 
     co2_ratio = calculate_co2_reduction_flightdist(ac_data=aircraft_data, standard_ac_data=c206_data)
     print(f"CO2 reduction: {co2_ratio*100:.2f}%")
-    #improvement_co2(0.37, 0.7, check_over_time=True)
+    # improvement_co2(0.37, 0.7, check_over_time=True)
