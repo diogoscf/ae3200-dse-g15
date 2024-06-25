@@ -33,7 +33,7 @@ def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
         if tyres[tyre, 2] >= Pnw:
             break
 
-        # if Pmw > tyres[-1, 2]: # pragma: no cover
+    if Pmw > tyres[-1, 2]:  # pragma: no cover
         print("WARNING: NO TYRE AVAILABLE")
         con = input("Continue? (y/n): ")
         if con == "n":
