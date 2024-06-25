@@ -122,7 +122,7 @@ def objective(
     chord_dist,
     non_fus_idx,
     verbose=False,
-):
+):  # pragma: no cover
     weight = get_weight(
         variables, htot, rho, len_nodes, A_stringer, stringer_sections_halfspan, n_halfspan, chord_dist, non_fus_idx
     )
@@ -494,7 +494,7 @@ start = time.time()
 times_called = 0
 
 
-def print_time():
+def print_time():  # pragma: no cover
     global last_time, times_called
     now = time.time()
     print(f"{times_called} - Time taken:", now - last_time, flush=True)
@@ -513,7 +513,7 @@ def run_optimiser(
     maxiter=None,
     full_return=False,
     verbose=False,
-):
+):  # pragma: no cover
     """
     Function to run the optimization of the wing structure
 
@@ -763,8 +763,7 @@ def run_optimiser(
     return optimized_t_spar_tip, optimized_t_spar_root, optimized_t_skin, optimized_no_stringers, weight
 
 
-if __name__ == "__main__":
-
+if __name__ == "__main__":  # pragma: no cover
     (
         optimized_t_spar_tip,
         optimized_t_spar_root,

@@ -64,8 +64,8 @@ def TailAero(l_H, acd=aircraft_data):
     VhVcorr = acd["Aero"]["VhV"] * eta_H
 
     # Downwash Gradient supposedly from Slingerland whoever that may be
-    r = l_H * 2 / acd["Aero"]["b_Wing"]
-    mtv = 0 * 2 / acd["Aero"]["b_Wing"]
+    r = float(l_H * 2 / acd["Aero"]["b_Wing"])
+    mtv = float(0 * 2 / acd["Aero"]["b_Wing"])
     deda = (
         (
             (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
@@ -168,7 +168,7 @@ def StabControl(acd=aircraft_data):
     # l_H iteration/calculation, XLEMAC placement
     # TODO: add this
     # TODO: done
-    lh_sv = calculate_lh(ac_data=aircraft_data, hinge_chord_percentage=3 / 4)
+    lh_sv = calculate_lh(ac_data=aircraft_data)
     l_H = acd["Stability"]["QCW_to_QCh"]
 
     # Get necessary values from functions
@@ -188,7 +188,7 @@ def StabControl(acd=aircraft_data):
 
 
 # negative values does not work because the nose gear will colapse, the begin value has to be larger than 0.05
-def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, step=10):
+def TailIteration(ac_datafile=aircraft_data, begin_value=0.2, end_value=0.6, step=10):
     # define the minimum value for Sh/S
     Sh_S_min = 10000
 
@@ -240,15 +240,19 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
                     * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
                     / (1 + ac_datafile["Aero"]["Taper_HS"])
                 )
+
                 # save the best configuration
                 if Sh_S < Sh_S_min:
+                    save_value_xcg_wing = x_percentage
                     Sh_S_min = Sh_S
                     Xcg_excursion_min = Xcg_excursion
 
                     dummy_dict = {}
                     dummy_dict["Aero"] = {}
+                    dummy_dict["Geometry"] = {}
+                    dummy_dict["Geometry"]["XLEMAC_m"] = ac_datafile["Geometry"]["XLEMAC_m"]
                     dummy_dict["Stability"] = {}
-                    dummy_dict["Stability"]["QCW_to_QCh"] = lh_sv
+                    dummy_dict["Stability"]["QCW_to_QCh"] = float(lh_sv)
                     dummy_dict["Aero"]["S_h"] = S_h
                     dummy_dict["Aero"]["b_h"] = sqrt(ac_datafile["Aero"]["AR_HS"] * ac_datafile["Aero"]["S_h"])
                     dummy_dict["Aero"]["c_root_HS"] = (
@@ -281,13 +285,19 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
                     * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
                     / (1 + ac_datafile["Aero"]["Taper_HS"])
                 )
+
                 # save the best configuration
                 if Sh_S < Sh_S_min:
+                    save_value_xcg_wing = x_percentage
                     Sh_S_min = Sh_S
                     Xcg_excursion_min = Xcg_excursion
 
                     dummy_dict = {}
                     dummy_dict["Aero"] = {}
+                    dummy_dict["Stability"] = {}
+                    dummy_dict["Geometry"] = {}
+                    dummy_dict["Geometry"]["XLEMAC_m"] = ac_datafile["Geometry"]["XLEMAC_m"]
+                    dummy_dict["Stability"]["QCW_to_QCh"] = float(lh_sv)
                     dummy_dict["Aero"]["S_h"] = S_h
                     dummy_dict["Aero"]["b_h"] = sqrt(ac_datafile["Aero"]["AR_HS"] * ac_datafile["Aero"]["S_h"])
                     dummy_dict["Aero"]["c_root_HS"] = (
@@ -305,16 +315,19 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
             # check for convergence
             if np.abs(S_h_old - S_h) / S_h_old < 0.0001:
                 lh_converged = True
+
             # save the old value of Sh for the lh iteration
             S_h_old = S_h
 
     # save the best configuration
+    ac_datafile["Geometry"]["XLEMAC_m"] = dummy_dict["Geometry"]["XLEMAC_m"]
     ac_datafile["Aero"]["S_h"] = dummy_dict["Aero"]["S_h"]
     ac_datafile["Aero"]["b_h"] = dummy_dict["Aero"]["b_h"]
     ac_datafile["Aero"]["c_root_HS"] = dummy_dict["Aero"]["c_root_HS"]
     ac_datafile["Aero"]["c_tip_HS"] = dummy_dict["Aero"]["c_tip_HS"]
     ac_datafile["Aero"]["MAC_HS"] = dummy_dict["Aero"]["MAC_HS"]
-    ac_datafile["Stability"]["QCW_to_QCh"] = dummy_dict["Stability"]["QCW_to_QCh"]
+    ac_datafile["Stability"]["QCW_to_QCh"] = float(dummy_dict["Stability"]["QCW_to_QCh"])
+    ac_datafile["Stability"]["Xcg_oew_wing_mac"] = save_value_xcg_wing
 
     tan_LE_sweep = tan(0) - 4 / ac_datafile["Aero"]["AR_HS"] * (
         (-3 / 4) * (1 - ac_datafile["Aero"]["Taper_HS"]) / (1 + ac_datafile["Aero"]["Taper_HS"])
@@ -324,37 +337,25 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.05, end_value=0.8, st
         + ac_datafile["Aero"]["c_root_HS"] / (2 * ac_datafile["Aero"]["b_h"]) * (ac_datafile["Aero"]["Taper_HS"] - 1)
     )
     ac_datafile["Aero"]["QuarterChordSweep_HS_deg"] = quarter_chord_sweep * 180 / np.pi
-    print("DA")
 
     # plot the optimised xcg for the landing gear
     Plotting(acd=ac_datafile, show=False)
+
     Sh_S_list = np.ones(np.shape(Xcg_excursion_min)[0]) * Sh_S_min
     plt.plot(Xcg_excursion_min, Sh_S_list, label="Optimised Xcg for Landing Gear")
+    plt.savefig("ScissorPlot.svg")
     plt.show()
 
     print(f"The aircraft has a horizontal tail with a surface area of {round(ac_datafile['Aero']['S_h'], 2)} [m^2]")
-    # answer = input("Do you want to stop? [Y/N]")
-
-    # if answer.lower() == "y":
-    #     # saving all of the updated horizontal tail values
-    #     ac_datafile["Aero"]["S_h"] = S_h
-    #     ac_datafile["Aero"]["b_h"] = sqrt(ac_datafile["Aero"]["AR_HS"] * ac_datafile["Aero"]["S_h"])
-    #     ac_datafile["Aero"]["c_root_HS"] = (
-    #         2 * ac_datafile["Aero"]["S_h"] / (ac_datafile["Aero"]["b_h"] * (1 + ac_datafile["Aero"]["Taper_HS"]))
-    #     )
-    #     ac_datafile["Aero"]["c_tip_HS"] = ac_datafile["Aero"]["Taper_HS"] * ac_datafile["Aero"]["c_root_HS"]
-    #     ac_datafile["Aero"]["MAC_HS"] = (
-    #         (2 / 3 * ac_datafile["Aero"]["c_root_HS"])
-    #         * (1 + ac_datafile["Aero"]["Taper_HS"] + ac_datafile["Aero"]["Taper_HS"] ** 2)
-    #         / (1 + ac_datafile["Aero"]["Taper_HS"])
-    #     )
-
-    #     break
 
 
-def Plotting(acd=aircraft_data, show=True):
+def Plotting(acd=aircraft_data, show=True):  # pragma: no cover
     # Get data to plot from previous functions
     StabSM, StabNeutral, Control, Xcg, lh_sv = StabControl(acd)
+    StabSM = np.array(StabSM, dtype=np.float64)
+    StabNeutral = np.array(StabNeutral, dtype=np.float64)
+    Control = np.array(Control, dtype=np.float64)
+    Xcg = np.array(Xcg, dtype=np.float64)
     # TailSizing(ac_datafile=aircraft_data)
     # Actual plotting
     plt.plot(Xcg, StabSM, label="Stability with Safety Margin", color="limegreen", linewidth=2.2)
@@ -363,13 +364,13 @@ def Plotting(acd=aircraft_data, show=True):
     plt.fill_between(Xcg, 0, StabSM, color="crimson", alpha=0.2)
     plt.fill_between(Xcg, 0, Control, color="crimson", alpha=0.2)
     plt.xlim(-0.2, 1.2)
-    plt.ylim(0, 1)
+    plt.ylim(0, 0.6)
     plt.legend()
 
     if show:
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # Plotting()
     TailIteration(ac_datafile=aircraft_data)

@@ -24,7 +24,7 @@ mission_freqs_global = None
 flight_distribution = None
 
 
-def get_flight_distribution(dist_file="flight_dist.pickle", size=10000):
+def get_flight_distribution(dist_file="flight_dist.pickle", size=10000):  # pragma: no cover
     with open(os.path.join(os.path.dirname(__file__), dist_file), "rb") as f:
         dist = pickle.load(f)
     return dist.rvs(size=size)
@@ -308,7 +308,7 @@ def calculate_co2_reduction_flightdist(
     return co2_ratio
 
 
-def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
+def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):  # pragma: no cover
     c206_hour = 134  # Cessna 206 CO2 emissions in kg/hr
     c206_flight_hours = (359 + 149) / 2  # Average Cessna 206 flight hours
     target_level = 0.5  # CO2 reduction level
@@ -318,10 +318,19 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
         c206_hour * c206_flight_hours / 1000
     )  # Cessna 206 emissions per year measured in tons assuming a target_value CO2 reduction
 
+    plt.rcParams.update({"font.size": 23})
+    plt.rcParams.update({"axes.labelsize": 27})
+    plt.rcParams.update({"legend.fontsize": 23})
+    fig, ax = plt.subplots()
+    fig.tight_layout()
+    ax.axhline(linewidth=2, color="k")
+    ax.axvline(linewidth=2, color="k")
+    colours = "brgm"
+
     if check_over_time:
         year_max = 0
 
-        for introduction_year in delta_year:
+        for i, introduction_year in enumerate(delta_year):
             target_reached = False
             lst_CO2 = [
                 0,
@@ -346,21 +355,45 @@ def improvement_co2(first_level=0.3, second_level=0.6, check_over_time=False):
 
             years = np.array(lst_year) + 2030
             np.round(years, 0)
-            plt.plot(years, lst_CO2, label="Available in " + str(int(introduction_year + 2030)))
-    c206_years = np.ndarray.round(np.arange(2030, year_max + 2031, 1), 0)
+            ax.plot(
+                years,
+                lst_CO2,
+                colours[i] + "-",
+                label="Available in " + str(int(introduction_year + 2030)),
+                lw=2,
+                zorder=5,
+            )
+            ax.plot(years[-1], lst_CO2[-1], colours[i] + "o", ms=15, zorder=5)
+
+    c206_years = np.ndarray.round(np.arange(2030, year_max + 2033, 1), 0)
 
     c206_CO2 = (c206_years - 2030) * total_CO2_year * target_level
-    plt.plot(c206_years, c206_CO2, linestyle="dashed", label=str(int(target_level * 100)) + "% Cessna 206")
 
-    plt.xticks(np.arange(2030, year_max + 2031, 5))
-    plt.xlabel("Years")
-    plt.ylabel("CO2 [t]")
-    plt.legend()
-    plt.grid()
+    ax.plot(c206_years, c206_CO2, "k--", label=str(int(target_level * 100)) + "% C206", lw=2, zorder=3)
+
+    ax.set_xticks(np.arange(2030, year_max + 2033, 2))
+    ax.set_xticks(np.arange(2030, year_max + 2033, 1), minor=True)
+    ax.tick_params("both", length=8, width=1, which="major")
+    ax.tick_params("both", length=4, width=1, which="minor")
+
+    ax.set_xlabel("Years")
+    ax.set_ylabel("CO2 [t]")
+    ax.set_xlim(2030, year_max + 2031)
+    ax.legend(loc="upper left")
+    ax.grid(which="both")
+
+    fig.set_size_inches(16, 6)
+    fig.tight_layout()
+
+    fig.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "time-to-target-co2.pdf"),
+        bbox_inches="tight",
+        dpi=200,
+    )
     plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # t1 = time.process_time()
     # n = 10000
     # i = 0

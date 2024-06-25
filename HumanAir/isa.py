@@ -42,7 +42,7 @@ def rho1(p, t):
 
 
 # Print Results in User-Readable Format
-def results(t, p, rho):
+def results(t, p, rho):  # pragma: no cover
     t, p, rho = round_sig(t, 5), round_sig(p, 5), round_sig(rho, 5)
     t_celsius = round(t - 273.15, 2)
     p_perc, rho_perc = round_sig((100 * p) / p_sea, 2), round_sig((100 * rho) / rho_sea, 2)
@@ -59,12 +59,13 @@ def isa(h, delta_T=0):
         t, p, h0 = t1(t, a, h0, h1), p1(p, t, a, h0, h1), h1
         if h <= h_max:
             return t + delta_T, p, rho1(p, t + delta_T)
-    print("ERROR: Height too large - The ISA only goes to a height of 86 km (282152 ft or FL 2821)")
-    exit(0)
+
+    print("ERROR: Height too large - The ISA only goes to a height of 86 km (282152 ft or FL 2821)")  # pragma: no cover
+    exit(0)  # pragma: no cover
 
 
 # Feet and Flight Level converters
-def ft_to_m(x):
+def ft_to_m(x):  # pragma: no cover
     return x * 0.3048
 
 
@@ -72,7 +73,7 @@ def FL_to_m(x):
     return x * 0.3048 * 100.0
 
 
-def main():
+def main():  # pragma: no cover
     print("\n* * * ISA calculator * * *\n")
     print("\n1. Calculate ISA for altitude in meters")
     print("2. Calculate ISA for altitude in feet")
@@ -96,5 +97,5 @@ def main():
         main()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

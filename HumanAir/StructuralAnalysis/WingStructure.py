@@ -357,7 +357,7 @@ class WingStructure:
         return (h_frontspar + h_rearspar) / 2 * (self.spar_pos[1] - self.spar_pos[0]) * self.chord_distribution
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # INPUT
     # Sw = 34.56  # [m2]
     # taper_ratio = 0.4

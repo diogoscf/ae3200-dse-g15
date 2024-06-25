@@ -130,7 +130,7 @@ class WP_WS:
         return optimal_WP, optimal_WS
 
     #  ========== 2: Plot Lines =========="""
-    def plot(self, saving=None):
+    def plot(self, saving=None):  # pragma: no cover
         optimal_point = self.calculate_optimal_point()
 
         plt.figure(figsize=(10, 7))
@@ -166,7 +166,7 @@ class WP_WS:
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     wp = WP_WS()
     print(wp.calculate_optimal_point())
     wp.plot()

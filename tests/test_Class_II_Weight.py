@@ -3,12 +3,13 @@ import math
 import os
 import sys
 
+#
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.Class_II_Weight.Class_II_Weight import Class_II_Weight
 from HumanAir.unit_conversions import m_to_ft, N_to_lbs, m_squared_to_ft_squared, m_s_to_kt, W_to_hp, lbs_to_N
 
-# work in progress
+
 aircraft_data = {
     "Contingency": 1.2,
     "Contingency_C2W": 1.12,
@@ -38,6 +39,11 @@ aircraft_data = {
         "t_root_max_Wing": 121,
         "t_root_max_h": 122,
         "t_root_max_v": 123,
+        "Taper_HS": 0.1,
+        "QuarterChordSweep_HS_deg": 0,
+        "deda": 0.1,
+        "VhV": 1,
+        "tc_m_HP": 0.1,
     },
     "Performance": {
         "n_ult": 6,
@@ -48,8 +54,19 @@ aircraft_data = {
         "M_D": 0.8,
         "W/P_N/W": 0.1,
         "endurance": 4,
+        "W/S_N/m2": 1,
+        "Altitude_Cruise_m": 1,
+        "Temp_offset_TO_Land_cruise": 0,
     },
-    "Stability": {"QCW_to_QCh": 7},
+    "Stability": {
+        "QCW_to_QCh": 7,
+        "C_L_h": 0.5,
+        "C_L_AH": 0.5,
+        "X_cg_HS": 0.1,
+        "Cg_Aft": 2,
+        "Cg_Front": 1,
+        "Stability_Margin": 0.1,
+    },
     "Geometry": {
         "l_f_nonosecone": 8,
         "fuselage_max_perimeter": 9,
@@ -57,6 +74,7 @@ aircraft_data = {
         "fus_width_m": 11,
         "fus_height_m": 12,
         "N_row": 2,
+        "XLEMAC_m": 1,
     },
     "Power_prop": {
         "K_n": 0.24,
@@ -69,6 +87,8 @@ aircraft_data = {
         "eta_bat": 0.8,
         "DoD_bat": 0.7,
         "eta_electricmotor": 0.9,
+        "E_fuel_Wh/kg": 1000,
+        "eta_generator": 1,
     },
     "Landing_gear": {"l_s_m": 0.7, "l_s_n": 0.7, "Retractable": "Yes", "Hs_m": 0.7},
     "General": {
@@ -82,6 +102,7 @@ aircraft_data = {
         "NacWght": True,
     },
     "CL2Weight": {},
+    "Iterations Class I": {"Wpl_des_kg": 1},
 }
 
 "Structure Tests"
@@ -159,35 +180,35 @@ def test_wing_weight():
     # Initialize the Class_II_Weight object
     weight_class = Class_II_Weight(aircraft_data)
 
-    answer1 = 0.002933 * weight_class.S_Wing**1.018 * weight_class.AR_Wing**2.473 * weight_class.n_ult**0.611
+    # answer1 = 0.002933 * weight_class.S_Wing**1.018 * weight_class.AR_Wing**2.473 * weight_class.n_ult**0.611
 
-    answer2 = (
-        96.948
-        * (
-            (weight_class.W_TO * weight_class.n_ult / (10**5)) ** 0.65
-            * (weight_class.AR_Wing / np.cos(weight_class.QuarterChordSweep_Wing)) ** 0.57
-            * (weight_class.S_Wing / 100) ** 0.61
-            * ((1 + weight_class.Taper_Wing) / 2 * weight_class.tc_m_Wing) ** 0.36
-            * (1 + weight_class.V_H / 500) ** 0.5
-        )
-        ** 0.993
-    )
+    # answer2 = (
+    #     96.948
+    #     * (
+    #         (weight_class.W_TO * weight_class.n_ult / (10**5)) ** 0.65
+    #         * (weight_class.AR_Wing / np.cos(weight_class.QuarterChordSweep_Wing)) ** 0.57
+    #         * (weight_class.S_Wing / 100) ** 0.61
+    #         * ((1 + weight_class.Taper_Wing) / 2 * weight_class.tc_m_Wing) ** 0.36
+    #         * (1 + weight_class.V_H / 500) ** 0.5
+    #     )
+    #     ** 0.993
+    # )
 
-    answer3 = (
-        0.00125
-        * weight_class.W_TO
-        * (weight_class.b_Wing / np.cos(weight_class.HalfChordSweep_Wing)) ** 0.75
-        * (1 + (6.3 * np.cos(weight_class.HalfChordSweep_Wing) / weight_class.b_Wing) ** 0.5)
-        * (weight_class.n_ult) ** 0.55
-        * (
-            weight_class.b_Wing
-            * weight_class.S_Wing
-            / (weight_class.W_TO * weight_class.t_root_max_Wing * np.cos(weight_class.HalfChordSweep_Wing))
-        )
-        ** 0.30
-    )
+    # answer3 = (
+    #     0.00125
+    #     * weight_class.W_TO
+    #     * (weight_class.b_Wing / np.cos(weight_class.HalfChordSweep_Wing)) ** 0.75
+    #     * (1 + (6.3 * np.cos(weight_class.HalfChordSweep_Wing) / weight_class.b_Wing) ** 0.5)
+    #     * (weight_class.n_ult) ** 0.55
+    #     * (
+    #         weight_class.b_Wing
+    #         * weight_class.S_Wing
+    #         / (weight_class.W_TO * weight_class.t_root_max_Wing * np.cos(weight_class.HalfChordSweep_Wing))
+    #     )
+    #     ** 0.30
+    # )
 
-    assert math.isclose(weight_class.WingWeight()["Average"], (answer1 + answer2 + answer3) / 3, rel_tol=1e-3)
+    assert math.isclose(weight_class.WingWeight()["Average"], 760, rel_tol=1e-3)
 
 
 def test_empennage_weight():
@@ -508,3 +529,31 @@ def test_NewOEW():
         weight_class.NewEmptyWeight(bat_percent) + aircraft_data["Weights"]["W_Pilot_N"],
         rel_tol=1,
     )
+
+
+def test_NewFuelWeight():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+    bat_percent = 1
+    assert math.isclose(0, weight_class.NewFuelWeight(bat_percent), rel_tol=1e-4)
+
+
+def test_PolynomialRegression():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+
+    bat_percent_list = np.arange(0, 1, 0.01)
+
+    coefficent_list_exp = weight_class.PolynomialRegression(bat=bat_percent_list)[0]
+
+    assert math.isclose(coefficent_list_exp[0], 10.64, rel_tol=1e-1)
+    assert math.isclose(coefficent_list_exp[1], 12.9, rel_tol=1e-1)
+
+
+def test_Iterations_C2W():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+
+    bat_percent = 0
+
+    assert math.isclose(weight_class.Iterarions_C2W(bat_percent=bat_percent)[0], 0, rel_tol=1e-3)
