@@ -372,21 +372,21 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     plt.ylim(-4500, 900)
     plt.axhline(0, color="k", linewidth=2)
     plt.gca().tick_params(labelsize=14)
-    plt.legend(["Eigenvalue 1", "Eigenvalue 2"], loc = "lower left")
+    plt.legend(["Eigenvalue 1", "Eigenvalue 2"], loc="lower left")
     # plot coordinate of the flutter speed point
     plt.plot(V_flut, 0, "ro", markersize=10)
     plt.text(V_flut * 1.03, -270, f"(0, {int(np.round(V_flut,0))})", fontsize=14)
     # plot the flutter speed in textbox on top left corner
     plt.text(
-                0.025,
-                0.965,
-                f"V_flut: {int(np.round(V_flut,0))} [m/s]",
-                transform=plt.gca().transAxes,
-                fontsize=14,
-                verticalalignment="top",
-                horizontalalignment="left",
-                bbox=dict(facecolor="white", alpha=0.5),
-            )
+        0.025,
+        0.965,
+        f"V_flut: {int(np.round(V_flut,0))} [m/s]",
+        transform=plt.gca().transAxes,
+        fontsize=14,
+        verticalalignment="top",
+        horizontalalignment="left",
+        bbox=dict(facecolor="white", alpha=0.5),
+    )
     plt.savefig(
         os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "Flutter_damping_vs_airspeed.pdf"),
         bbox_inches="tight",
@@ -748,7 +748,7 @@ if __name__ == "__main__":
 
         # If no flutter:
         if Identifier is None:
-            V_arr=np.linspace(eps, 400 * 1.15, 500)
+            V_arr = np.linspace(eps, 400 * 1.15, 500)
             print("########################################################################################")
             print("GOOD NEWS: No flutter occurs over all mass configurations and operating regimes")
             print("########################################################################################")
@@ -763,7 +763,7 @@ if __name__ == "__main__":
                 Sw,
                 a,
                 B,
-                V_arr
+                V_arr,
             )
             # Save parameters in json file:
             flutter_data = {
@@ -777,11 +777,9 @@ if __name__ == "__main__":
                 "Sw": Sw,
                 "a": a,
                 "B": B,
-                "V_arr": V_arr.tolist()
+                "V_arr": V_arr.tolist(),
             }
-            with open(
-                os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w"
-            ) as json_file:
+            with open(os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w") as json_file:
                 json.dump(flutter_data, json_file, indent=4)
 
         # If flutter:
@@ -802,7 +800,7 @@ if __name__ == "__main__":
                 Sw,
                 a,
                 B,
-                V_arr
+                V_arr,
             )
             # Save parameters in json file:
             flutter_data = {
@@ -816,11 +814,9 @@ if __name__ == "__main__":
                 "Sw": Sw,
                 "a": a,
                 "B": B,
-                "V_arr": V_arr.tolist()
+                "V_arr": V_arr.tolist(),
             }
-            with open(
-                os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w"
-            ) as json_file:
+            with open(os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w") as json_file:
                 json.dump(flutter_data, json_file, indent=4)
 
     if plot_only:
@@ -840,7 +836,7 @@ if __name__ == "__main__":
             data["B"],
             np.array(data["V_arr"]),
         )
-        
+
     if analyze == "static aeroelasticity":
         # Static Aeroelasticity
         static_aeroelasticity(K_h, K_theta, Sw, C_L_alpha, a, B, q_cruise, alpha_0L, C_M_AC)
