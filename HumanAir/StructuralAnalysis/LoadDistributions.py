@@ -467,12 +467,13 @@ if __name__ == "__main__":  # pragma: no cover
     # plt.legend()
     # plt.grid()
 
-    plt.legend(loc='upper center',
-          ncol=3, fancybox=True, shadow=True)
+    plt.legend(loc="upper center", ncol=3, fancybox=True, shadow=True)
     plt.grid()
     plt.gcf().set_size_inches(18, 16)
     plt.tight_layout()
-    plt.savefig(os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "shear-force.png"), bbox_inches="tight", dpi=200)
+    plt.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "shear-force.png"), bbox_inches="tight", dpi=200
+    )
     plt.show()
 
     # twist = (
