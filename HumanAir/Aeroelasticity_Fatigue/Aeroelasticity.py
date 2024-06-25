@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import os
+import json
 
 # from scipy.optimize import fsolve
 import matplotlib.pyplot as plt
@@ -56,8 +57,12 @@ def Divergence(K_theta, CL_alpha, a, B, rho):
         The divergence speed of the aircraft.
     """
     q = K_theta / ((2 * B) * CL_alpha * (1 / 2 + a) * B)  # where S = 2 * b since we analyse per unit span.
+    if q < 0:
+        V_div = -np.sqrt(2 * abs(q) / rho)
+        print("The divergence speed is negative, since the elastic axis lies in front of the aerodynamic center.")
+        return q, V_div
     V_div = np.sqrt(2 * q / rho)
-    return V_div
+    return q, V_div
 
 
 def Reversal(h, K_theta, CL_alpha, CM_ac_beta, B, rho):
@@ -89,9 +94,8 @@ def Reversal(h, K_theta, CL_alpha, CM_ac_beta, B, rho):
         np.sqrt(1 - h**2) + np.arccos(h)
     )  # The lift variation with deflection of the control surface (aileron).
     q = CL_beta * K_theta / (CL_alpha * CM_ac_beta * 2 * B * (2 * B))
-
     V_rev = np.sqrt(2 * q / rho)
-    return V_rev
+    return q, V_rev
 
 
 # def rho_altitude(rho):
@@ -346,37 +350,57 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     # plt.plot(q, imag_p_save, '.', linewidth=2)
     # plt.xlabel('Dynamic pressure [N/m^2]')
     plt.plot(V, imag_p_save, ".", linewidth=2)
-    plt.xlabel("Airspeed [m/s]")
-    plt.ylabel("Frequency ω [1/s]")
+    plt.xlabel("Airspeed [m/s]", fontsize=14)
+    plt.ylabel("Frequency ω [1/s]", fontsize=14)
     plt.ylim(0, np.max(imag_p_save))
     plt.gca().tick_params(labelsize=14)
-    plt.legend()
-    plt.show()
+    plt.legend(["Eigenvalue 1", "Eigenvalue 2"])
+    plt.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "Flutter_frequency_vs_airspeed.pdf"),
+        bbox_inches="tight",
+        dpi=200,
+    )
 
     # Plot flutter diagram: damping vs dynamic pressure
     plt.figure()
     # plt.plot(q, real_p_save, '.', linewidth=2)
     # plt.xlabel('Dynamic pressure [N/m^2]')
     plt.plot(V, real_p_save, ".", linewidth=2)
-    plt.xlabel("Airspeed [m/s]")
-    plt.ylabel("Damping σ [1/s]")
+    plt.legend
+    plt.xlabel("Airspeed [m/s]", fontsize=14)
+    plt.ylabel("Damping σ [1/s]", fontsize=14)
+    plt.ylim(-4500, 900)
     plt.axhline(0, color="k", linewidth=2)
     plt.gca().tick_params(labelsize=14)
-    # plot the flutter speed
-    if V_flut != 0:
-        plt.plot(V_flut, 0, "ro")
-        plt.text(V_flut * 1.05, -3, f"V_flut = {np.round(V_flut, 0)}", fontsize=12)
-    plt.legend()
-    plt.show()
+    plt.legend(["Eigenvalue 1", "Eigenvalue 2"], loc="lower left")
+    # plot coordinate of the flutter speed point
+    plt.plot(V_flut, 0, "ro", markersize=10)
+    plt.text(V_flut * 1.03, -270, f"(0, {int(np.round(V_flut, 0))})", fontsize=14)
+    # plot the flutter speed in textbox on top left corner
+    plt.text(
+        0.025,
+        0.965,
+        f"V_flut: {int(np.round(V_flut, 0))} [m/s]",
+        transform=plt.gca().transAxes,
+        fontsize=14,
+        verticalalignment="top",
+        horizontalalignment="left",
+        bbox=dict(facecolor="white", alpha=0.5),
+    )
+    plt.savefig(
+        os.path.join(os.path.dirname(__file__), "..", "..", "Figures", "Flutter_damping_vs_airspeed.pdf"),
+        bbox_inches="tight",
+        dpi=200,
+    )
 
     # Plot flutter diagram: imaginary part vs real part of p_save
     plt.figure()
     plt.plot(real_p_save, imag_p_save, "r.", linewidth=2)
-    plt.xlabel("Damping σ [1/s]")
-    plt.ylabel("Frequency ω [1/s]")
+    plt.xlabel("Damping σ [1/s]", fontsize=14)
+    plt.ylabel("Frequency ω [1/s]", fontsize=14)
     plt.axvline(0, color="k", linewidth=2)
     plt.gca().tick_params(labelsize=14)
-    plt.legend()
+    plt.legend(["Eigenvalue 1", "Eigenvalue 2"])
     plt.show()
 
     return None
@@ -650,8 +674,9 @@ def calculate_K_h(wing_structure, typical_section):
 
 
 if __name__ == "__main__":
+    plot_only = False
     analyze = (
-        "flutter"  # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
+        "reversal"  # "divergence", "reversal", "flutter", "static aeroelasticity" or "static trimmed aeroelasticity"
     )
 
     nodes = 501
@@ -701,11 +726,13 @@ if __name__ == "__main__":
     q_cruise = 1 / 2 * rho * V_cruise**2
 
     if analyze == "divergence":
-        V_div = Divergence(K_theta, C_L_alpha, a, B, rho)
+        q, V_div = Divergence(K_theta, C_L_alpha, a, B, rho)
+        print(f"Divergence boundary: {q} N/m^2")
         print(f"Divergence speed: {V_div} m/s")
 
     if analyze == "reversal":
-        V_rev = Reversal(hinge_dist, K_theta, C_L_alpha, CM_ac_beta, B, rho)
+        q, V_rev = Reversal(hinge_dist, K_theta, C_L_alpha, CM_ac_beta, B, rho)
+        print(f"Reversal boundary: {q} N/m^2")
         print(f"Reversal speed: {V_rev} m/s")
 
     if analyze == "flutter":
@@ -721,6 +748,7 @@ if __name__ == "__main__":
 
         # If no flutter:
         if Identifier is None:
+            V_arr = np.linspace(eps, 400 * 1.15, 500)
             print("########################################################################################")
             print("GOOD NEWS: No flutter occurs over all mass configurations and operating regimes")
             print("########################################################################################")
@@ -735,8 +763,25 @@ if __name__ == "__main__":
                 Sw,
                 a,
                 B,
-                V_arr=np.linspace(eps, 400 * 1.15, 500),
+                V_arr,
             )
+            # Save parameters in json file:
+            flutter_data = {
+                "m_airfoil": m_airfoil,
+                "I_theta": I_theta,
+                "S_theta": S_theta,
+                "rho": 1.225,
+                "K_h": K_h,
+                "K_theta": K_theta,
+                "C_L_alpha": C_L_alpha,
+                "Sw": Sw,
+                "a": a,
+                "B": B,
+                "V_arr": V_arr.tolist(),
+            }
+            with open(os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w") as json_file:
+                json.dump(flutter_data, json_file, indent=4)
+
         # If flutter:
         else:
             # Plot flutter diagram for this configuration
@@ -757,6 +802,40 @@ if __name__ == "__main__":
                 B,
                 V_arr,
             )
+            # Save parameters in json file:
+            flutter_data = {
+                "m_airfoil": m_airfoil,
+                "I_theta": I_theta,
+                "S_theta": S_theta,
+                "rho": V_flut_dict[Identifier]["rho [kg/m^3]"],
+                "K_h": K_h,
+                "K_theta": K_theta,
+                "C_L_alpha": C_L_alpha,
+                "Sw": Sw,
+                "a": a,
+                "B": B,
+                "V_arr": V_arr.tolist(),
+            }
+            with open(os.path.join(os.path.dirname(__file__), "flutter_data.json"), "w") as json_file:
+                json.dump(flutter_data, json_file, indent=4)
+
+    if plot_only:
+        # Extract data from json file:
+        with open(os.path.join(os.path.dirname(__file__), "flutter_data.json")) as json_file:
+            data = json.load(json_file)
+        flutter_diagram(
+            data["m_airfoil"],
+            data["I_theta"],
+            data["S_theta"],
+            data["rho"],
+            data["K_h"],
+            data["K_theta"],
+            data["C_L_alpha"],
+            data["Sw"],
+            data["a"],
+            data["B"],
+            np.array(data["V_arr"]),
+        )
 
     if analyze == "static aeroelasticity":
         # Static Aeroelasticity
