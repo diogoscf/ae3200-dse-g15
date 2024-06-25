@@ -102,7 +102,7 @@ def test_l_end_main_land():
 
 
 def test_check_back():
-    assert fuselage.check_back(0.1) == True
+    assert fuselage.check_back(0.1)
 
 
 def test_battery_dim():

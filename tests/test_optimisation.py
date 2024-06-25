@@ -74,7 +74,7 @@ simplified_airfoil_data = """\
 
 # Function to read airfoil data from the multi-line string
 def read_airfoil_data():
-    return pd.read_csv(StringIO(simplified_airfoil_data), sep="\s+", header=None, names=["x", "y"])
+    return pd.read_csv(StringIO(simplified_airfoil_data), sep="\\s+", header=None, names=["x", "y"])
 
 
 # Use the read_airfoil_data function to create airfoil_data_df
@@ -178,9 +178,9 @@ def test_get_I():
     h_frontspar = 10
     h_rearspar = 1
 
-    I = get_I(t_spar, t_skin, no_stringers, A_stringers, w_top, w_bottom, h_avemax, h_frontspar, h_rearspar)
+    MOI = get_I(t_spar, t_skin, no_stringers, A_stringers, w_top, w_bottom, h_avemax, h_frontspar, h_rearspar)
 
-    assert isclose(I, 2 + 83.417 + 10, rel_tol=1e-2)
+    assert isclose(MOI, 2 + 83.417 + 10, rel_tol=1e-2)
 
 
 def test_get_A():

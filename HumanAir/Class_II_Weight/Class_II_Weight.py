@@ -258,8 +258,7 @@ class Class_II_Weight:
         results["Cessna"] = 0.40 * self.W_F / self.K_fsp
         results["USAF"] = (
             2.49
-            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13)
-            ** 1.21
+            * ((self.W_F / self.K_fsp) ** 0.6 * (1 / (1 + self.int)) ** 0.3 * self.N_t**0.20 * self.N_e**0.13) ** 1.21
         )
         results["Torenbeek"] = 2 * (self.W_F / 5.87) ** 0.667
 
@@ -701,7 +700,7 @@ class Class_II_Weight:
         percentage_changes = [pct for pct in sensitivity_results[components[0]].keys() if pct != 0]  # Exclude 0% change
 
         fig, axes = plt.subplots(3, 2, figsize=(22, 15), sharey=True)
-        #fig.tight_layout(pad=5.0)
+        # fig.tight_layout(pad=5.0)
 
         for i, pct_change in enumerate(percentage_changes):
             row = i // 2
@@ -721,7 +720,7 @@ class Class_II_Weight:
 
             axes[row, col].bar(sorted_components, sorted_relative_errors, color="skyblue")
             axes[row, col].set_title(f"Percentage Change: {pct_change}%", fontsize=20)  # Adjust font size as needed
-            #axes[row, col].set_xlabel("Component", fontsize=20)  # Adjust font size as needed
+            # axes[row, col].set_xlabel("Component", fontsize=20)  # Adjust font size as needed
             axes[row, col].set_ylabel("RelError MTOW (%)", fontsize=20)  # Adjust font size as needed
             axes[row, col].set_ylim([-20, 30])  # Adjust the limits as needed for better visualization
             axes[row, col].grid(True, axis="y", linestyle="--", alpha=0.7)

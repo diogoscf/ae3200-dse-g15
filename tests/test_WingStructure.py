@@ -39,7 +39,7 @@ simplified_airfoil_data = """\
 
 # Function to read airfoil data from the multi-line string
 def read_airfoil_data():
-    return pd.read_csv(StringIO(simplified_airfoil_data), sep="\s+", header=None, names=["x", "y"])
+    return pd.read_csv(StringIO(simplified_airfoil_data), sep="\\s+", header=None, names=["x", "y"])
 
 
 # Use the read_airfoil_data function to create airfoil_data_df
