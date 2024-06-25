@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+
+# from scipy.optimize import curve_fit
 
 
 # generate flight profile with 3 phases. Ground, flight, and landing
@@ -57,12 +58,12 @@ y7 = transition_load
 
 # Apply noise to all phases deviating from the mean value with a normal distribution
 noise = 0.3
-y1 += np.random.normal(0, noise, y1.shape)
-y2 += np.random.normal(0, noise, y2.shape)
-y4 += np.random.normal(0, noise, y4.shape)
-y5 += np.random.normal(0, noise, y5.shape)
-y6 += np.random.normal(0, noise, y6.shape)
-y7 += np.random.normal(0, noise, y7.shape)
+y1 += np.random.normal(0, noise, y1.shape)  # type: ignore[arg-type]
+y2 += np.random.normal(0, noise, y2.shape)  # type: ignore[arg-type]
+y4 += np.random.normal(0, noise, y4.shape)  # type: ignore[arg-type]
+y5 += np.random.normal(0, noise, y5.shape)  # type: ignore[arg-type]
+y6 += np.random.normal(0, noise, y6.shape)  # type: ignore[arg-type]
+y7 += np.random.normal(0, noise, y7.shape)  # type: ignore[arg-type]
 xa = np.concatenate((x1, x5, x2, x6, x3, x7, x4))
 ya = np.concatenate((y1, y5, y2, y6, y3, y7, y4))
 
@@ -118,12 +119,12 @@ y7 = transition_load
 
 # Apply noise to all phases deviating from the mean value with a normal distribution
 noise = 0.3
-y1 += np.random.normal(0, noise, y1.shape)
-y2 += np.random.normal(0, noise, y2.shape)
-y4 += np.random.normal(0, noise, y4.shape)
-y5 += np.random.normal(0, noise, y5.shape)
-y6 += np.random.normal(0, noise, y6.shape)
-y7 += np.random.normal(0, noise, y7.shape)
+y1 += np.random.normal(0, noise, y1.shape)  # type: ignore[arg-type]
+y2 += np.random.normal(0, noise, y2.shape)  # type: ignore[arg-type]
+y4 += np.random.normal(0, noise, y4.shape)  # type: ignore[arg-type]
+y5 += np.random.normal(0, noise, y5.shape)  # type: ignore[arg-type]
+y6 += np.random.normal(0, noise, y6.shape)  # type: ignore[arg-type]
+y7 += np.random.normal(0, noise, y7.shape)  # type: ignore[arg-type]
 xb = np.concatenate((x1, x5, x2, x6, x3, x7, x4))
 yb = np.concatenate((y1, y5, y2, y6, y3, y7, y4))
 

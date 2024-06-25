@@ -346,7 +346,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
         V_flut = min(V_flut1, V_flut2)
 
     # Plot flutter diagram: frequency vs dynamic pressure
-    fig_1 = plt.figure()
+    plt.figure()
     # plt.plot(q, imag_p_save, '.', linewidth=2)
     # plt.xlabel('Dynamic pressure [N/m^2]')
     plt.plot(V, imag_p_save, ".", linewidth=2)
@@ -362,7 +362,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     )
 
     # Plot flutter diagram: damping vs dynamic pressure
-    fig_2 = plt.figure()
+    plt.figure()
     # plt.plot(q, real_p_save, '.', linewidth=2)
     # plt.xlabel('Dynamic pressure [N/m^2]')
     plt.plot(V, real_p_save, ".", linewidth=2)
@@ -375,12 +375,12 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     plt.legend(["Eigenvalue 1", "Eigenvalue 2"], loc="lower left")
     # plot coordinate of the flutter speed point
     plt.plot(V_flut, 0, "ro", markersize=10)
-    plt.text(V_flut * 1.03, -270, f"(0, {int(np.round(V_flut,0))})", fontsize=14)
+    plt.text(V_flut * 1.03, -270, f"(0, {int(np.round(V_flut, 0))})", fontsize=14)
     # plot the flutter speed in textbox on top left corner
     plt.text(
         0.025,
         0.965,
-        f"V_flut: {int(np.round(V_flut,0))} [m/s]",
+        f"V_flut: {int(np.round(V_flut, 0))} [m/s]",
         transform=plt.gca().transAxes,
         fontsize=14,
         verticalalignment="top",
@@ -394,7 +394,7 @@ def flutter_diagram(m, I_theta, S_theta, rho, K_h, K_theta, C_L_alpha, S, a, B, 
     )
 
     # Plot flutter diagram: imaginary part vs real part of p_save
-    fig_3 = plt.figure()
+    plt.figure()
     plt.plot(real_p_save, imag_p_save, "r.", linewidth=2)
     plt.xlabel("Damping σ [1/s]", fontsize=14)
     plt.ylabel("Frequency ω [1/s]", fontsize=14)

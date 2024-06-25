@@ -201,14 +201,10 @@ def fatigue_life(Sult=None, alpha=None, Smax=None, K_t=None, verification=False,
             data[:, 1] = data[:, 1] * 1e6
             if Smax is not None:
                 if Smax >= data[0, 1]:
-                    print(
-                        "Instant failure: Your maximum stress experienced exceeds the material ultimate stress and will fail instantly"
-                    )
+                    print("Instant failure: Max stress exceeds material ultimate stress, will fail instantly")
                     return None
                 if Smax <= data[-1, 1]:
-                    print(
-                        "No fatigue: Your maximum stress experienced is below the material endurance limit and will not fail due to fatigue at all"
-                    )
+                    print("No fatigue: Max stress below material endurance limit, will not fail due to fatigue")
                     return None
             # Linearly interpolate between curve points to get the Nf for the given Smax
             if Smax is not None:
