@@ -30,9 +30,11 @@ def calculate_range(
     
     guess = (guess_tot_range_nm - 42*num_legs) * 1852 / num_legs # climb and descent add about 42nm per leg
     
-    while (not only_electric and (reserve < 15 or reserve > 15.1)) or \
+    while (not only_electric and (reserve < 14.95 or reserve > 15.1)) or \
            (only_electric and (reserve < 0 or reserve > 1)):
         iterations += 1
+        if iterations > 15:
+            raise Exception(f"Too many iterations: {iterations}")
 
         macf = perform_flight(
             aircraft=aircraft,

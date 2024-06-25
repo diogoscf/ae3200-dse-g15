@@ -134,8 +134,8 @@ def vary_area():
               Climb gradient land  = ({gradient_ld[0]:>8.2f}) %      {pass_gr_ld}   at V={gradient_ld[1]:.2f} m/s
               V_S0                 = {V_S0:>8.2f} m/s    {pass_vs}
               V_S1                 = {V_S1:>8.2f} m/s
-              Takeoff run          = {TO_dist[0]:>8.0f} m      {pass_to}
-              Landing roll         = {land_dist:>8.0f} m      {pass_ld}
+              Min. TORA take-off   = {TO_dist[0]:>8.0f} m      {pass_to}
+              Min. TORA landing    = {land_dist:>8.0f} m      {pass_ld}
               Runway with {TORA}m TORA at {elevation}m ISA+{temp_offset}, {slope}% slope, {surface} runway
               *************************************************
               ! Note that the climb gradient calculations are

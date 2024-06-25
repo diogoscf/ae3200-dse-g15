@@ -43,7 +43,7 @@
         "N_t": 2,
         "P_req_TO_W": 291477.32066664944,
         "Dp_m": 2.286,
-		"Fuel_engine_P_TO_W": 292000, "old": 368000,
+		"Fuel_engine_P_TO_W": 368000,
         "Fuel_engine_P_max_cont_W": 338000,
         "Newton_fuel_per_W_per_S_TO": 0.00000062101634094798,
         "Newton_fuel_per_W_per_S_flight": 0.00000058448596795104,

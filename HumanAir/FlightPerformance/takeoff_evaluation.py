@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 
 def plot_variation():
     
-    fig = plt.figure(figsize=(6,3))
+    fig = plt.figure(figsize=(8,5))
     
-    for i in [1,2,4]:
+    for i in [1,2,3,4]:
         if i == 2:
             # ***** design *****
             elevation   = 750
@@ -74,9 +74,6 @@ def plot_variation():
     plt.savefig("plots/takeoff.svg")
     plt.show()
         
-    print(f"OE: {acf.W_OE}")
-    print(f"MTO: {acf.W_MTO}")
-
               
 if __name__ == "__main__":
      plot_variation()
