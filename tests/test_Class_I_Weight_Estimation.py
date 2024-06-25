@@ -88,7 +88,7 @@ aircraft_data = {
         "W/S_N/m2": 836.4001000000001,
         "W/P_N/W": 0.1345174630075089,
         "Vc_m/s": 60.0,
-        "VH_m/s": 50,
+        "Vh_m/s": 50,
         "M_D": 0.2,
         "range_nm": 600,
         "endurance": 5.2,
@@ -140,7 +140,6 @@ aircraft_data = {
 
 
 def test_Class_I_Weight_init():
-
     # Initialize the Class_I weight estimation object:
     class_I = WeightEstm(aircraft_data)
 
@@ -234,7 +233,7 @@ def test_Class_I_Weight_init():
             "W/S_N/m2": 836.4001000000001,
             "W/P_N/W": 0.1345174630075089,
             "Vc_m/s": 60.0,
-            "VH_m/s": 50,
+            "Vh_m/s": 50,
             "M_D": 0.2,
             "range_nm": 600,
             "endurance": 5.2,
@@ -467,7 +466,7 @@ def test_PolynomialRegression():
     assert np.allclose([class_I.PolynomialRegression(bat)][0][1], coeff_pol, rtol=1e-3)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_Class_I_Weight_init()
     test_OEW_prime()
     test_BatteryWeight()

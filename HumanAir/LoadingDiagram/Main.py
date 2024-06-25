@@ -84,7 +84,6 @@ class WP_WS:
         self.Climbgradient_y = eq.Climbgradient(
             p.eta_p, self.WS, p.climbgradient, p.V_climb, p.A, p.e, p.Clmax_clean, p.Cl_SafetyFactor, p.Cdo, 0, 0
         )
-        # Manouvering_y=eq.Manouvering(p.Cdo, p.h_Cruise, p.V_cruise, WS, p.nmax, p.A, p.e, p.eta_p)
 
         # Convert the x-values to y-values
         self.Landing_y = self.Landing_x * self.ylst
@@ -128,20 +127,10 @@ class WP_WS:
                 optimal_WP = min_envelope[y]
                 optimal_WS = self.WS[y]
 
-        # print(np.max(min_envelope))
-        # print(f"Optimal W/S = {optimal_WS}, Optimal W/P = {optimal_WP}")
-
         return optimal_WP, optimal_WS
 
-    # index=np.where(np.abs(Cruise_y-Takeoff_y)<0.0005)[0][0]
-    # print("INDEX:")
-    # print(index)
-    # print("W/S = ", WS[index])
-    # print("W/P = ", Cruise_y[index])
-    #
-
     #  ========== 2: Plot Lines =========="""
-    def plot(self, saving=None):
+    def plot(self, saving=None):  # pragma: no cover
         optimal_point = self.calculate_optimal_point()
 
         plt.figure(figsize=(10, 7))
@@ -177,7 +166,7 @@ class WP_WS:
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     wp = WP_WS()
     print(wp.calculate_optimal_point())
     wp.plot()
