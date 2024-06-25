@@ -2,6 +2,7 @@ import sys
 import os
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 "Unit test in progress"
 
@@ -578,8 +579,160 @@ class Class_II_Weight:
 
         return coeff_exp, coeff_pol
 
+    def SensitivityAnalysis(self, components, percentage_changes):  # pragma: no cover
+        """
+        Perform sensitivity analysis on the specified component weights.
 
-def RunClassII(ac_data=aircraft_data, check=None, pbat=0.0):
+        Parameters:
+        components (list of str): List of component weights to vary (e.g., "Wing", "Empennage", "Fuselage", etc.).
+        percentage_changes (list of float): List of percentage changes to apply to the component weights.
+
+        Returns:
+        dict: Dictionary containing component names, percentage changes, and corresponding MTOW values.
+        """
+        original_weights = {
+            "Wing": self.WingWeight()["Average"],
+            "Empennage": self.EmpennageWeight()["Average"],
+            "Fuselage": self.FuselageWeight()["Average"],
+            "LandingGear": self.LandingGearWeight()["Average"],
+            "Total Structures": self.StructureWeight_Total(),
+            "Powerplant": self.PowerplantWeight_Total()["Average"],
+            "FlightControl": self.FlightControlSystem()["Average"],
+            "Hydraulics": self.HydraulicsPneumatics()["Average"],
+            "Instruments": self.InstrumentsAvionicsElectronics()["Average"],
+            "Electrical": self.ElectricalSystemWeight()["Average"],
+            "Aircon": self.AirconPressurizationAntiDeicingWeight()["Average"],
+            "Oxygen": self.OxygenSystem()["Average"],
+            "Furnishings": self.Furnishings()["Average"],
+            "Auxiliary Gear": self.AuxiliaryGear()["Average"],
+            "Paint": self.Paint()["Average"],
+            "Fixed Equipment": self.FixedEquipmentWeight_Total(),
+            "Fuel": self.NewFuelWeight(bat=0.144),
+            "Battery": self.NewBatteryWeight(bat=0.144),
+        }
+
+        results = {component: {} for component in components}
+
+        for component in components:
+            original_weight = original_weights[component]
+            for pct_change in percentage_changes:
+                # Apply percentage change
+                new_weight = original_weight * (1 + pct_change / 100)
+
+                # Update the corresponding method to return the new weight
+                if component == "Wing":
+                    self.WingWeight = lambda: {"Average": new_weight}
+                elif component == "Empennage":
+                    self.EmpennageWeight = lambda: {"Average": new_weight}
+                elif component == "Fuselage":
+                    self.FuselageWeight = lambda: {"Average": new_weight}
+                elif component == "LandingGear":
+                    self.LandingGearWeight = lambda: {"Average": new_weight}
+                elif component == "Total Structures":
+                    self.StructureWeight_Total = lambda: new_weight
+                elif component == "Powerplant":
+                    self.PowerplantWeight_Total = lambda: {"Average": new_weight}
+                elif component == "FlightControl":
+                    self.FlightControlSystem = lambda: {"Average": new_weight}
+                elif component == "Hydraulics":
+                    self.HydraulicsPneumatics = lambda: {"Average": new_weight}
+                elif component == "Instruments":
+                    self.InstrumentsAvionicsElectronics = lambda: {"Average": new_weight}
+                elif component == "Electrical":
+                    self.ElectricalSystemWeight = lambda: {"Average": new_weight}
+                elif component == "Aircon":
+                    self.AirconPressurizationAntiDeicingWeight = lambda: {"Average": new_weight}
+                elif component == "Oxygen":
+                    self.OxygenSystem = lambda: {"Average": new_weight}
+                elif component == "Furnishings":
+                    self.Furnishings = lambda: {"Average": new_weight}
+                elif component == "Auxiliary Gear":
+                    self.AuxiliaryGear = lambda: {"Average": new_weight}
+                elif component == "Paint":
+                    self.Paint = lambda: {"Average": new_weight}
+                elif component == "Total Fixed Equipment":
+                    self.FixedEquipmentWeight_Total = lambda: new_weight
+                elif component == "Fuel":
+                    self.NewFuelWeight = lambda bat_percent: new_weight
+                elif component == "Battery":
+                    self.NewBatteryWeight = lambda bat_percent: new_weight
+                # Add other components as necessary
+
+                # Recalculate MTOW
+                MTOW_new = self.Iterarions_C2W(bat_percent=0.144)[0]
+
+                # Store result
+                results[component][pct_change] = MTOW_new
+
+        # Restore original methods
+        self.WingWeight = lambda: {"Average": original_weights["Wing"]}
+        self.EmpennageWeight = lambda: {"Average": original_weights["Empennage"]}
+        self.FuselageWeight = lambda: {"Average": original_weights["Fuselage"]}
+        self.LandingGearWeight = lambda: {"Average": original_weights["LandingGear"]}
+        self.TotalStructuresWeight = lambda: original_weights["Total Structures"]
+        self.FuelSystemWeight = lambda: original_weights["Fuel System"]
+        self.PowerplantWeight = lambda: original_weights["Powerplant"]
+        self.FlightControlSystemWeight = lambda: original_weights["FlightControl System"]
+        self.HydraulicsWeight = lambda: original_weights["Hydraulics"]
+        self.InstrumentsWeight = lambda: original_weights["Instruments"]
+        self.ElectricalSystemWeight = lambda: original_weights["Electrical System"]
+        self.AirconWeight = lambda: original_weights["Aircon"]
+        self.OxygenSystemWeight = lambda: original_weights["Oxygen System"]
+        self.FurnishingsWeight = lambda: original_weights["Furnishings"]
+        self.AuxiliaryGearWeight = lambda: original_weights["Auxiliary Gear"]
+        self.PaintWeight = lambda: original_weights["Paint"]
+        self.FixedEquipmentWeight = lambda: original_weights["Total Fixed Equipment"]
+        self.NewFuelWeight = lambda: original_weights["Fuel"]
+        self.NewBatteryWeight = lambda: original_weights["Battery"]
+        # Add other components as necessary
+
+        return results
+
+    def plot_sensitivity_analysis(self, sensitivity_results):  # pragma: no cover
+        """
+        Plot the sensitivity analysis results.
+
+        Parameters:
+        sensitivity_results (dict): Results from the SensitivityAnalysis method.
+        original_mtow (float): The original MTOW value.
+        """
+        components = list(sensitivity_results.keys())
+        percentage_changes = [pct for pct in sensitivity_results[components[0]].keys() if pct != 0]  # Exclude 0% change
+
+        fig, axes = plt.subplots(3, 2, figsize=(22, 15), sharey=True)
+        # fig.tight_layout(pad=5.0)
+
+        for i, pct_change in enumerate(percentage_changes):
+            row = i // 2
+            col = i % 2
+
+            relative_errors = [
+                (sensitivity_results[component][pct_change] - sensitivity_results[component][0])
+                / sensitivity_results[component][0]
+                * 100
+                for component in components
+            ]
+
+            # Sort components and relative errors based on the relative errors
+            sorted_indices = np.argsort(relative_errors)[::-1]
+            sorted_components = [components[i] for i in sorted_indices]
+            sorted_relative_errors = [relative_errors[i] for i in sorted_indices]
+
+            axes[row, col].bar(sorted_components, sorted_relative_errors, color="skyblue")
+            axes[row, col].set_title(f"Percentage Change: {pct_change}%", fontsize=20)  # Adjust font size as needed
+            # axes[row, col].set_xlabel("Component", fontsize=20)  # Adjust font size as needed
+            axes[row, col].set_ylabel("RelError MTOW (%)", fontsize=20)  # Adjust font size as needed
+            axes[row, col].set_ylim([-20, 30])  # Adjust the limits as needed for better visualization
+            axes[row, col].grid(True, axis="y", linestyle="--", alpha=0.7)
+            axes[row, col].tick_params(axis="x", rotation=90)
+            axes[row, col].tick_params(axis="both", labelsize=20)  # Adjust tick label font size
+
+        plt.tight_layout()
+        plt.savefig("Sensitivity_Analysis.pdf")
+        plt.show()
+
+
+def RunClassII(ac_data=aircraft_data, check=None, pbat=0.0):  # pragma: no cover
     # initialise the class II weight object
     p = Class_II_Weight(ac_data)
     p.Iterarions_C2W(pbat)
@@ -636,5 +789,37 @@ def RunClassII(ac_data=aircraft_data, check=None, pbat=0.0):
     return dict
 
 
-if __name__ == "__main__":
-    RunClassII(ac_data=aircraft_data, check=True, pbat=0.144)
+if __name__ == "__main__":  # pragma: no cover
+    # Populate with actual aircraft data
+    class_ii_weight = Class_II_Weight(ac_data=aircraft_data)
+    percentage_changes = [-10, -5, 0, 5, 10, 15, 20]  # Example percentage changes
+    components = [
+        "Wing",
+        "Empennage",
+        "Fuselage",
+        "LandingGear",
+        "Total Structures",
+        "Powerplant",
+        "FlightControl",
+        "Hydraulics",
+        "Instruments",
+        "Electrical",
+        "Aircon",
+        "Oxygen",
+        "Furnishings",
+        "Auxiliary Gear",
+        "Paint",
+        "Fixed Equipment",
+        "Fuel",
+        "Battery",
+    ]
+    sensitivity_results = class_ii_weight.SensitivityAnalysis(components, percentage_changes)
+
+    # print(sensitivity_results)
+    # for pct_change, mtow in sensitivity_results.items():
+    #     print(mtow)
+    #     print(f"Percentage Change: {pct_change}%, MTOW: {mtow} N")
+
+    class_ii_weight.plot_sensitivity_analysis(sensitivity_results)
+
+    RunClassII(ac_data=aircraft_data, check=True, pbat=0)

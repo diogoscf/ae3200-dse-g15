@@ -39,6 +39,11 @@ aircraft_data = {
         "t_root_max_Wing": 121,
         "t_root_max_h": 122,
         "t_root_max_v": 123,
+        "Taper_HS": 0.1,
+        "QuarterChordSweep_HS_deg": 0,
+        "deda": 0.1,
+        "VhV": 1,
+        "tc_m_HP": 0.1,
     },
     "Performance": {
         "n_ult": 6,
@@ -49,8 +54,19 @@ aircraft_data = {
         "M_D": 0.8,
         "W/P_N/W": 0.1,
         "endurance": 4,
+        "W/S_N/m2": 1,
+        "Altitude_Cruise_m": 1,
+        "Temp_offset_TO_Land_cruise": 0,
     },
-    "Stability": {"QCW_to_QCh": 7},
+    "Stability": {
+        "QCW_to_QCh": 7,
+        "C_L_h": 0.5,
+        "C_L_AH": 0.5,
+        "X_cg_HS": 0.1,
+        "Cg_Aft": 2,
+        "Cg_Front": 1,
+        "Stability_Margin": 0.1,
+    },
     "Geometry": {
         "l_f_nonosecone": 8,
         "fuselage_max_perimeter": 9,
@@ -58,6 +74,7 @@ aircraft_data = {
         "fus_width_m": 11,
         "fus_height_m": 12,
         "N_row": 2,
+        "XLEMAC_m": 1,
     },
     "Power_prop": {
         "K_n": 0.24,
@@ -70,6 +87,8 @@ aircraft_data = {
         "eta_bat": 0.8,
         "DoD_bat": 0.7,
         "eta_electricmotor": 0.9,
+        "E_fuel_Wh/kg": 1000,
+        "eta_generator": 1,
     },
     "Landing_gear": {"l_s_m": 0.7, "l_s_n": 0.7, "Retractable": "Yes", "Hs_m": 0.7},
     "General": {
@@ -83,6 +102,7 @@ aircraft_data = {
         "NacWght": True,
     },
     "CL2Weight": {},
+    "Iterations Class I": {"Wpl_des_kg": 1},
 }
 
 "Structure Tests"
@@ -509,3 +529,31 @@ def test_NewOEW():
         weight_class.NewEmptyWeight(bat_percent) + aircraft_data["Weights"]["W_Pilot_N"],
         rel_tol=1,
     )
+
+
+def test_NewFuelWeight():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+    bat_percent = 1
+    assert math.isclose(0, weight_class.NewFuelWeight(bat_percent), rel_tol=1e-4)
+
+
+def test_PolynomialRegression():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+
+    bat_percent_list = np.arange(0, 1, 0.01)
+
+    coefficent_list_exp = weight_class.PolynomialRegression(bat=bat_percent_list)[0]
+
+    assert math.isclose(coefficent_list_exp[0], 10.64, rel_tol=1e-1)
+    assert math.isclose(coefficent_list_exp[1], 12.9, rel_tol=1e-1)
+
+
+def test_Iterations_C2W():
+    # Initialize the Class_II_Weight object
+    weight_class = Class_II_Weight(aircraft_data)
+
+    bat_percent = 0
+
+    assert math.isclose(weight_class.Iterarions_C2W(bat_percent=bat_percent)[0], 0, rel_tol=1e-3)

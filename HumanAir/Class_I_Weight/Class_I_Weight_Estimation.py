@@ -149,7 +149,7 @@ class WeightEstm:
         return coeff_exp, coeff_pol
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     data = WeightEstm(aircraft_data)
 
     bat = 0.11

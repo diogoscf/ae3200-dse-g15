@@ -111,7 +111,7 @@ def payload_range_points(filename):
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     plt.rcParams.update({"font.size": 30})
     fig, ax = plt.subplots()
     fig.tight_layout()

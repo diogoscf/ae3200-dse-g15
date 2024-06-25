@@ -7,7 +7,6 @@ import sys
 import time
 from math import tan
 
-# position update
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from HumanAir.aircraft_data import aircraft_data
@@ -221,7 +220,7 @@ class FuselageSizing:
         l_p = wb_fus + wu_fus + 2 * side_c
         return l_p
 
-    def plot_side_drawing(self, s_gear, ac_data=aircraft_data):
+    def plot_side_drawing(self, s_gear, ac_data=aircraft_data):  # pragma: no cover
         ac_data["Landing_gear"]["length_main_strut"] = self.length_main_strut(s_gear=0.1)
         ac_data["Landing_gear"]["length_nose_strut"] = self.h_nose_strut
         ac_data["Landing_gear"]["Hs_nose"] = self.h_nose_strut - self.h_nose / 2
@@ -404,7 +403,7 @@ class FuselageSizing:
         plt.axis("equal")
         plt.show()
 
-    def plot_front_view(self, s_gear):
+    def plot_front_view(self, s_gear):  # pragma: no cover
         fig, ax = plt.subplots()
         ax.axhline(y=0, color="gray", linewidth=0.3)
 
@@ -485,7 +484,7 @@ class FuselageSizing:
         plt.title("Fuselage front view")
         plt.show()
 
-    def above_position(self):
+    def above_position(self):  # pragma: no cover
         my_dict = {}
         my_dict["frontwall"] = (0, FuselageSizing.t_fuse)
         my_dict["empty_space"] = (my_dict["frontwall"][-1], my_dict["frontwall"][-1] + self.l_empty)
@@ -525,16 +524,10 @@ class FuselageSizing:
             "nose landing gear"
         ][1]
         xcg2 = 1 / m2 * (self.bat_xcg * self.length_fus() * (m1 + m2) - xcg1 * m1)
-        # print(xcg1)
-        # # print(l1)
-        # print(xcg2)
-        # # print(l2)
-        # print(self.bat_xcg)
-        # print(xcg2)
 
         return xcg1, l1, xcg2, l2
 
-    def below_position(self, s_gear):
+    def below_position(self, s_gear):  # pragma: no cover
         # get the battery dimensions
         l_battery, w_battery, s_gear = self.battery_dim(s_gear)
 
@@ -551,21 +544,10 @@ class FuselageSizing:
         battery_center = self.bat_xcg * self.length_fus()
         my_dict["battery"] = (battery_center - l_battery / 2, battery_center + l_battery / 2)
 
-        # my_dict["battery"] = (
-        #     self.l_end_nose_land() + FuselageSizing.s,
-        #     self.l_end_nose_land() + FuselageSizing.s + l_battery,
-        # )
-        # print(my_dict['battery'][0], my_dict['battery'][1])
         return my_dict
 
-    # def size_struts(self, ac_data = aircraft_data, angle = None):
-    #
-    #     ac_data['Landing_gear']['l_s_m'] = self.length_main_strut(0.1)
-    #     ac_data['Landing_gear']['l_s_n'] = self.length_main_strut(0.1) + tan(angle * np.pi / 180) * (
-    #             ac_data["Landing_gear"]["lm_m"] + ac_data["Landing_gear"]["ln_m"])
 
-
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # # Example usage:
     # n_seat = 8
     # w_engine = 0.85
@@ -590,7 +572,8 @@ if __name__ == "__main__":
     # print(fuselage_size.above_position())
     # print(fuselage_size.below_position(0.1))
     # print(fuselage_size.battery_dim(0.1))
-    # print(fuselage_size.bottom_width(0.1))
+    print(fuselage_size.bottom_width(0.1))
+    print(fuselage_size.top_width())
     fuselage_size.plot_side_drawing(s_gear=0.1)
     # fuselage_size.plot_front_view(s_gear=0.1)
     # print(iterate_cg_lg(aircraft_data, PERCENTAGE=0.5))

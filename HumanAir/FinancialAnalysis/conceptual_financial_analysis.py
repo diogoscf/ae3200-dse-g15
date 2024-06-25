@@ -57,7 +57,7 @@ def hourly_operating_cost(mission_file, standard_aircraft_data=c206_data, ac_dat
     return overhaul_cost + maintenance_cost + fuel_cost
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(hourly_operating_cost("maf_mission_graph.csv", c206_data, ac_data=aircraft_data))
 
     # V&V
