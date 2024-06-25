@@ -466,7 +466,7 @@ def test_PolynomialRegression():
     assert np.allclose([class_I.PolynomialRegression(bat)][0][1], coeff_pol, rtol=1e-3)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     test_Class_I_Weight_init()
     test_OEW_prime()
     test_BatteryWeight()

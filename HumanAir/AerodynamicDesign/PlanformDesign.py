@@ -50,7 +50,7 @@ class Planform:
     def t_root_max(self):
         return self.tc * self.RootChord()
 
-    def PlotWingPlanform(self):
+    def PlotWingPlanform(self):  # pragma: no cover
         plt.figure()
         plt.plot([0, 0], [self.RootChord(), 0], color="black")  # Plotting Root Chord
         tip_x_qc = (
@@ -70,7 +70,7 @@ class Planform:
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     WingConventional = Planform(7.44, 0.4, 0, 0.1367, 25753, 618)
     print("S = ", WingConventional.WingSurfaceArea())
     print("b = ", WingConventional.WingSpan())

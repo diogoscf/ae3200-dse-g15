@@ -12,12 +12,12 @@ with open(os.path.join(os.path.dirname(__file__), "Configurations", "c206.json")
     c206_data = json.load(f)
 
 
-def save_ac_data_to_json(ac_data=aircraft_data, filename="design.json"):
+def save_ac_data_to_json(ac_data=aircraft_data, filename="design.json"):  # pragma: no cover
     with open(os.path.join(os.path.dirname(__file__), "Configurations", filename), "w", encoding="utf-8") as f:
         json.dump(ac_data, f, indent=4)
 
 
-def import_aero_data(file_name):
+def import_aero_data(file_name):  # pragma: no cover
     data = {}
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
