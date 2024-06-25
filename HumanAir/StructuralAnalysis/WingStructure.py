@@ -277,7 +277,12 @@ class WingStructure:
         qdc_part = (
             V
             / Ixx
-            * (-(l_ad**2) * l_ab / 4 - l_ad**3 / 6 * np.sin(beta) + l_dc * l_ad**2 / 2 - l_ad**3 * np.sin(beta) / 2)
+            * (
+                -(l_ad**2) * l_ab / 4
+                - l_ad**3 / 6 * np.sin(beta)
+                + l_dc * l_ad**2 / 2
+                - l_ad**3 * np.sin(beta) / 2
+            )
         )
         qbc_part = (
             V
@@ -285,7 +290,9 @@ class WingStructure:
             * (
                 -(l_dc**3) / 4
                 + l_dc**3 / 6
-                + self.t_skin / self.t_spar_dist * (-(l_ad**2) * l_dc * np.sin(beta) + l_dc * (l_dc - l_ab) * l_ad / 2)
+                + self.t_skin
+                / self.t_spar_dist
+                * (-(l_ad**2) * l_dc * np.sin(beta) + l_dc * (l_dc - l_ab) * l_ad / 2)
             )
         )
 
@@ -311,7 +318,12 @@ class WingStructure:
             * l_dc
             * self.t_skin
             * np.cos(beta)
-            * (-l_ab * l_ad**2 / 4 - l_ad**3 / 6 * np.sin(beta) + l_dc * l_ad**2 / 2 - l_bc**3 * np.sin(beta) / 2)
+            * (
+                -l_ab * l_ad**2 / 4
+                - l_ad**3 / 6 * np.sin(beta)
+                + l_dc * l_ad**2 / 2
+                - l_bc**3 * np.sin(beta) / 2
+            )
         ) / V
 
         return eta + self.spars[:, 0]  # distance from LE

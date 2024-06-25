@@ -69,7 +69,8 @@ def TailAero(l_H, acd=aircraft_data):
     deda = (
         (
             (r / (r**2 + mtv**2)) * 0.4876 / np.sqrt(r**2 + 0.6319 + mtv**2)
-            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113) * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
+            + (1 + (r**2 / (r**2 + 0.7915 + 5.0734 * mtv**2)) ** 0.3113)
+            * (1 - np.sqrt(mtv**2 / (1 + mtv**2)))
         )
         * acd["Aero"]["CLalpha"]
         / (pi * acd["Aero"]["AR"])
@@ -343,6 +344,7 @@ def TailIteration(ac_datafile=aircraft_data, begin_value=0.2, end_value=0.6, ste
 
     Sh_S_list = np.ones(np.shape(Xcg_excursion_min)[0]) * Sh_S_min
     plt.plot(Xcg_excursion_min, Sh_S_list, label="Optimised Xcg for Landing Gear")
+    plt.savefig("ScissorPlot.svg")
     plt.show()
 
     print(f"The aircraft has a horizontal tail with a surface area of {round(ac_datafile['Aero']['S_h'], 2)} [m^2]")
@@ -363,7 +365,7 @@ def Plotting(acd=aircraft_data, show=True):  # pragma: no cover
     plt.fill_between(Xcg, 0, StabSM, color="crimson", alpha=0.2)
     plt.fill_between(Xcg, 0, Control, color="crimson", alpha=0.2)
     plt.xlim(-0.2, 1.2)
-    plt.ylim(0, 1)
+    plt.ylim(0, 0.6)
     plt.legend()
 
     if show:
