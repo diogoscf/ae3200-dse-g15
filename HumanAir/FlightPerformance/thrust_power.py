@@ -115,7 +115,6 @@ It is an array of dicts, each dict containing:
 thrust_calculations = []  # type: ignore[var-annotated]
 
 
-
 def T(acf, V_ms, h, dT, use_takeoff_power=False, electric=False):
     """
     Approximates the thrust for given conditions. It uses the cubic spline
