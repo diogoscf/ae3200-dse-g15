@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -8,7 +9,8 @@ project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
 sys.path.append(project_root)
 
 
-import FlightPerformance.aircraft as aircraft
+import HumanAir.FlightPerformance.aircraft as aircraft
+
 acf = aircraft.Aircraft()
 
 """========== Aircraft Design Parameters =========="""
@@ -34,8 +36,8 @@ s_land = 424  # 500 corrected for grass landing
 f = 1  # W_to/W_land - changed to 1 since if aircraft flies on batteries W_to = W_land - used to be 0.95
 temp_offset = 18
 
-V_stall = 27 # Cessna 206 with STOL kit
-V_climb = 1.2 * V_stall # not used
+V_stall = 27  # Cessna 206 with STOL kit
+V_climb = 1.2 * V_stall  # not used
 V_cruise = 60  # Cessna 206
 
 climbrate = 5

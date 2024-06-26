@@ -27,7 +27,7 @@ def Stallspeedx(h, temp_offset, Vs, Clmax, T0=288.15, constlambda=-0.0065):
 
 def Takeoff(TOP, WS, h, temp_offset, ClmaxTO, rho0=1.225, T0=288.15, constlambda=-0.0065):
     constsigma = Density(h, temp_offset) / rho0
-    Clto = ClmaxTO #/ 1.21  # roskam pt1 p95
+    Clto = ClmaxTO  # / 1.21  # roskam pt1 p95
     return TOP * Clto * constsigma / WS
 
 

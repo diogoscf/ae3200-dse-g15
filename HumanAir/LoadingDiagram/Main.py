@@ -14,7 +14,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
 sys.path.append(project_root)
 
-import aircraft_data
+from HumanAir import aircraft_data
 
 from HumanAir.LoadingDiagram.Parameters import Parameters_CurrentDesign as p
 import HumanAir.LoadingDiagram.Equations as eq
@@ -131,26 +131,28 @@ class WP_WS:
 
         return optimal_WP, optimal_WS
 
-
     #  ========== 2: Plot Lines =========="""
     def plot(self, saving=None):
-        # not sure if altitude correction should be applied to power, assumed here and in FlightPerformance.takeoff_landing.py that it is not used
-        #power_alt_correction = 1.132 * (eq.Density(p.h_TO, p.temp_offset)/1.225) - 0.132 # Gagg and Ferrar model, Gudmundsen eq 7-16
+        # not sure if altitude correction should be applied to power,
+        # assumed here and in FlightPerformance.takeoff_landing.py that it is not used
+        # power_alt_correction = 1.132 * (eq.Density(p.h_TO, p.temp_offset)/1.225) - 0.132
+        # Gagg and Ferrar model, Gudmundsen eq 7-16
         acf = aircraft_data.aircraft_data
         W = acf["CL2Weight"]["MTOW_N"]
         S_clean = acf["Aero"]["S_Wing"]
-        S_to = acf["Aero"]["S_Wing"] * acf["Flaps"]["Sprime_S_takeoff"] 
+        S_to = acf["Aero"]["S_Wing"] * acf["Flaps"]["Sprime_S_takeoff"]
         S_ld = acf["Aero"]["S_Wing"] * acf["Flaps"]["Sprime_S_landing"]
-        P_to = acf["Power_prop"]["Fuel_engine_P_TO_W"] * acf["Power_prop"]["eta_powertrain"] #* power_alt_correction # prop eff should not be included
-        P_cont = acf["Power_prop"]["Fuel_engine_P_max_cont_W"] * acf["Power_prop"]["eta_powertrain"] # prop eff taken into account in formulas
+        P_to = (
+            acf["Power_prop"]["Fuel_engine_P_TO_W"] * acf["Power_prop"]["eta_powertrain"]
+        )  # * power_alt_correction # prop eff should not be included
+        P_cont = (
+            acf["Power_prop"]["Fuel_engine_P_max_cont_W"] * acf["Power_prop"]["eta_powertrain"]
+        )  # prop eff taken into account in formulas
 
-        our_design_to = [W/S_to, W/P_to]
-        our_design_ld = [W/S_ld, W/P_cont]
-        our_design_clean = [W/S_clean, W/P_cont]
+        our_design_to = [W / S_to, W / P_to]
+        our_design_ld = [W / S_ld, W / P_cont]
+        our_design_clean = [W / S_clean, W / P_cont]
 
-        
-        
-        
         optimal_point = self.calculate_optimal_point()
 
         plt.figure(figsize=(10, 7))

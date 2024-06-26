@@ -7,9 +7,10 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from aircraft_data import aircraft_data
+from HumanAir.aircraft_data import aircraft_data
 
-def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
+
+def find_lg(nose_loading, aftcg, ac_datafile=aircraft_data):
     # Import tyre database
     tyre_file = os.path.join(os.path.dirname(__file__), "tiredata.csv")
     tyres = pd.read_csv(tyre_file, index_col=0).to_numpy()
@@ -17,7 +18,7 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
     # Choose smallest available tyre
     nose_loading = nose_loading
     Pmw = (1 - nose_loading) * ac_datafile["Weights"]["MTOW_N"] / (2 * 9.81)
-    Pnw = nose_loading * ac_datafile["Weights"]["MTOW_N"] / 9.81 # accounts for additional load from front CG
+    Pnw = nose_loading * ac_datafile["Weights"]["MTOW_N"] / 9.81  # accounts for additional load from front CG
     Pmg = (1 - nose_loading) * ac_datafile["Weights"]["MTOW_N"] / (9.81)
 
     for tyre in range(len(tyres[:, 0])):
@@ -40,9 +41,11 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
 
     # Calculate landing gear geometry
     Hcg = 0.5 * ac_datafile["Geometry"]["fus_height_m"]
-    H_s = 1.5 * Dw_m # initial guess
-    l_m = tan(np.radians(16))*(Hcg+H_s+0.5*Dw_m)
-    H_strike = (ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg+l_m)) * np.tan(np.radians(18))
+    H_s = 1.5 * Dw_m  # initial guess
+    l_m = tan(np.radians(16)) * (Hcg + H_s + 0.5 * Dw_m)
+    H_strike = (
+        ac_datafile["Geometry"]["fus_length_m"] - ac_datafile["Geometry"]["tail_length_m"] - (aftcg + l_m)
+    ) * np.tan(np.radians(18))
     iter = 1.0
 
     while iter > 0.0001:
@@ -61,8 +64,8 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
             iter = 0
 
     H_s = H_strike
-    l_n = l_m * Pmg/Pnw
-    ymin = (l_m + l_n)/(sqrt(l_n**2 * tan(np.radians(55))**2 / (Hcg+H_s+0.5*Dw_m)**2 - 1))
+    l_n = l_m * Pmg / Pnw
+    ymin = (l_m + l_n) / (sqrt(l_n**2 * tan(np.radians(55)) ** 2 / (Hcg + H_s + 0.5 * Dw_m) ** 2 - 1))
 
     # Write values to dict
     ac_datafile["Landing_gear"]["lm_m"] = l_m
@@ -78,9 +81,10 @@ def find_lg(nose_loading, aftcg, ac_datafile = aircraft_data):
 
     return l_m, l_n, Pmg, Pnw, H_s, Pmw, ymin, Dw_m, Wt_m, Dw_n, Wt_n
 
-def component_mass(ac_datafile = aircraft_data):
+
+def component_mass(ac_datafile=aircraft_data):
     # Import statistical weight fraction data
-    fracs_file= os.path.join(os.path.dirname(__file__), "fraction-database.csv")
+    fracs_file = os.path.join(os.path.dirname(__file__), "fraction-database.csv")
     fracs = pd.read_csv(fracs_file, index_col=0).to_numpy()
 
     # Convert weights to kg and with contingency
@@ -90,13 +94,15 @@ def component_mass(ac_datafile = aircraft_data):
     Ww_cont = ac_datafile["Weights"]["Ww_N"] / 9.81
 
     # Set up known fractions
-    OEW_frac = OEW_cont/MTOW_cont
+    OEW_frac = OEW_cont / MTOW_cont
     OEW_avg = np.average(fracs[:, -1])
-    Ww_frac = Ww_cont/MTOW_cont
-    Wbat_frac = Wbat_cont/MTOW_cont
+    Ww_frac = Ww_cont / MTOW_cont
+    Wbat_frac = Wbat_cont / MTOW_cont
 
     # Get adjusted component fractions: Wing, MLG, pwtr, NLG, fus, emp, FE, bat, EW
-    Ww_diff = Ww_frac - (np.average(fracs[:, 0])*(OEW_frac / OEW_avg) - (Wbat_frac * np.average(fracs[:, 0]) / OEW_avg))
+    Ww_diff = Ww_frac - (
+        np.average(fracs[:, 0]) * (OEW_frac / OEW_avg) - (Wbat_frac * np.average(fracs[:, 0]) / OEW_avg)
+    )
     wcg = np.zeros((3, 9))
     wcg[0, 0] = Ww_frac
     wcg[0, -2] = Wbat_frac
@@ -124,7 +130,8 @@ def component_mass(ac_datafile = aircraft_data):
     # Return fractions and masses of each component: Wing, MLG, pwtr, NLG, fus, emp, FE, bat, EW
     return wcg
 
-def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
+
+def iterate_cg_lg(ac_datafile=aircraft_data, PERCENTAGE=0.2):
     # Set distance of nosewheel from nose [m]
     nose_distance = 0.2
     nose_loading = 0.08
@@ -159,7 +166,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
     ]
     aftcg = np.max(CGlist)
 
-    l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5] # Nose loading of 8% initially
+    l_m, l_n, Pmg, Pnw, H_s = find_lg(nose_loading, aftcg, ac_datafile)[0:5]  # Nose loading of 8% initially
     wcg[2, 1] = aftcg + l_m
     wcg[2, 3] = aftcg - l_n
     wcg[2, -1] = Xcg_OEW
@@ -210,7 +217,7 @@ def iterate_cg_lg(ac_datafile = aircraft_data, PERCENTAGE=0.2):
             - PERCENTAGE * (1 + np.sum(wcg[1, 0:2]) / np.sum(wcg[1, 2:8]))
         )
         wcg[2, 0] = CGw_MAC + xlemac
-        iter = abs(xlemacold/xlemac - 1)
+        iter = abs(xlemacold / xlemac - 1)
 
     ac_datafile["Geometry"]["XLEMAC_m"] = xlemac
     ac_datafile["Landing_gear"]["Xmw_m"] = wcg[2, 1]
