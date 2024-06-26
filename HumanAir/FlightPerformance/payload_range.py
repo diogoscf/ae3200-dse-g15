@@ -5,7 +5,7 @@ import mission_evaluation
 
 g = 9.80665
 pl1, pl2, pl3 = 630, 540, 0
-extra_payload = (pl1-pl2) * g
+extra_payload = (pl1 - pl2) * g
 
 
 #
@@ -75,15 +75,15 @@ print(f"Range des. payload, no fuel, one leg:        {rb2:.1f} nm")
 print(f"Range no payload, no fuel, one leg:          {rb3:.1f} nm")
 
 
-plt.figure(figsize=(6,3))
-plt.plot([0, r1,r2,r3],[pl1, pl1,pl2,pl3], color="b", label="Hybrid, four flight legs")
-#plt.plot([0, ro1,ro2,ro3],[pl1, pl1,pl2,pl3], color="b", label="Hybrid, one flight leg")
-plt.plot([0, rb1,rb2,rb3],[pl1, pl1,pl2,pl3], color="g", label="Electric, one flight leg")
+plt.figure(figsize=(6, 3))
+plt.plot([0, r1, r2, r3], [pl1, pl1, pl2, pl3], color="b", label="Hybrid, four flight legs")
+# plt.plot([0, ro1,ro2,ro3],[pl1, pl1,pl2,pl3], color="b", label="Hybrid, one flight leg")
+plt.plot([0, rb1, rb2, rb3], [pl1, pl1, pl2, pl3], color="g", label="Electric, one flight leg")
 plt.scatter(600, 540, marker="x", color="r", label="Design point")
 plt.xlabel("Range [NM]")
 plt.ylabel("Payload [kg]")
-plt.ylim(0, pl1*1.1)
-plt.xlim(0, r3*1.1)
+plt.ylim(0, pl1 * 1.1)
+plt.xlim(0, r3 * 1.1)
 plt.grid()
 plt.legend()
 plt.savefig("plots/payload_range.svg")

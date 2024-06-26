@@ -744,7 +744,7 @@ if __name__ == "__main__":
 
         logging.info(" Sizing flaps")
         # sizing the flaps
-        class_2_dictionary=flaps_design(ac_data=class_2_dictionary)
+        class_2_dictionary = flaps_design(ac_data=class_2_dictionary)
 
         logging.info(" Calculating flap position and design succesfully")
 
