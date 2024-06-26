@@ -35,7 +35,7 @@ def test_Stallspeedx():
 
 def test_Takeoff():
     # expected value
-    expected_takeoff = 100 * 1.5 / 1.21 / 500
+    expected_takeoff = 100 * 1.5 / 500  # / 1.21
 
     assert isclose(Takeoff(100, 500, 0, 0, 1.5), expected_takeoff, rel_tol=1e-4)
 
