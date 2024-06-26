@@ -742,6 +742,12 @@ if __name__ == "__main__":
         print(f"Cost: {round(cost, 2)} [US$]")
         logging.info(" Calculating the cost successful")
 
+        logging.info(" Sizing flaps")
+        # sizing the flaps
+        class_2_dictionary = flaps_design(ac_data=class_2_dictionary)
+
+        logging.info(" Calculating flap position and design succesfully")
+
         # save the updated dictionary
         design_json_path = os.path.join(script_dir, "Configurations", "design.json")
         logging.info(" Design.json saved at: " + design_json_path)

@@ -27,14 +27,14 @@ def Stallspeedx(h, temp_offset, Vs, Clmax, T0=288.15, constlambda=-0.0065):
 
 def Takeoff(TOP, WS, h, temp_offset, ClmaxTO, rho0=1.225, T0=288.15, constlambda=-0.0065):
     constsigma = Density(h, temp_offset) / rho0
-    Clto = ClmaxTO / 1.21  # roskam pt1 p95
+    Clto = ClmaxTO  # / 1.21  # roskam pt1 p95
     return TOP * Clto * constsigma / WS
 
 
 def Landingx(Clmax_land, h, temp_offset, sland, f, T0=288.15, constlambda=-0.0065):
     return (Clmax_land * Density(h, temp_offset) * sland / 0.305199384478051392) / (
         2 * f
-    )  # was 0.5915 changed to 0.305199384478051392
+    )  # 0.5915=including airborne phase, 0.305199384478051392=only ground run
 
 
 def Cruise(

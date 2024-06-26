@@ -68,8 +68,8 @@ def test_calculate_optimal_point():
     optimal_WP, optimal_WS = wp_ws.calculate_optimal_point()
 
     # Add the expected values for optimal_WP and optimal_WS
-    expected_optimal_WP = 0.1260
-    expected_optimal_WS = 885
+    expected_optimal_WP = 0.1195
+    expected_optimal_WS = 796.4
 
     assert isclose(optimal_WP, expected_optimal_WP, rel_tol=1e-2)
     assert isclose(optimal_WS, expected_optimal_WS, rel_tol=1e-2)
