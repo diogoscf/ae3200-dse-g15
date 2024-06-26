@@ -114,7 +114,7 @@ def plot_gust_diagram(
     ac_name="aircraft",
     save_plot=True,
     show_plot=True,
-):
+):  # pragma: no cover
     """
     Plot the gust diagram
 
@@ -305,12 +305,20 @@ def plot_gust_diagram(
     return fig, ax
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     Vc_ms, Vd_ms, _, V_S1, _, _ = calculate_manoeuvre_velocities(aircraft_data)
 
-    n_max, n_min, V_B, n_cruise_pve, n_cruise_nve, n_dive_pve, n_dive_nve, n_B_pve, n_B_nve = (
-        calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000, temp_offset=18)
-    )
+    (
+        n_max,
+        n_min,
+        V_B,
+        n_cruise_pve,
+        n_cruise_nve,
+        n_dive_pve,
+        n_dive_nve,
+        n_B_pve,
+        n_B_nve,
+    ) = calculate_gust_diagram_loads(aircraft_data, Vc_ms, Vd_ms, V_S1, COMMUTER, h=3000, temp_offset=18)
 
     plot_gust_diagram(
         Vc_ms,

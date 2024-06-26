@@ -152,7 +152,6 @@ def test_setup_logging():
         # patch("os.path.join", return_value="/fake/dir/../..") as mock_path_join,
         # patch("sys.path", new_callable=list) as mock_sys_path,
     ):
-
         # Mock logger and handler
         mock_logger = MagicMock()
         mock_handler = MagicMock()
@@ -242,7 +241,6 @@ def test_generate_function():
         patch("HumanAir.main.WeightEstimation") as mock_WeightEstm,
         patch("HumanAir.main.co2") as mock_co2,
     ):
-
         # Mock the return values for methods and functions used in the Generate function
         mock_WP_WS().calculate_optimal_point.return_value = (0.5, 0.6)
         mock_WeightEstm().PolynomialRegression.return_value = ([0.1, 0.2], [0.3, 0.4])
@@ -459,5 +457,5 @@ def test_find_optimal_design():
     )
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

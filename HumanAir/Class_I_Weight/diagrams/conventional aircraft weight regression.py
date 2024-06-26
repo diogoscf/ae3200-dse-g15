@@ -8,7 +8,6 @@ from sklearn.preprocessing import PolynomialFeatures  # type: ignore[import-unty
 
 
 def plot_MTOW_vs_Payload(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW_single_propeller = (
         np.array([680.388, 997.903, 1065.942, 1202.02, 1202.02, 952.544, 1315.418, 1315.418, 1339.912]) * 9.81
@@ -67,7 +66,6 @@ def plot_MTOW_vs_Payload(combined=True, show=None, save=None, ax=None):
 
     for MTOW in MTOW_:
         for Payload in Payload_:
-
             # plot data points
 
             ax.scatter(Payload, MTOW, label="Data points")
@@ -163,7 +161,6 @@ def plot_MTOW_vs_Payload(combined=True, show=None, save=None, ax=None):
 
 
 def plot_MTOW_vs_OEW(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW_single_propeller = (
         np.array([680.388, 997.903, 1065.942, 1202.02, 1202.02, 952.544, 1315.418, 1315.418]) * 9.81
@@ -305,7 +302,6 @@ def plot_MTOW_vs_OEW(combined=True, show=None, save=None, ax=None):
 
                 # save the images based on the case
                 if save:
-
                     if step == 1 and combined:
                         plt.savefig("Combined_MTOW_vs_OEW.svg")
 
@@ -320,7 +316,6 @@ def plot_MTOW_vs_OEW(combined=True, show=None, save=None, ax=None):
 
 
 def plot_MTOW_vs_WW(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW_single_propeller = np.array([680.388, 997.903, 1065.942, 1202.02, 1202.02, 952.544, 1315.418]) * 9.81  # N
     WW_single_propeller = (
@@ -454,7 +449,6 @@ def plot_MTOW_vs_WW(combined=True, show=None, save=None, ax=None):
 
                 # save the images based on the case
                 if save:
-
                     if step == 1 and combined:
                         plt.savefig("Combined_MTOW_vs_WW.svg")
 

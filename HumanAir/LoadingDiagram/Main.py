@@ -189,7 +189,7 @@ class WP_WS:
         plt.show()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     wp = WP_WS()
     print(wp.calculate_optimal_point())
     wp.plot()

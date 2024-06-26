@@ -8,7 +8,6 @@ from sklearn.preprocessing import PolynomialFeatures  # type: ignore[import-unty
 
 
 def plot_MTOW_vs_Payload(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW = np.array([6876, 15495, 23814, 20185, 1600, 2678, 2000, 600, 884]) * 9.81  # N
     Payload = np.array([1000, 1800, 2300, 2041, 160, 453.6, 160, 213, 160]) * 9.81  # N
@@ -97,7 +96,6 @@ def plot_MTOW_vs_Payload(combined=True, show=None, save=None, ax=None):
 
 
 def plot_MTOW_vs_OEW(combined=True, show=None, save=None, ax=None):
-
     # single propeller
     MTOW = np.array([6876, 15495, 23814, 20185, 1600, 2678, 2000, 600, 884]) * 9.81  # N
     OEW = np.array([4844, 8918, 13381, 13080, 1360, 1740, 1550, 275, 481]) * 9.81  # N
